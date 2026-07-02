@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Hub - EasyMarket</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    .dashboard-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      padding: 4rem 0 8rem 0;
+      color: white;
+      margin-bottom: -6rem;
+    }
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 1.5rem;
+      border-radius: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .stat-card i {
+      font-size: 2rem;
+      color: #febd69;
+      margin-bottom: 0.5rem;
+    }
+    .stat-card h3 {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+    .stat-card p {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .dashboard-main-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+    }
+
+    .listing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .seller-card {
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+    }
+    .seller-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+
+    .seller-card-img {
+      height: 180px;
+      width: 100%;
+      object-fit: cover;
+    }
+
+    .seller-card-body {
+      padding: 1.2rem;
+    }
+
+    .status-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 0.4rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      backdrop-filter: blur(5px);
+    }
+
+    .promote-btn {
+      background: linear-gradient(135deg, #febd69, #f3a847);
+      color: #131921;
+      font-weight: 700;
+      border-radius: 50px;
+      width: 100%;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .manage-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-hero">
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Seller Hub</h1>
+          <p id="user-greeting" style="opacity: 0.8; font-size: 1.1rem;"></p>
+        </div>
+        <a href="sell.html" class="btn btn-primary" style="padding: 1rem 2rem; border-radius: 50px;">+ List New Item</a>
+      </div>
+    </div>
+  </div>
+
+  <main style="padding-bottom: 5rem;">
+    <div class="container">
+      <div class="stats-row">
+        <div class="stat-card">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <h3 id="stat-active">0</h3>
+          <p>Active Listings</p>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-sack-dollar"></i>
+          <h3 id="stat-value">0</h3>
+          <p>Inventory Value</p>
+        </div>
+        <div class="stat-card">
+          <i class="fa-solid fa-bullhorn"></i>
+          <h3 id="stat-ads">0</h3>
+          <p>Ad Placements</p>
+        </div>
+      </div>
+
+      <div class="dashboard-main-card">
+        <h2 style="color: #1e293b; border-bottom: 2px solid #f1f5f9; padding-bottom: 1rem;">My Product Catalog</h2>
+        <div id="dashboard-content">
+          <!-- Unique cards injected by JS -->
+          <div style="text-align:center; padding: 4rem 0;">
+            <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: var(--primary-blue)"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
+

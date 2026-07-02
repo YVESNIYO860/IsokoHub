@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Admin - Niyonkuru Yves</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    .profile-hero {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      padding: 8rem 0;
+      text-align: center;
+    }
+
+    .profile-container {
+      max-width: 1000px;
+      margin: -6rem auto 5rem;
+      background: white;
+      border-radius: 30px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+      padding: 4rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .profile-img-container {
+      text-align: center;
+    }
+
+    .profile-img {
+      width: 100%;
+      border-radius: 24px;
+      border: 8px solid #f8fafc;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .profile-socials {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 2rem;
+      font-size: 1.8rem;
+    }
+
+    .profile-socials a {
+      transition: transform 0.3s ease;
+    }
+
+    .profile-socials a:hover {
+      transform: translateY(-5px);
+    }
+
+    .bio-content {
+      line-height: 1.8;
+      color: #334155;
+      font-size: 1.15rem;
+    }
+
+    .bio-content h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      color: #0f172a;
+    }
+
+    .bio-content p {
+      margin-bottom: 2rem;
+    }
+
+    .experience-tag {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 850px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .profile-container {
+        padding: 2rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="profile-hero">
+    <div class="container">
+      <h2 style="font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; margin-bottom: 1rem;">
+        Meet the Founder</h2>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="profile-container">
+      <div class="profile-grid">
+        <div class="profile-img-container">
+          <img src="assets/admin.jpeg" alt="Niyonkuru Yves" class="profile-img">
+          <div class="profile-socials">
+            <a href="https://www.instagram.com/maverix_001/" target="_blank" title="Instagram" style="color: #e4405f;"><i class="fa-brands fa-instagram"></i></a>
+            <a href="https://www.facebook.com/profile.php?id=100073494818427&sk=friends" target="_blank" title="Facebook" style="color: #1877f2;"><i class="fa-brands fa-facebook"></i></a>
+            <a href="https://www.youtube.com/@Maverix1" target="_blank" title="YouTube" style="color: #ff0000;"><i class="fa-brands fa-youtube"></i></a>
+            <a href="https://www.linkedin.com/in/best-shineboy-3aa183383/" target="_blank" title="LinkedIn" style="color: #0077b5;"><i class="fa-brands fa-linkedin"></i></a>
+            <a href="https://x.com/best_shineboy" target="_blank" title="Twitter" style="color: #000000;"><i class="fa-brands fa-x-twitter"></i></a>
+            <a href="mailto:yvesniyonkuru2022@gmail.com" title="Email" style="color: #ea4335;"><i class="fa-solid fa-envelope"></i></a>
+          </div>
+
+        </div>
+        <div class="bio-content">
+          <span class="experience-tag">ADMIN & DEVELOPER</span>
+          <h1>ABOUT ADMIN</h1>
+          <p><strong>Niyonkuru Yves</strong> is a passionate and ambitious young Rwandan from Kamonyi District, Southern
+            Province, Rwanda. From an early age, Yves demonstrated a natural curiosity and love for learning, exploring
+            both academic subjects and creative pursuits with dedication and enthusiasm.</p>
+
+          <p>He completed his secondary education at <strong>ES Runaba</strong>, where he excelled academically while
+            actively participating in school activities and community initiatives. His time at ES Runaba instilled in
+            him a deep appreciation for education, discipline, and teamwork, shaping the values that continue to guide
+            him today.</p>
+
+          <p>Currently, Yves is pursuing higher education at the <strong>University of Rwanda</strong>, balancing
+            rigorous academics with his diverse interests. Beyond formal education, he is deeply passionate about
+            creativity, innovation, and digital projects that combine practical solutions with artistic expression.</p>
+
+          <p>Growing up in a supportive yet resource-limited environment, Yves learned the importance of resilience,
+            problem-solving, and self-motivation. These qualities have driven him to explore photography, content
+            creation, and digital projects, allowing him to express creativity while developing practical skills.</p>
+
+          <p>Yves believes strongly in lifelong learning and personal growth, constantly seeking opportunities to expand
+            his knowledge, contribute positively to society, and inspire others through his work. His journey reflects
+            determination, curiosity, and creativity, making him not only the driving force behind this website but also
+            a young Rwandan committed to making a meaningful impact in his community and beyond.</p>
+
+          <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #f1f5f9; text-align: center;">
+            <a href="index.html" class="btn btn-primary" style="padding: 1rem 2.5rem; border-radius: 50px;">Back to
+              Marketplace</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

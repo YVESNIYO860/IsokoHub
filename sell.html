@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell Product - EasyMarket</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    .sell-container {
+      max-width: 600px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="container">
+      <div class="sell-container">
+        <h2 class="mb-3">Sell a New Product</h2>
+        <div id="sell-error" class="text-danger mb-2 d-none"></div>
+        <form id="sell-form">
+          <div class="form-group">
+            <label class="form-label">Product Name</label>
+            <input type="text" id="prod-name" class="form-control" required placeholder="e.g. iPhone 13 Pro">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="prod-category" class="form-control" required>
+              <option value="">Select a category</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Shoes">Shoes</option>
+              <option value="Phones">Phones</option>
+              <option value="Cars">Cars</option>
+              <option value="Houses & Rents">Houses & Rents</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Condition</label>
+            <select id="prod-condition" class="form-control" required>
+              <option value="New">New (Factory Sealed)</option>
+              <option value="Used">Used (Still Works Excellent)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Price ($)</label>
+            <input type="number" id="prod-price" class="form-control" required min="1" step="0.01" placeholder="99.00">
+          </div>
+
+          <div class="form-group" id="image-url-group">
+            <label class="form-label">Product Images (Min 3, Max 6)</label>
+            <div id="image-inputs-container">
+              <input type="url" class="form-control mb-1 prod-image" required placeholder="Main Image URL (Required)">
+              <input type="url" class="form-control mb-1 prod-image" required placeholder="Image URL 2 (Required)">
+              <input type="url" class="form-control mb-1 prod-image" required placeholder="Image URL 3 (Required)">
+              <input type="url" class="form-control mb-1 prod-image" placeholder="Image URL 4 (Optional)">
+              <input type="url" class="form-control mb-1 prod-image" placeholder="Image URL 5 (Optional)">
+              <input type="url" class="form-control mb-1 prod-image" placeholder="Image URL 6 (Optional)">
+            </div>
+            <small class="text-muted d-block mt-1">Provide at least 3 high-quality image URLs for better visibility.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Seller WhatsApp / Phone Number</label>
+            <input type="tel" id="prod-phone" class="form-control" required placeholder="e.g. +250 788 123 456">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Full Description</label>
+            <textarea id="prod-description" class="form-control" rows="5" required placeholder="Tell us more about the product features, history, and current condition..."></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">List Product</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/sell.js"></script>
+</body>
+</html>

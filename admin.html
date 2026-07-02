@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Approval Panel - EasyMarket</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    .admin-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      min-height: 60vh;
+    }
+    .admin-header {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-stats {
+      display: flex;
+      gap: 2rem;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-value {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-blue);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: #666;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header injected by app.js -->
+
+  <main class="admin-container">
+    <div class="admin-header">
+      <div>
+        <h1 style="color: #131921; display:flex; align-items:center; gap:0.5rem;">
+          <i class="fa-solid fa-user-shield" style="color:#febd69"></i>
+          Admin Approval Panel
+        </h1>
+        <p class="text-muted">Review and approve product listings to prevent scams.</p>
+      </div>
+      <div class="admin-stats">
+        <div class="stat-item">
+          <span class="stat-value" id="pending-count">0</span>
+          <span class="stat-label">Pending</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value" id="ad-request-count" style="color: #f59e0b;">0</span>
+          <span class="stat-label">Ad Requests</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-tabs" style="display:flex; gap:1rem; margin-bottom: 1rem;">
+      <button class="btn btn-secondary active-tab" id="tab-pending" style="border-radius:50px;">New Listings</button>
+      <button class="btn btn-secondary" id="tab-ads" style="border-radius:50px;">Ad Requests</button>
+    </div>
+
+    <div class="dashboard-card" style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color);">
+      <div id="admin-content">
+        <div style="text-align:center; padding: 3rem;">
+          <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+          <p class="mt-1">Loading pending listings...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer injected by app.js -->
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
