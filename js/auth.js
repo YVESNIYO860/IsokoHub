@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const errorMsg = document.getElementById('error-msg');
   const loginForm = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
+  const adminEmail = 'yvesniyonkuru2022@gmail.com';
 
   // Firebase Auth State Listener
   if (typeof firebase !== 'undefined') {
@@ -38,6 +39,44 @@ document.addEventListener('DOMContentLoaded', () => {
           errorMsg.classList.remove('d-none');
         });
     });
+  }
+
+  const googleLoginBtn = document.getElementById('google-login-btn');
+  const googleSignupBtn = document.getElementById('google-signup-btn');
+
+  const handleGoogleSignIn = () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider)
+      .then((result) => {
+        const user = result.user;
+        if (typeof db === 'undefined') return;
+
+        const userRef = db.collection('users').doc(user.uid);
+        const userRole = user.email === adminEmail ? 'admin' : 'seller';
+
+        return userRef.set({
+          name: user.displayName || user.email,
+          email: user.email,
+          role: userRole,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      })
+      .catch((error) => {
+        console.error('Google sign-in error:', error);
+        if (error.code === 'auth/popup-blocked-request' || error.code === 'auth/cancelled-popup-request') {
+          firebase.auth().signInWithRedirect(provider);
+          return;
+        }
+        errorMsg.textContent = error.message || 'Google sign-in failed. Please try again.';
+        errorMsg.classList.remove('d-none');
+      });
+  };
+
+  if (googleLoginBtn) {
+    googleLoginBtn.addEventListener('click', handleGoogleSignIn);
+  }
+  if (googleSignupBtn) {
+    googleSignupBtn.addEventListener('click', handleGoogleSignIn);
   }
 
   if (signupForm) {
