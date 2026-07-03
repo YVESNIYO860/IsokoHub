@@ -26,6 +26,12 @@
             <label class="form-label">Password</label>
             <input type="password" id="password" class="form-control" required placeholder="••••••••">
           </div>
+          <div class="form-group form-check">
+            <input type="checkbox" id="accept-terms-login" class="form-check-input" required>
+            <label for="accept-terms-login" class="form-check-label" style="font-size:0.95rem;">
+              I agree to the <a href="terms.html" target="_blank" style="color:var(--primary-blue); text-decoration:underline;">Terms and Conditions</a>
+            </label>
+          </div>
           <button type="submit" class="btn btn-primary btn-block">Log In</button>
           <button id="google-login-btn" type="button" class="btn btn-google btn-block mt-2">
             <span class="google-logo" aria-hidden="true">
@@ -38,6 +44,9 @@
             </span>
             <span>Continue with Google</span>
           </button>
+          <p class="text-center mt-2" style="font-size:0.9rem; color:#555;">
+            By clicking Google login you accept the <a href="terms.html" target="_blank" style="color:var(--primary-blue); text-decoration:underline;">Terms and Conditions</a>.
+          </p>
         </form>
         <p class="text-center mt-2">
           Don't have an account? <a href="signup.html" style="color:var(--primary-blue)">Sign up</a>

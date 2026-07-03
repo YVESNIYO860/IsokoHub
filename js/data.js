@@ -62,9 +62,11 @@ async function fetchProductById(id) {
  */
 async function createProduct(productData) {
   if (!db) throw new Error("Database not initialized");
-  
+  if (!auth || !auth.currentUser) throw new Error("You must be logged in to save a product.");
+
   const newProduct = {
     ...productData,
+    sellerId: auth.currentUser.uid,
     status: 'pending', // Scam-prevention default
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };

@@ -30,6 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loginForm) {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      const termsAccepted = document.getElementById('accept-terms-login').checked;
+      if (!termsAccepted) {
+        errorMsg.textContent = 'You must accept the Terms and Conditions to log in.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+
       const email = document.getElementById('email').value;
       const pw = document.getElementById('password').value;
       
@@ -82,6 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (signupForm) {
     signupForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      const termsAccepted = document.getElementById('accept-terms-signup').checked;
+      if (!termsAccepted) {
+        errorMsg.textContent = 'You must accept the Terms and Conditions to sign up.';
+        errorMsg.classList.remove('d-none');
+        return;
+      }
+
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const pw = document.getElementById('password').value;

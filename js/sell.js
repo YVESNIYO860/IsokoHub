@@ -60,8 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         image: images,
         description: document.getElementById('prod-description').value,
         condition: document.getElementById('prod-condition').value,
-        sellerPhone: document.getElementById('prod-phone').value,
-        sellerId: user.id
+        sellerPhone: document.getElementById('prod-phone').value
       };
 
       if (isEditing) {
@@ -72,8 +71,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       window.location.href = 'dashboard.html';
     } catch (err) {
-      console.error(err);
-      errorEl.textContent = 'Error saving product. Please try again.';
+      console.error('Sell page error:', err);
+      const message = err.message || 'Error saving product. Please try again.';
+      errorEl.textContent = message;
       errorEl.classList.remove('d-none');
     }
   });
