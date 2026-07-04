@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupLoaderLogic();
   ensureBackToHomeLink();
   registerServiceWorker();
+  setupInstallPrompt();
   renderNavbar();
   renderFooter();
   setupStickyHeader();
@@ -14,6 +15,52 @@ function registerServiceWorker() {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     });
   }
+}
+
+function setupInstallPrompt() {
+  let deferredPrompt;
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    showInstallBanner(deferredPrompt);
+  });
+
+  window.addEventListener('appinstalled', () => {
+    hideInstallBanner();
+  });
+
+  window.showInstallPrompt = async () => {
+    if (!deferredPrompt) {
+      alert('Install is not available yet. Please open this site in Chrome on Android and try again.');
+      return;
+    }
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    hideInstallBanner();
+  };
+}
+
+function showInstallBanner(promptEvent) {
+  if (document.getElementById('pwa-install-banner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'pwa-install-banner';
+  banner.style.cssText = 'position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:1600;background:#0f172a;color:white;padding:0.95rem 1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;';
+  banner.innerHTML = `
+    <div>
+      <strong style="display:block; margin-bottom:0.2rem;">Install EasyMarket</strong>
+      <span style="font-size:0.9rem; color:#cbd5e1;">Add it to your home screen for a faster Android experience.</span>
+    </div>
+    <button onclick="showInstallPrompt()" style="border:none;border-radius:999px;padding:0.6rem 0.9rem;background:#febd69;color:#0f172a;font-weight:700;cursor:pointer;">Install</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+function hideInstallBanner() {
+  const banner = document.getElementById('pwa-install-banner');
+  if (banner) banner.remove();
 }
 
 function ensureBackToHomeLink() {
