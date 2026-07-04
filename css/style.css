@@ -942,6 +942,96 @@ body.menu-open .menu-active-overlay {
   line-height: 1;
 }
 
+.install-guide-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 3000;
+}
+
+.install-guide-card {
+  position: relative;
+  width: min(92vw, 440px);
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  color: var(--text-dark);
+  border-radius: 20px;
+  padding: 1.2rem 1.1rem 1rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+}
+
+.install-guide-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #0f172a;
+  color: #febd69;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.7rem;
+  font-size: 1.2rem;
+}
+
+.install-guide-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.install-guide-card p {
+  margin: 0 0 0.6rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.install-guide-card ol {
+  margin: 0 0 0.9rem 1rem;
+  padding: 0;
+  color: #334155;
+}
+
+.install-guide-card li + li {
+  margin-top: 0.35rem;
+}
+
+.install-guide-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}
+
+.install-guide-secondary,
+.install-guide-primary {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.install-guide-secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.install-guide-primary {
+  background: #0f172a;
+  color: #fff;
+}
+
+.install-guide-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.75rem;
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #64748b;
+}
+
 .app-loader-overlay {
   position: fixed;
   inset: 0;

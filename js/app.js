@@ -76,23 +76,70 @@ function getInstallGuide() {
     return {
       title: 'Install on iPhone',
       message: 'Tap Share and choose Add to Home Screen to keep EasyMarket like a real app.',
-      actionLabel: 'Open guide'
+      actionLabel: 'Open guide',
+      steps: [
+        'Open EasyMarket in Safari',
+        'Tap the Share button',
+        'Choose Add to Home Screen'
+      ]
     };
   }
 
   if (isAndroidDevice()) {
     return {
       title: 'Install on Android',
-      message: 'Open the Chrome menu and tap Install app or Add to Home screen.',
-      actionLabel: 'Install now'
+      message: 'Open the browser menu and tap Install app or Add to Home screen.',
+      actionLabel: 'Install now',
+      steps: [
+        'Open EasyMarket in Chrome or Edge',
+        'Tap the menu button',
+        'Choose Install app or Add to Home screen'
+      ]
     };
   }
 
   return {
     title: 'Install on desktop',
     message: 'Use your browser menu to install EasyMarket and launch it like an app.',
-    actionLabel: 'Install now'
+    actionLabel: 'Install now',
+    steps: [
+      'Open EasyMarket in Chrome, Edge or Firefox',
+      'Open the browser menu',
+      'Choose Install EasyMarket'
+    ]
   };
+}
+
+function closeInstallGuideModal() {
+  const modal = document.getElementById('install-guide-modal');
+  if (modal) modal.remove();
+}
+
+function showInstallGuideModal() {
+  if (document.getElementById('install-guide-modal')) return;
+
+  const guide = getInstallGuide();
+  const modal = document.createElement('div');
+  modal.id = 'install-guide-modal';
+  modal.className = 'install-guide-modal';
+  modal.innerHTML = `
+    <div class="install-guide-card">
+      <button class="install-guide-close" onclick="closeInstallGuideModal()" aria-label="Close install guide">×</button>
+      <div class="install-guide-icon">
+        <i class="fa-solid fa-download"></i>
+      </div>
+      <h3>${guide.title}</h3>
+      <p>${guide.message}</p>
+      <ol>
+        ${guide.steps.map((step) => `<li>${step}</li>`).join('')}
+      </ol>
+      <div class="install-guide-actions">
+        <button class="install-guide-secondary" onclick="closeInstallGuideModal()">Maybe later</button>
+        <button class="install-guide-primary" onclick="showInstallPrompt()">${guide.actionLabel}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 function setupInstallPrompt() {
@@ -116,18 +163,24 @@ function setupInstallPrompt() {
   }
 
   window.showInstallPrompt = async () => {
+    closeInstallGuideModal();
+
     if (pwaDeferredPrompt) {
-      pwaDeferredPrompt.prompt();
-      const choice = await pwaDeferredPrompt.userChoice;
-      if (choice.outcome === 'accepted') {
-        hideInstallBanner();
+      try {
+        pwaDeferredPrompt.prompt();
+        const choice = await pwaDeferredPrompt.userChoice;
+        if (choice.outcome === 'accepted') {
+          hideInstallBanner();
+          closeInstallGuideModal();
+        }
+      } catch (error) {
+        console.warn('Install prompt failed:', error);
       }
       pwaDeferredPrompt = null;
       return;
     }
 
-    const guide = getInstallGuide();
-    showInstallBanner(true, guide.message, guide.title, guide.actionLabel);
+    showInstallGuideModal();
   };
 
   window.requestNotificationPermission = async () => {
@@ -154,6 +207,7 @@ function setupInstallPrompt() {
     installPromptDismissed = true;
     localStorage.setItem(INSTALL_PROMPT_DISMISS_KEY, 'true');
     hideInstallBanner();
+    closeInstallGuideModal();
   };
 }
 
