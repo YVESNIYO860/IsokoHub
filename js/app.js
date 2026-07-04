@@ -49,6 +49,7 @@ function ensurePwaMetaTags() {
 
 let pwaDeferredPrompt = null;
 let installPromptDismissed = false;
+const INSTALL_PROMPT_DISMISS_KEY = 'easyMarketInstallPromptDismissed';
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
@@ -95,6 +96,9 @@ function getInstallGuide() {
 }
 
 function setupInstallPrompt() {
+  const isDismissed = localStorage.getItem(INSTALL_PROMPT_DISMISS_KEY) === 'true';
+  installPromptDismissed = isDismissed;
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     pwaDeferredPrompt = event;
@@ -148,18 +152,21 @@ function setupInstallPrompt() {
 
   window.dismissInstallPrompt = () => {
     installPromptDismissed = true;
+    localStorage.setItem(INSTALL_PROMPT_DISMISS_KEY, 'true');
     hideInstallBanner();
   };
 }
 
 function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your phone for a faster app-like experience.', title = 'Install EasyMarket', actionLabel = 'Install') {
-  if (document.getElementById('pwa-install-banner') || isInStandaloneMode()) return;
+  if (document.getElementById('pwa-install-banner') || isInStandaloneMode() || installPromptDismissed) return;
 
   const guide = getInstallGuide();
   const banner = document.createElement('div');
   banner.id = 'pwa-install-banner';
   banner.innerHTML = `
-    <div class="install-app-badge">EM</div>
+    <div class="install-app-badge">
+      <img src="assets/logo.png" alt="EasyMarket logo">
+    </div>
     <div class="install-app-content">
       <div class="install-app-title">${title}</div>
       <div class="install-app-copy">${message || guide.message}</div>
@@ -249,19 +256,14 @@ function addDependencies() {
 function renderStartupLoader() {
   const loaderHTML = `
     <div id="app-startup-loader" class="app-loader-overlay">
-      <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
-      <div class="loader-icons">
-        <div class="center-icon-wrapper">
-          <i class="fa-solid fa-mobile-screen-button base-icon"></i>
-          <i class="fa-solid fa-users overlay-icon"></i>
+      <div class="loader-card">
+        <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
+        <div class="loader-title">EasyMarket</div>
+        <div class="loader-bar">
+          <span class="loader-bar-fill"></span>
         </div>
-        <i class="fa-solid fa-shopping-cart marketing-icon icon-1"></i>
-        <i class="fa-solid fa-tags marketing-icon icon-2"></i>
-        <i class="fa-solid fa-shopping-bag marketing-icon icon-3"></i>
-        <i class="fa-solid fa-truck-fast marketing-icon icon-4"></i>
-        <i class="fa-solid fa-gift marketing-icon icon-5"></i>
+        <div class="loader-subtext">Preparing your marketplace experience</div>
       </div>
-      <div class="loader-text">EASYMARKET EVERYWHERE YOU ARE</div>
     </div>
   `;
   document.body.insertAdjacentHTML('afterbegin', loaderHTML);
@@ -270,12 +272,13 @@ function renderStartupLoader() {
 function renderDataLoader(message = 'Loading EasyMarket...') {
   const loaderHTML = `
     <div id="app-data-loader" class="app-loader-overlay data-loader">
-      <div class="loader-shell">
+      <div class="loader-card compact-loader">
         <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
+        <div class="loader-title">EasyMarket</div>
         <div class="loader-bar">
           <span class="loader-bar-fill"></span>
         </div>
-        <div class="loader-text">${message}</div>
+        <div class="loader-subtext">${message}</div>
       </div>
     </div>
   `;
