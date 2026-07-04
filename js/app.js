@@ -213,16 +213,19 @@ function setupLoaderLogic() {
   if (!hasSeenLoader || isReload) {
     sessionStorage.setItem('loaderSeen', 'true');
     renderLoader();
-    
-    // Start the 5-second timer immediately to guarantee it disappears
-    const loader = document.getElementById('app-loader');
-    if (loader) {
-      setTimeout(() => {
-        loader.classList.add('hidden');
-        setTimeout(() => loader.remove(), 800);
-      }, 5000); 
-    }
   }
+}
+
+function showAppLoader(message = 'Loading EasyMarket...') {
+  if (document.getElementById('app-loader')) return;
+  renderLoader(message);
+}
+
+function hideAppLoader() {
+  const loader = document.getElementById('app-loader');
+  if (!loader) return;
+  loader.classList.add('hidden');
+  setTimeout(() => loader.remove(), 700);
 }
 
 function addDependencies() {
@@ -235,22 +238,16 @@ function addDependencies() {
   }
 }
 
-function renderLoader() {
+function renderLoader(message = 'Loading EasyMarket...') {
   const loaderHTML = `
     <div id="app-loader">
-      <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
-      <div class="loader-icons">
-        <div class="center-icon-wrapper">
-          <i class="fa-solid fa-mobile-screen-button base-icon"></i>
-          <i class="fa-solid fa-users overlay-icon"></i>
+      <div class="loader-shell">
+        <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
+        <div class="loader-bar">
+          <span class="loader-bar-fill"></span>
         </div>
-        <i class="fa-solid fa-shopping-cart marketing-icon icon-1"></i>
-        <i class="fa-solid fa-tags marketing-icon icon-2"></i>
-        <i class="fa-solid fa-shopping-bag marketing-icon icon-3"></i>
-        <i class="fa-solid fa-truck-fast marketing-icon icon-4"></i>
-        <i class="fa-solid fa-gift marketing-icon icon-5"></i>
+        <div class="loader-text">${message}</div>
       </div>
-      <div class="loader-text">EASYMARKET EVERYWHERE YOU ARE</div>
     </div>
   `;
   document.body.insertAdjacentHTML('afterbegin', loaderHTML);

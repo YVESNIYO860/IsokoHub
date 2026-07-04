@@ -17,6 +17,7 @@ const getProductCol = () => db ? db.collection('products') : null;
  */
 async function fetchProducts(approvedOnly = true, sellerId = null) {
   if (!db) return [];
+  showAppLoader('Loading marketplace items...');
   try {
     let query = getProductCol();
     if (approvedOnly) {
@@ -27,8 +28,10 @@ async function fetchProducts(approvedOnly = true, sellerId = null) {
     }
     
     const snapshot = await query.orderBy('createdAt', 'desc').get();
+    hideAppLoader();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
+    hideAppLoader();
     console.error("Error fetching products:", err);
     return [];
   }
@@ -39,13 +42,16 @@ async function fetchProducts(approvedOnly = true, sellerId = null) {
  */
 async function fetchPendingProducts() {
   if (!db) return [];
+  showAppLoader('Loading pending listings...');
   try {
     const snapshot = await getProductCol()
       .where('status', '==', 'pending')
       .orderBy('createdAt', 'desc')
       .get();
+    hideAppLoader();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
+    hideAppLoader();
     console.error("Error fetching pending products:", err);
     return [];
   }
@@ -148,14 +154,17 @@ async function rejectAdPlacement(productId) {
 
 async function fetchPromotedProducts() {
   if (!db) return [];
+  showAppLoader('Loading featured deals...');
   try {
     const snapshot = await getProductCol()
       .where('status', '==', 'approved')
       .where('isAd', '==', true)
       .limit(6)
       .get();
+    hideAppLoader();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
+    hideAppLoader();
     console.error("Error fetching promoted products:", err);
     return [];
   }
@@ -163,12 +172,15 @@ async function fetchPromotedProducts() {
 
 async function fetchAdRequests() {
   if (!db) return [];
+  showAppLoader('Loading ad requests...');
   try {
     const snapshot = await getProductCol()
       .where('adRequested', '==', true)
       .get();
+    hideAppLoader();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (err) {
+    hideAppLoader();
     console.error("Error fetching ad requests:", err);
     return [];
   }
