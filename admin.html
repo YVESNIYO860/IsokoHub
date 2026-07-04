@@ -77,6 +77,16 @@
       <button class="btn btn-secondary" id="tab-ads" style="border-radius:50px;">Ad Requests</button>
     </div>
 
+    <div class="dashboard-card" style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+      <h3 style="margin-bottom: 1rem;">Import Users from JSON</h3>
+      <p class="text-muted" style="margin-bottom: 1rem;">Paste a JSON array of users with email, name, role, phone, and uid or id fields to create Firestore profiles.</p>
+      <textarea id="user-json-input" class="form-control" rows="8" placeholder='[{"email":"seller@example.com","name":"Seller One","role":"seller","phone":"+250788000000","uid":"seller-1"}]'></textarea>
+      <div style="display:flex; gap: 1rem; align-items:center; margin-top: 1rem; flex-wrap: wrap;">
+        <button id="import-users-btn" class="btn btn-primary">Import Users</button>
+        <span id="import-status" class="text-muted"></span>
+      </div>
+    </div>
+
     <div class="dashboard-card" style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color);">
       <div id="admin-content">
         <div style="text-align:center; padding: 3rem;">

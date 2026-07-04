@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const adCountSpan = document.getElementById('ad-request-count');
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
+  const importBtn = document.getElementById('import-users-btn');
+  const importInput = document.getElementById('user-json-input');
+  const importStatus = document.getElementById('import-status');
 
   let activeTab = 'pending';
 
@@ -69,6 +72,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (confirm('Reject this Ad request?')) {
       await rejectAdPlacement(id);
       renderAdmin();
+    }
+  };
+
+  importBtn.onclick = async () => {
+    const raw = importInput.value.trim();
+    if (!raw) {
+      importStatus.textContent = 'Paste a JSON array first.';
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      importStatus.textContent = 'Importing users...';
+      const result = await importUsersFromJson(parsed);
+      importStatus.textContent = `${result.imported} users imported successfully.`;
+      importInput.value = '';
+    } catch (err) {
+      importStatus.textContent = err.message || 'Invalid JSON.';
     }
   };
 
