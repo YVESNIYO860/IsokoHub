@@ -87,6 +87,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     selectedImages = mergedFiles.slice(0, 6);
     renderImagePreviews();
+
+    const dataTransfer = new DataTransfer();
+    selectedImages.forEach((file) => dataTransfer.items.add(file));
+    imageInput.files = dataTransfer.files;
     event.target.value = '';
   });
 
@@ -102,7 +106,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     try {
       const fileInput = document.getElementById('prod-images');
-      const files = Array.from(fileInput.files || []).filter(file => file && file.type.startsWith('image/'));
+      const files = selectedImages.length > 0
+        ? selectedImages
+        : Array.from(fileInput.files || []).filter(file => file && file.type.startsWith('image/'));
 
       if (!isEditing && files.length < 3) {
         throw new Error('Please upload at least 3 product photos.');
