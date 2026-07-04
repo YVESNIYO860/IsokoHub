@@ -51,6 +51,23 @@ let pwaDeferredPrompt = null;
 let installPromptDismissed = false;
 const INSTALL_PROMPT_DISMISS_KEY = 'easyMarketInstallPromptDismissed';
 
+function setInstallUiState(isInstalling = false) {
+  const installButtons = document.querySelectorAll('.install-nav-btn, .install-app-primary');
+  installButtons.forEach((button) => {
+    button.disabled = isInstalling;
+
+    if (button.classList.contains('install-nav-btn')) {
+      button.innerHTML = isInstalling
+        ? '<i class="fa-solid fa-spinner fa-spin"></i><strong>Installing...</strong>'
+        : '<i class="fa-solid fa-download"></i><strong>Install</strong>';
+    }
+
+    if (button.classList.contains('install-app-primary')) {
+      button.textContent = isInstalling ? 'Installing...' : (button.dataset.defaultLabel || 'Install');
+    }
+  });
+}
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -164,10 +181,16 @@ function setupInstallPrompt() {
 
   window.showInstallPrompt = async () => {
     closeInstallGuideModal();
+    setInstallUiState(true);
 
     if (pwaDeferredPrompt) {
       try {
-        pwaDeferredPrompt.prompt();
+        setTimeout(() => {
+          if (pwaDeferredPrompt) {
+            pwaDeferredPrompt.prompt();
+          }
+        }, 250);
+
         const choice = await pwaDeferredPrompt.userChoice;
         if (choice.outcome === 'accepted') {
           hideInstallBanner();
@@ -177,10 +200,11 @@ function setupInstallPrompt() {
         console.warn('Install prompt failed:', error);
       }
       pwaDeferredPrompt = null;
-      return;
+    } else {
+      showInstallGuideModal();
     }
 
-    showInstallGuideModal();
+    setTimeout(() => setInstallUiState(false), 1400);
   };
 
   window.requestNotificationPermission = async () => {
