@@ -877,10 +877,10 @@ body.menu-open .menu-active-overlay {
   line-height: 1;
 }
 
-#app-loader {
+#app-startup-loader,
+#app-data-loader {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -888,7 +888,17 @@ body.menu-open .menu-active-overlay {
   transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
-#app-loader.hidden {
+#app-startup-loader {
+  background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+}
+
+#app-data-loader {
+  background: rgba(2, 6, 23, 0.84);
+  backdrop-filter: blur(6px);
+}
+
+#app-startup-loader.hidden,
+#app-data-loader.hidden {
   opacity: 0;
   transform: translateY(-8px);
   pointer-events: none;
@@ -939,6 +949,50 @@ body.menu-open .menu-active-overlay {
   letter-spacing: 0.04em;
 }
 
+.loader-icons {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1.6rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.marketing-icon {
+  position: absolute;
+  font-size: 2.2rem;
+  opacity: 0;
+  animation-duration: 2s;
+  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+.center-icon-wrapper {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: pulse 2s infinite;
+}
+
+.base-icon {
+  font-size: 4.8rem;
+  color: #ffffff;
+  filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.8));
+}
+
+.overlay-icon {
+  position: absolute;
+  font-size: 1.6rem;
+  color: #0b1120;
+  background: white;
+  border-radius: 50%;
+  padding: 0.3rem;
+}
+
 @keyframes loaderPulse {
   from { transform: scale(0.97); }
   to { transform: scale(1.03); }
@@ -947,6 +1001,11 @@ body.menu-open .menu-active-overlay {
 @keyframes loaderSlide {
   0% { transform: translateX(-120%); }
   100% { transform: translateX(320%); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(0.95); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
 }
   border-radius: 5px;
   padding: 6px;
