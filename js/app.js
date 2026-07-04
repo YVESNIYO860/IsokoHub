@@ -180,6 +180,16 @@ function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your
   document.body.appendChild(banner);
 }
 
+window.addEventListener('load', () => {
+  const footerInstallLink = document.querySelector('.footer-install-col a[href="#"]');
+  if (footerInstallLink) {
+    footerInstallLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      showInstallPrompt();
+    });
+  }
+});
+
 function hideInstallBanner() {
   const banner = document.getElementById('pwa-install-banner');
   if (banner) banner.remove();
