@@ -423,6 +423,13 @@ function renderFooter() {
   const footerHTML = `
     <footer class="footer">
       <div class="container footer-grid">
+        <div class="footer-col footer-install-col">
+          <h4>Install EasyMarket</h4>
+          <ul>
+            <li><a href="#" onclick="event.preventDefault(); showInstallPrompt();">Install app on this device</a></li>
+            <li><a href="#" onclick="event.preventDefault(); requestNotificationPermission();">Enable alerts</a></li>
+          </ul>
+        </div>
         <div class="footer-col">
           <h4>Get to Know Us</h4>
           <ul>

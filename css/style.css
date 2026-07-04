@@ -616,6 +616,17 @@ body.menu-open .menu-active-overlay {
   color: white;
 }
 
+.footer-install-col {
+  border: 1px solid rgba(254, 189, 105, 0.25);
+  border-radius: 14px;
+  padding: 1rem;
+  background: rgba(254, 189, 105, 0.08);
+}
+
+.footer-install-col h4 {
+  color: #febd69;
+}
+
 .footer-bottom {
   background-color: #131a22;
   padding: 2rem 0;
