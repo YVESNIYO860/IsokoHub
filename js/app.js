@@ -321,11 +321,13 @@ function renderNavbar() {
         <div class="navbar-actions">
           <a href="${user ? 'dashboard.html' : 'login.html'}" class="nav-action-item">
             <span>Hello, ${user ? user.name : 'Sign in'}</span>
-            <strong>Account & Lists</strong>
+            <strong>Account</strong>
           </a>
-          
-          
-          
+
+          <button type="button" class="nav-action-item install-nav-btn" onclick="showInstallPrompt()">
+            <i class="fa-solid fa-download"></i>
+            <strong>Install</strong>
+          </button>
 
           <a href="#" class="nav-action-item cart-icon">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.5rem;"></i>

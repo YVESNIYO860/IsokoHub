@@ -435,7 +435,7 @@ body.menu-open .menu-active-overlay {
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
   flex-shrink: 0;
 }
 
@@ -446,6 +446,27 @@ body.menu-open .menu-active-overlay {
   color: white;
   text-decoration: none;
   line-height: 1.2;
+}
+
+.install-nav-btn {
+  border: 1px solid rgba(254, 189, 105, 0.5);
+  background: rgba(254, 189, 105, 0.14);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #fff;
+  font: inherit;
+}
+
+.install-nav-btn:hover {
+  background: rgba(254, 189, 105, 0.22);
+}
+
+.install-nav-btn i {
+  font-size: 0.9rem;
+  color: #febd69;
 }
 
 .nav-action-item span {
