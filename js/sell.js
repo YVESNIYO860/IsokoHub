@@ -86,11 +86,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (isEditing) {
         await updateProductData(editId, productData);
+        window.location.href = 'dashboard.html?message=Your listing was updated successfully.';
       } else {
         await createProduct(productData);
+        window.location.href = 'dashboard.html?message=Your listing was added and sent to admin for review.';
       }
-
-      window.location.href = 'dashboard.html';
     } catch (err) {
       console.error('Sell page error:', err);
       const message = err.message || 'Error saving product. Please try again.';

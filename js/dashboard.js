@@ -6,6 +6,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('user-greeting').textContent = `Manage your inventory and promotions, ${user.name.split(' ')[0]}`;
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const successMessage = urlParams.get('message');
+  if (successMessage) {
+    const header = document.querySelector('.dashboard-main-card');
+    if (header) {
+      const banner = document.createElement('div');
+      banner.className = 'success-banner';
+      banner.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${successMessage}</span>`;
+      header.insertBefore(banner, header.firstChild);
+    }
+  }
   
   window.deleteItem = async function(id) {
     if(confirm('Are you sure you want to delete this listing? This will remove all associated data.')) {
