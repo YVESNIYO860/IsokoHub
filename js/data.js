@@ -1,6 +1,11 @@
 // Firebase Firestore Data Layer
-const EXCHANGE_RATE_USDT_RWF = 1295; // 1 USDT = 1295 RWF
 const CURRENT_USER_KEY = 'easyMarketCurrentUser';
+const RWANDA_DISTRICTS = [
+  'Bugesera', 'Burera', 'Gakenke', 'Gasabo', 'Gatsibo', 'Gicumbi', 'Gisagara', 'Huye',
+  'Kamonyi', 'Karongi', 'Kayonza', 'Kicukiro', 'Kirehe', 'Muhanga', 'Musanze', 'Ngoma',
+  'Ngororero', 'Nyabihu', 'Nyagatare', 'Nyamagabe', 'Nyamasheke', 'Nyanza', 'Nyarugenge',
+  'Nyaruguru', 'Rubavu', 'Ruhango', 'Rulindo', 'Rusizi', 'Rutsiro', 'Rwamagana'
+];
 
 // Helper: Get Firestore collection
 const getProductCol = () => db ? db.collection('products') : null;
@@ -67,6 +72,7 @@ async function createProduct(productData) {
   const newProduct = {
     ...productData,
     sellerId: auth.currentUser.uid,
+    currency: productData.currency || 'RWF',
     status: 'pending', // Scam-prevention default
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -77,7 +83,10 @@ async function createProduct(productData) {
 
 async function updateProductData(id, updatedData) {
   if (!db) return;
-  await getProductCol().doc(id).update(updatedData);
+  await getProductCol().doc(id).update({
+    ...updatedData,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 }
 
 async function updateProductStatus(id, status) {
@@ -104,14 +113,13 @@ function logoutUser() {
 }
 
 /**
- * Format Currency (Converts USDT to RWF)
+ * Format Currency in Rwandan francs.
  */
-function formatPrice(usdtPrice) {
-  const rwfPrice = usdtPrice * EXCHANGE_RATE_USDT_RWF;
-  return new Intl.NumberFormat('en-RW', { 
-    style: 'currency', 
+function formatPrice(rwfPrice) {
+  return new Intl.NumberFormat('en-RW', {
+    style: 'currency',
     currency: 'RWF',
-    maximumFractionDigits: 0 
+    maximumFractionDigits: 0
   }).format(rwfPrice);
 }
 

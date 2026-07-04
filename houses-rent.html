@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Houses & Rent - EasyMarket</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <style>
+    .houses-hero {
+      background: linear-gradient(135deg, #0f172a, #2563eb);
+      color: white;
+      padding: 2.25rem;
+      border-radius: 1.5rem;
+      margin: 2rem 0 1.5rem;
+      box-shadow: 0 18px 35px rgba(37, 99, 235, 0.2);
+    }
+    .houses-hero h1 {
+      margin-bottom: 0.75rem;
+      font-size: 2rem;
+    }
+    .houses-hero p {
+      max-width: 680px;
+      color: rgba(255,255,255,0.9);
+    }
+    .houses-highlights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0 0;
+    }
+    .houses-highlight-card {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 1rem;
+      padding: 1rem;
+      backdrop-filter: blur(10px);
+    }
+    .houses-highlight-card strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-size: 1rem;
+    }
+    .houses-highlight-card span {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="container">
+      <section class="houses-hero">
+        <h1>Houses & Rent</h1>
+        <p>Explore homes, apartments, and rental listings in Rwanda with clear pricing, trusted sellers, and quick direct contact.</p>
+        <div class="houses-highlights">
+          <div class="houses-highlight-card">
+            <strong>Verified listings</strong>
+            <span>Quality homes and rentals from real sellers</span>
+          </div>
+          <div class="houses-highlight-card">
+            <strong>Flexible search</strong>
+            <span>Filter by home type and property style</span>
+          </div>
+          <div class="houses-highlight-card">
+            <strong>Clear pricing</strong>
+            <span>All prices are displayed in RWF</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="products-layout" style="margin-top: 0;">
+        <aside class="filters-sidebar">
+          <h3>Property Type</h3>
+          <div id="housing-filters">
+            <span class="filter-item active" data-housing="all">All Housing</span>
+            <span class="filter-item" data-housing="House">House</span>
+            <span class="filter-item" data-housing="Apartment">Apartment</span>
+            <span class="filter-item" data-housing="Room">Room</span>
+            <span class="filter-item" data-housing="Land">Land</span>
+          </div>
+
+          <h3 style="margin-top: 1.25rem;">Location</h3>
+          <div id="housing-location-filters">
+            <span class="filter-item active" data-location="all">All Locations</span>
+            <span class="filter-item" data-location="Kigali">Kigali</span>
+            <span class="filter-item" data-location="Rubavu">Rubavu</span>
+            <span class="filter-item" data-location="Muhanga">Muhanga</span>
+            <span class="filter-item" data-location="Huye">Huye</span>
+            <span class="filter-item" data-location="Rwamagana">Rwamagana</span>
+          </div>
+        </aside>
+
+        <div class="products-main">
+          <div class="search-summary" id="housing-summary">
+            <h2>Housing & Rental Listings</h2>
+          </div>
+          <div class="product-grid" id="housing-products"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/houses-rent.js"></script>
+</body>
+</html>

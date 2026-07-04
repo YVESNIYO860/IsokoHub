@@ -1,4 +1,41 @@
 // Handle login and signup logic with Firebase
+function saveUserProfile(userId, userData) {
+  if (typeof db === 'undefined' || !db) return Promise.resolve();
+
+  const profileDoc = {
+    ...userData,
+    uid: userId,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  return Promise.all([
+    db.collection('users').doc(userId).set(profileDoc, { merge: true }),
+    db.collection('userProfiles').doc(userId).set(profileDoc, { merge: true })
+  ]);
+}
+
+async function importUsersFromJson(usersArray) {
+  if (!Array.isArray(usersArray) || typeof db === 'undefined' || !db) {
+    throw new Error('A valid user JSON array is required.');
+  }
+
+  const operations = usersArray.map((userItem) => {
+    const userId = userItem.uid || userItem.id || userItem.email;
+    if (!userId) return Promise.resolve();
+
+    return saveUserProfile(userId, {
+      name: userItem.name || userItem.fullName || userItem.email || 'User',
+      email: userItem.email || '',
+      role: userItem.role || 'seller',
+      phone: userItem.phone || '',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  });
+
+  await Promise.all(operations);
+  return { imported: operations.filter(Boolean).length };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const errorMsg = document.getElementById('error-msg');
   const loginForm = document.getElementById('login-form');
@@ -58,15 +95,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const user = result.user;
         if (typeof db === 'undefined') return;
 
-        const userRef = db.collection('users').doc(user.uid);
         const userRole = user.email === adminEmail ? 'admin' : 'seller';
 
-        return userRef.set({
+        return saveUserProfile(user.uid, {
           name: user.displayName || user.email,
           email: user.email,
           role: userRole,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
+        });
       })
       .catch((error) => {
         console.error('Google sign-in error:', error);
@@ -107,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return user.updateProfile({ displayName: name }).then(() => {
             // Step 2: Create Firestore User Document
             if (typeof db !== 'undefined') {
-              return db.collection('users').doc(user.uid).set({
+              return saveUserProfile(user.uid, {
                 name: name,
                 email: email,
                 role: email === 'yvesniyonkuru2022@gmail.com' ? 'admin' : 'seller', // Auto-set admin for Yves

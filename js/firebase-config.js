@@ -11,11 +11,13 @@ const firebaseConfig = {
 
 let auth = null;
 let db = null;
+let storage = null;
 
 if (typeof firebase !== 'undefined') {
   firebase.initializeApp(firebaseConfig);
 
   auth = firebase.auth();
+  storage = firebase.storage();
   if (typeof firebase.firestore === 'function') {
     db = firebase.firestore();
   } else {

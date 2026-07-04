@@ -1,9 +1,29 @@
 document.addEventListener('DOMContentLoaded', () => {
-  renderSlideshow();
+  renderHeroSection();
   renderPromotedProducts();
   renderCategories();
   renderFeaturedProducts();
+  startSellerShowcase();
 });
+
+function startSellerShowcase() {
+  const slides = document.querySelectorAll('.seller-slide');
+  const indicators = document.querySelectorAll('.seller-indicator');
+  if (!slides.length) return;
+
+  let current = 0;
+  setInterval(() => {
+    slides.forEach((slide, index) => {
+      slide.classList.toggle('active', index === current);
+    });
+
+    indicators.forEach((indicator, index) => {
+      indicator.classList.toggle('active', index === current);
+    });
+
+    current = (current + 1) % slides.length;
+  }, 2600);
+}
 
 const CATEGORIES = [
   { name: 'Electronics', icon: 'fa-solid fa-laptop' },
@@ -17,116 +37,93 @@ const CATEGORIES = [
 
 function renderCategories() {
   const container = document.getElementById('categories-container');
-  container.innerHTML = CATEGORIES.map(cat => `
-    <a href="products.html?category=${encodeURIComponent(cat.name)}" class="category-card">
-      <i class="${cat.icon} category-icon"></i>
-      <span class="category-name">${cat.name}</span>
-    </a>
-  `).join('');
+  container.innerHTML = CATEGORIES.map(cat => {
+    const isHousing = cat.name === 'Houses & Rents';
+    const href = isHousing ? 'houses-rent.html' : `products.html?category=${encodeURIComponent(cat.name)}`;
+    const extraClass = isHousing ? ' category-card-special' : '';
+    const badge = isHousing ? '<span class="category-badge">Special</span>' : '';
+
+    const target = isHousing ? ' target="_blank" rel="noopener"' : '';
+
+    return `
+      <a href="${href}" class="category-card${extraClass}"${target}>
+        <i class="${cat.icon} category-icon"></i>
+        <span class="category-name">${cat.name}</span>
+        ${badge}
+      </a>
+    `;
+  }).join('');
 }
 
-function renderSlideshow() {
+function renderHeroSection() {
   const container = document.getElementById('home-slideshow');
   if (!container) return;
 
-  const slidesData = [
-    {
-      img: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&q=80&w=1600&h=600',
-      title: 'Premium Electronics',
-      desc: 'The place where you find qualitative products directly from sellers without third-party interference.',
-      btnText: 'Shop Electronics',
-      href: 'products.html?category=Electronics'
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&q=80&w=1600&h=600',
-      title: 'Global Fashion Trends',
-      desc: 'Direct access to high-quality apparel. Smart shopping for smart people.',
-      btnText: 'Shop Fashion',
-      href: 'products.html?category=Fashion'
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=1600&h=600',
-      title: 'Step Up Your Style',
-      desc: 'Authentic footwear from verified sellers. Quality you can trust, delivered easy.',
-      btnText: 'Shop Shoes',
-      href: 'products.html?category=Shoes'
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=1600&h=600',
-      title: 'Next-Gen Connectivity',
-      desc: 'Top-tier smartphones at smart prices. Buy easy, sell smart, and stay connected.',
-      btnText: 'Shop Phones',
-      href: 'products.html?category=Phones'
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1600&h=600',
-      title: 'Elite Automotive Deals',
-      desc: 'Qualitative cars and luxury vehicles. Your dream ride is just one click away.',
-      btnText: 'Shop Cars',
-      href: 'products.html?category=Cars'
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&q=80&w=1600&h=600',
-      title: 'Premium Houses & Rentals',
-      desc: 'Find your dream home or the perfect rental property. Verified listings only.',
-      btnText: 'Explore Properties',
-      href: 'products.html?category=Houses%20%26%20Rents'
-    }
-  ];
-
-  let html = '';
-  let navHtml = '<div class="slideshow-nav">';
-  
-  slidesData.forEach((slide, index) => {
-    html += `
-      <div class="slide ${index === 0 ? 'active' : ''}" data-index="${index}">
-        <img src="${slide.img}" class="slide-img" alt="${slide.title}">
-        <div class="slide-content">
-          <h1 class="slide-title">${slide.title}</h1>
-          <p class="slide-desc">${slide.desc}</p>
-          <a href="${slide.href}" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 2px solid white;">${slide.btnText}</a>
+  container.innerHTML = `
+    <section class="hero-shell">
+      <div class="hero-copy">
+        <div class="hero-title-row">
+          <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Rwanda’s trusted marketplace</span>
+          <div class="hero-logo-orb" aria-hidden="true">
+            <img src="assets/logo.png" alt="EasyMarket logo">
+          </div>
+        </div>
+        <h1>Buy smart, sell faster, and grow your business in RWF.</h1>
+        <p>Discover verified products, connect with real sellers, and list your own items in minutes with a smooth, secure experience.</p>
+        <div class="hero-actions">
+          <a href="products.html" class="btn btn-primary hero-btn">Browse Products</a>
+          <a href="sell.html" class="btn btn-secondary hero-btn hero-btn-secondary">Start Selling</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat-card"><strong>500+</strong><span>Verified listings</span></div>
+          <div class="hero-stat-card"><strong>24/7</strong><span>Seller support</span></div>
+          <div class="hero-stat-card"><strong>RWF</strong><span>Prices shown clearly</span></div>
         </div>
       </div>
-    `;
-    navHtml += `<div class="dot ${index === 0 ? 'active' : ''}" data-index="${index}"></div>`;
-  });
-  navHtml += '</div>';
-  
-  container.innerHTML = html + navHtml;
-
-  let currentSlide = 0;
-  const slides = container.querySelectorAll('.slide');
-  const dots = container.querySelectorAll('.dot');
-  let slideInterval;
-
-  function showSlide(index) {
-    slides[currentSlide].classList.remove('active');
-    dots[currentSlide].classList.remove('active');
-    
-    currentSlide = index;
-    
-    slides[currentSlide].classList.add('active');
-    dots[currentSlide].classList.add('active');
-  }
-
-  function nextSlide() {
-    let nextIndex = (currentSlide + 1) % slidesData.length;
-    showSlide(nextIndex);
-  }
-
-  function startSlideshow() {
-    slideInterval = setInterval(nextSlide, 5000); // 5 seconds per slide
-  }
-
-  dots.forEach(dot => {
-    dot.addEventListener('click', (e) => {
-      clearInterval(slideInterval);
-      showSlide(parseInt(e.target.dataset.index));
-      startSlideshow();
-    });
-  });
-
-  startSlideshow();
+      <div class="hero-panel">
+        <div class="hero-panel-card">
+          <p class="hero-panel-title">Why sellers love EasyMarket</p>
+          <div class="seller-showcase" id="seller-showcase">
+            <div class="seller-slide active">
+              <div class="seller-slide-media">
+                <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=400&h=220" alt="Phone sale example">
+              </div>
+              <div class="seller-slide-copy">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+                <strong>Phone sold in 24 hours</strong>
+                <span>A verified seller closed a fast deal with direct buyer contact.</span>
+              </div>
+            </div>
+            <div class="seller-slide">
+              <div class="seller-slide-media">
+                <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&q=80&w=400&h=220" alt="House sale example">
+              </div>
+              <div class="seller-slide-copy">
+                <i class="fa-solid fa-house"></i>
+                <strong>Apartment listing gained attention</strong>
+                <span>Housing posts are getting real inquiries through EasyMarket.</span>
+              </div>
+            </div>
+            <div class="seller-slide">
+              <div class="seller-slide-media">
+                <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400&h=220" alt="Fashion sale example">
+              </div>
+              <div class="seller-slide-copy">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <strong>Fashion bundle sold fast</strong>
+                <span>Shoppers are responding quickly to clear photos and RWF pricing.</span>
+              </div>
+            </div>
+            <div class="seller-showcase-indicators" aria-label="Showcase progress">
+              <span class="seller-indicator active"></span>
+              <span class="seller-indicator"></span>
+              <span class="seller-indicator"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 async function renderFeaturedProducts() {

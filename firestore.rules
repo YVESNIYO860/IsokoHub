@@ -36,5 +36,12 @@ service cloud.firestore {
       // Only the authenticated user can create/update their profile
       allow create, update: if request.auth != null && request.auth.uid == userId;
     }
+
+    match /userProfiles/{userId} {
+      allow read: if request.auth != null &&
+                  (request.auth.uid == userId || isAdmin());
+
+      allow create, update: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

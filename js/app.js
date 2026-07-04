@@ -115,7 +115,7 @@ function renderNavbar() {
         <a href="products.html?category=Electronics">Electronics</a>
         <a href="products.html?category=Fashion">Fashion</a>
         <a href="products.html?category=Cars">Cars</a>
-        <a href="products.html?category=Houses%20%26%20Rents">Houses & Rents</a>
+        <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">Houses & Rent</a>
         <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on EasyMarket</a>
       </div>
     </nav>
