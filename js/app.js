@@ -2,12 +2,50 @@ document.addEventListener('DOMContentLoaded', () => {
   addDependencies();
   setupLoaderLogic();
   ensureBackToHomeLink();
+  ensurePwaMetaTags();
   registerServiceWorker();
   setupInstallPrompt();
   renderNavbar();
   renderFooter();
   setupStickyHeader();
 });
+
+function ensurePwaMetaTags() {
+  if (!document.querySelector('link[rel="manifest"]')) {
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = 'manifest.json';
+    document.head.appendChild(manifestLink);
+  }
+
+  if (!document.querySelector('meta[name="theme-color"]')) {
+    const themeMeta = document.createElement('meta');
+    themeMeta.name = 'theme-color';
+    themeMeta.content = '#0f172a';
+    document.head.appendChild(themeMeta);
+  }
+
+  if (!document.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
+    const appleCapable = document.createElement('meta');
+    appleCapable.name = 'apple-mobile-web-app-capable';
+    appleCapable.content = 'yes';
+    document.head.appendChild(appleCapable);
+  }
+
+  if (!document.querySelector('meta[name="mobile-web-app-capable"]')) {
+    const mobileCapable = document.createElement('meta');
+    mobileCapable.name = 'mobile-web-app-capable';
+    mobileCapable.content = 'yes';
+    document.head.appendChild(mobileCapable);
+  }
+
+  if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+    const appleIcon = document.createElement('link');
+    appleIcon.rel = 'apple-touch-icon';
+    appleIcon.href = 'assets/icon-192.png';
+    document.head.appendChild(appleIcon);
+  }
+}
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
