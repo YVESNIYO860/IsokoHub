@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const housingFields = document.getElementById('housing-fields');
   const categorySelect = document.getElementById('prod-category');
   const conditionSelect = document.getElementById('prod-condition');
+  const imageInput = document.getElementById('prod-images');
+  const imagePreviewGrid = document.getElementById('image-preview-grid');
 
   const urlParams = new URLSearchParams(window.location.search);
   const editId = urlParams.get('editId');
@@ -44,6 +46,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   const districtSelect = document.getElementById('prod-district');
   districtSelect.innerHTML = '<option value="">Select your district</option>' + RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
 
+  let selectedImages = [];
+
+  const renderImagePreviews = () => {
+    if (!imagePreviewGrid) return;
+    imagePreviewGrid.innerHTML = selectedImages.map((file, index) => `
+      <div class="image-preview-item" data-index="${index}" title="${file.name}">
+        <img src="${URL.createObjectURL(file)}" alt="Preview ${index + 1}">
+        <div class="preview-label">${index + 1}</div>
+      </div>
+    `).join('');
+
+    imagePreviewGrid.querySelectorAll('.image-preview-item').forEach((item) => {
+      item.addEventListener('click', () => {
+        const index = Number(item.dataset.index);
+        const file = selectedImages[index];
+        if (!file) return;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        const previewWindow = window.open('', '_blank', 'width=600,height=600');
+        if (previewWindow) {
+          previewWindow.document.write(`<title>${file.name}</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;"><img src="${img.src}" style="max-width:100%;max-height:100%;object-fit:contain;" /></body>`);
+        }
+      });
+    });
+  };
+
+  imageInput.addEventListener('change', (event) => {
+    const files = Array.from(event.target.files || []).filter(file => file && file.type.startsWith('image/'));
+    selectedImages = files.slice(0, 6);
+    renderImagePreviews();
+  });
+
   const toggleHousingFields = () => {
     const showHousing = categorySelect.value === 'Houses & Rents';
     housingFields.style.display = showHousing ? 'block' : 'none';
@@ -56,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     try {
       const fileInput = document.getElementById('prod-images');
-      const files = Array.from(fileInput.files).filter(file => file && file.type.startsWith('image/'));
+      const files = Array.from(fileInput.files || []).filter(file => file && file.type.startsWith('image/'));
 
       if (!isEditing && files.length < 3) {
         throw new Error('Please upload at least 3 product photos.');
