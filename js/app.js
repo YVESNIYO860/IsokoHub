@@ -2,10 +2,19 @@ document.addEventListener('DOMContentLoaded', () => {
   addDependencies();
   setupLoaderLogic();
   ensureBackToHomeLink();
+  registerServiceWorker();
   renderNavbar();
   renderFooter();
   setupStickyHeader();
 });
+
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+}
 
 function ensureBackToHomeLink() {
   if (document.querySelector('.back-to-home-link')) return;
