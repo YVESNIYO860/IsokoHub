@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const CATEGORIES = ['Electronics', 'Fashion', 'Shoes', 'Phones', 'Cars', 'Houses & Rents', 'Others'];
-  const filtersContainer = document.getElementById('category-filters');
-  const districtFiltersContainer = document.getElementById('district-filters');
+  const categorySelect = document.getElementById('category-filter-select');
+  const conditionSelect = document.getElementById('condition-filter-select');
+  const districtSelect = document.getElementById('district-filter-select');
   const productsContainer = document.getElementById('products-container');
   const summaryEl = document.getElementById('search-summary');
   
@@ -20,68 +21,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentDistrict = queryDistrict;
   }
 
-  // Render categories in sidebar
   CATEGORIES.forEach(cat => {
-    const el = document.createElement('span');
-    el.className = `filter-item ${currentCategory === cat ? 'active' : ''}`;
-    el.textContent = cat;
-    el.onclick = () => {
-      document.querySelectorAll('.filter-item').forEach(i => i.classList.remove('active'));
-      el.classList.add('active');
-      currentCategory = cat;
-      const newUrl = `products.html?category=${encodeURIComponent(cat)}${searchQuery ? '&q=' + encodeURIComponent(searchQuery) : ''}`;
-      window.history.pushState({}, '', newUrl);
-      renderProducts();
-    };
-    filtersContainer.appendChild(el);
+    const option = document.createElement('option');
+    option.value = cat;
+    option.textContent = cat;
+    categorySelect.appendChild(option);
   });
-  
-  // Also hook 'All Categories'
-    filtersContainer.children[0].onclick = (e) => {
-      document.querySelectorAll('.filter-item').forEach(i => i.classList.remove('active'));
-      e.target.classList.add('active');
-      currentCategory = 'all';
-      const newUrl = `products.html${searchQuery ? '?q=' + encodeURIComponent(searchQuery) : ''}`;
-      window.history.pushState({}, '', newUrl);
-      renderProducts();
-    };
-
-  const conditionFilters = document.querySelectorAll('#condition-filters .filter-item');
-  conditionFilters.forEach(el => {
-    el.onclick = () => {
-      conditionFilters.forEach(i => i.classList.remove('active'));
-      el.classList.add('active');
-      currentCondition = el.dataset.cond;
-      renderProducts();
-    };
-  });
-
-  const districtFilters = document.createElement('div');
-  districtFiltersContainer.innerHTML = '';
-  const allDistrictFilter = document.createElement('span');
-  allDistrictFilter.className = `filter-item ${currentDistrict === 'all' ? 'active' : ''}`;
-  allDistrictFilter.textContent = 'All Districts';
-  allDistrictFilter.dataset.dist = 'all';
-  allDistrictFilter.onclick = () => {
-    document.querySelectorAll('#district-filters .filter-item').forEach(i => i.classList.remove('active'));
-    allDistrictFilter.classList.add('active');
-    currentDistrict = 'all';
-    updateUrlAndRender();
-  };
-  districtFiltersContainer.appendChild(allDistrictFilter);
 
   RWANDA_DISTRICTS.forEach(dist => {
-    const el = document.createElement('span');
-    el.className = `filter-item ${currentDistrict === dist ? 'active' : ''}`;
-    el.textContent = dist;
-    el.dataset.dist = dist;
-    el.onclick = () => {
-      document.querySelectorAll('#district-filters .filter-item').forEach(i => i.classList.remove('active'));
-      el.classList.add('active');
-      currentDistrict = dist;
-      updateUrlAndRender();
-    };
-    districtFiltersContainer.appendChild(el);
+    const option = document.createElement('option');
+    option.value = dist;
+    option.textContent = dist;
+    districtSelect.appendChild(option);
+  });
+
+  categorySelect.value = currentCategory;
+  conditionSelect.value = currentCondition;
+  districtSelect.value = currentDistrict;
+
+  categorySelect.addEventListener('change', () => {
+    currentCategory = categorySelect.value;
+    updateUrlAndRender();
+  });
+
+  conditionSelect.addEventListener('change', () => {
+    currentCondition = conditionSelect.value;
+    updateUrlAndRender();
+  });
+
+  districtSelect.addEventListener('change', () => {
+    currentDistrict = districtSelect.value;
+    updateUrlAndRender();
   });
 
   function updateUrlAndRender() {
