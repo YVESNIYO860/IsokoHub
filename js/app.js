@@ -216,6 +216,9 @@ function renderFooter() {
             <li><a href="about.html#about">About EasyMarket</a></li>
             <li><a href="admin-profile.html">About Admin</a></li>
             <li><a href="about.html#investor">Investor Relations</a></li>
+            <li><a href="about.html#help">Help Center</a></li>
+            <li><a href="terms.html">Terms &amp; Conditions</a></li>
+            <li><a href="about.html#contact">Contact Us</a></li>
           </ul>
         </div>
         <div class="footer-col">

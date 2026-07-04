@@ -6,24 +6,119 @@
   <title>Terms and Conditions - EasyMarket</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+    }
+
+    .terms-page {
+      padding: 2.5rem 0 4rem;
+    }
+
+    .terms-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .terms-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #14213d 100%);
+      color: white;
+      padding: 2rem;
+    }
+
+    .terms-hero h1 {
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      margin-bottom: 0.6rem;
+    }
+
+    .terms-hero p {
+      color: #cbd5e1;
+      max-width: 760px;
+      line-height: 1.7;
+    }
+
+    .terms-body {
+      padding: 2rem;
+    }
+
+    .terms-section {
+      border-left: 3px solid #febd69;
+      padding-left: 1rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .terms-section h2 {
+      color: #0f172a;
+      font-size: 1.05rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .terms-section p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    .terms-pill {
+      display: inline-block;
+      margin-top: 0.8rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(254, 189, 105, 0.15);
+      color: #b7791f;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 768px) {
+      .terms-body {
+        padding: 1.25rem;
+      }
+
+      .terms-hero {
+        padding: 1.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
-  <main>
-    <div class="container" style="max-width: 900px; padding: 2rem;">
-      <h1>Terms and Conditions</h1>
-      <p>By using EasyMarket, you agree to the following terms and conditions.</p>
-      <h2>1. Acceptance</h2>
-      <p>By creating an account or signing in you accept these terms.</p>
-      <h2>2. User accounts</h2>
-      <p>You must provide accurate information and keep your account secure.</p>
-      <h2>3. Product listings</h2>
-      <p>All product listings must be truthful and compliant with local law. Admin approval is required before public posting.</p>
-      <h2>4. Google Sign-In</h2>
-      <p>Signing in with Google indicates your consent to these Terms and Conditions.</p>
-      <h2>5. Privacy</h2>
-      <p>Your personal data is stored in Firebase and used to provide the marketplace services.</p>
-      <p>If you need to review or remove your information, contact the site administrator.</p>
+  <main class="terms-page">
+    <div class="container">
+      <div class="terms-card">
+        <div class="terms-hero">
+          <h1>Terms &amp; Conditions</h1>
+          <p>By using EasyMarket, you agree to the rules below that help keep the marketplace trusted, safe, and easy to use for everyone.</p>
+          <span class="terms-pill">Secure • Transparent • Community-friendly</span>
+        </div>
+        <div class="terms-body">
+          <div class="terms-section">
+            <h2>1. Acceptance of terms</h2>
+            <p>By creating an account, signing in, or listing an item, you accept these Terms and Conditions and agree to follow them while using EasyMarket.</p>
+          </div>
+          <div class="terms-section">
+            <h2>2. Account responsibility</h2>
+            <p>You must provide accurate information, protect your login details, and keep your account secure at all times.</p>
+          </div>
+          <div class="terms-section">
+            <h2>3. Product and rental listings</h2>
+            <p>All listings must be truthful, lawful, and respectful of local regulations. Admin approval is required before public posting.</p>
+          </div>
+          <div class="terms-section">
+            <h2>4. Google sign-in and privacy</h2>
+            <p>Signing in with Google confirms your consent to these Terms and Conditions. Your data is stored securely and used to provide marketplace services.</p>
+          </div>
+          <div class="terms-section">
+            <h2>5. Contact and support</h2>
+            <p>If you need help, want to review your data, or have questions about these rules, please contact the site administrator or visit the Help Center.</p>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
+
+  <script src="js/app.js"></script>
 </body>
 </html>

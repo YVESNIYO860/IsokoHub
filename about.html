@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About EasyMarket</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .about-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #14213d 100%);
+      color: white;
+      padding: 4rem 0 3rem;
+    }
+
+    .about-hero .eyebrow {
+      color: #febd69;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .about-hero h1 {
+      font-size: clamp(2rem, 3.8vw, 2.8rem);
+      margin-bottom: 0.9rem;
+    }
+
+    .about-hero p {
+      max-width: 720px;
+      color: #cbd5e1;
+      font-size: 1.02rem;
+      line-height: 1.7;
+    }
+
+    .about-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem;
+      padding: 2rem 0 3rem;
+    }
+
+    .about-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.3rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .about-card h3 {
+      color: #0f172a;
+      margin-bottom: 0.6rem;
+      font-size: 1.05rem;
+    }
+
+    .about-card p {
+      color: var(--text-muted);
+      margin-bottom: 0.7rem;
+      line-height: 1.65;
+    }
+
+    .about-card a {
+      color: var(--primary-blue);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .about-card a:hover {
+      color: #febd69;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .about-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="about-hero">
+      <div class="container">
+        <p class="eyebrow">About EasyMarket</p>
+        <h1>Buy, sell, rent, and grow with confidence.</h1>
+        <p>EasyMarket is a modern Rwandan marketplace built to help local buyers and sellers connect faster with trusted listings, simple discovery, and a smooth experience on any device.</p>
+      </div>
+    </section>
+
+    <div class="container about-grid">
+      <article class="about-card" id="about">
+        <h3>Who we are</h3>
+        <p>EasyMarket brings products, homes, and services into one welcoming platform so people can discover what they need without friction.</p>
+        <a href="products.html">Explore marketplace</a>
+      </article>
+
+      <article class="about-card" id="careers">
+        <h3>Careers</h3>
+        <p>We are growing our team and looking for creative people who can help improve the marketplace experience for buyers and sellers.</p>
+        <a href="mailto:hello@easymarketplace.rw">Join our team</a>
+      </article>
+
+      <article class="about-card" id="blog">
+        <h3>Blog</h3>
+        <p>Stay updated with tips, product highlights, and stories that help sellers and buyers make better decisions.</p>
+        <a href="blog-post.html">Read latest stories</a>
+      </article>
+
+      <article class="about-card" id="investor">
+        <h3>Investor Relations</h3>
+        <p>We are building a reliable digital marketplace with strong community focus, local relevance, and long-term growth goals.</p>
+        <a href="mailto:investors@easymarketplace.rw">Contact investors</a>
+      </article>
+
+      <article class="about-card" id="help">
+        <h3>Help Center</h3>
+        <p>Need help with signing in, posting a listing, or managing your account? Our support team is ready to help.</p>
+        <a href="https://wa.me/250798269987" target="_blank">Get support</a>
+      </article>
+
+      <article class="about-card" id="contact">
+        <h3>Contact Us</h3>
+        <p>Reach us for sales, partnerships, support, or feedback. We are happy to hear from the EasyMarket community.</p>
+        <a href="mailto:hello@easymarketplace.rw">hello@easymarketplace.rw</a>
+      </article>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
