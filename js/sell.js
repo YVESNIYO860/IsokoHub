@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const form = document.getElementById('sell-form');
   const errorEl = document.getElementById('sell-error');
+  const housingFields = document.getElementById('housing-fields');
+  const categorySelect = document.getElementById('prod-category');
 
   const urlParams = new URLSearchParams(window.location.search);
   const editId = urlParams.get('editId');
@@ -41,6 +43,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const districtSelect = document.getElementById('prod-district');
   districtSelect.innerHTML = '<option value="">Select your district</option>' + RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
 
+  const toggleHousingFields = () => {
+    const showHousing = categorySelect.value === 'Houses & Rents';
+    housingFields.style.display = showHousing ? 'block' : 'none';
+  };
+
+  categorySelect.addEventListener('change', toggleHousingFields);
+  toggleHousingFields();
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -72,16 +82,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         throw new Error('Please select your district.');
       }
 
+      const category = categorySelect.value;
+      const isHousing = category === 'Houses & Rents';
+      const propertyType = document.getElementById('prod-property-type').value.trim();
+      const listingType = document.getElementById('prod-listing-type').value.trim();
+      const videoUrl = document.getElementById('prod-video-url').value.trim();
+
+      if (isHousing) {
+        if (!propertyType) throw new Error('Please select a property type for the house listing.');
+        if (!listingType) throw new Error('Please choose monthly, yearly, or one day for the listing.');
+        if (!videoUrl) throw new Error('Please add a video link for this house listing.');
+      }
+
       const productData = {
         name: document.getElementById('prod-name').value,
-        category: document.getElementById('prod-category').value,
+        category,
         price: Math.round(priceValue),
         currency: 'RWF',
         image: imageUrls,
         description: document.getElementById('prod-description').value,
         condition: document.getElementById('prod-condition').value,
         sellerPhone: document.getElementById('prod-phone').value,
-        district
+        district,
+        ...(isHousing ? {
+          propertyType,
+          listingType,
+          videoUrl
+        } : {})
       };
 
       if (isEditing) {
