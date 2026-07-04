@@ -73,9 +73,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   imageInput.addEventListener('change', (event) => {
-    const files = Array.from(event.target.files || []).filter(file => file && file.type.startsWith('image/'));
-    selectedImages = files.slice(0, 6);
+    const newFiles = Array.from(event.target.files || []).filter(file => file && file.type.startsWith('image/'));
+    const seen = new Set(selectedImages.map(file => `${file.name}-${file.size}-${file.lastModified}`));
+    const mergedFiles = [...selectedImages];
+
+    newFiles.forEach((file) => {
+      const key = `${file.name}-${file.size}-${file.lastModified}`;
+      if (!seen.has(key)) {
+        mergedFiles.push(file);
+        seen.add(key);
+      }
+    });
+
+    selectedImages = mergedFiles.slice(0, 6);
     renderImagePreviews();
+    event.target.value = '';
   });
 
   const toggleHousingFields = () => {
