@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const errorEl = document.getElementById('sell-error');
   const housingFields = document.getElementById('housing-fields');
   const categorySelect = document.getElementById('prod-category');
+  const conditionSelect = document.getElementById('prod-condition');
 
   const urlParams = new URLSearchParams(window.location.search);
   const editId = urlParams.get('editId');
@@ -86,13 +87,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       const isHousing = category === 'Houses & Rents';
       const propertyType = document.getElementById('prod-property-type').value.trim();
       const listingType = document.getElementById('prod-listing-type').value.trim();
-      const videoUrl = document.getElementById('prod-video-url').value.trim();
+      const videoFile = document.getElementById('prod-video').files[0];
 
       if (isHousing) {
         if (!propertyType) throw new Error('Please select a property type for the house listing.');
-        if (!listingType) throw new Error('Please choose monthly, yearly, or one day for the listing.');
-        if (!videoUrl) throw new Error('Please add a video link for this house listing.');
+        if (!listingType) throw new Error('Please choose a rental period for the listing.');
+        if (!videoFile) throw new Error('Please upload a house video.');
+        if (videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20MB or smaller.');
       }
+
+      const condition = isHousing ? 'New' : conditionSelect.value;
 
       const productData = {
         name: document.getElementById('prod-name').value,
@@ -101,21 +105,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         currency: 'RWF',
         image: imageUrls,
         description: document.getElementById('prod-description').value,
-        condition: document.getElementById('prod-condition').value,
+        condition,
         sellerPhone: document.getElementById('prod-phone').value,
         district,
         ...(isHousing ? {
           propertyType,
           listingType,
-          videoUrl
+          videoUrl: ''
         } : {})
       };
 
+      let uploadedVideoUrl = '';
+      if (isHousing && videoFile) {
+        uploadedVideoUrl = await uploadHousingVideo(videoFile, user.id);
+      }
+
       if (isEditing) {
-        await updateProductData(editId, productData);
+        await updateProductData(editId, { ...productData, ...(isHousing ? { videoUrl: uploadedVideoUrl || productData.videoUrl } : {}) });
         window.location.href = 'dashboard.html?message=Your listing was updated successfully.';
       } else {
-        await createProduct(productData);
+        await createProduct({ ...productData, ...(isHousing ? { videoUrl: uploadedVideoUrl } : {}) });
         window.location.href = 'dashboard.html?message=Your listing was added and sent to admin for review.';
       }
     } catch (err) {
@@ -139,5 +148,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     return Promise.all(uploadPromises);
+  }
+
+  async function uploadHousingVideo(file, sellerId) {
+    if (!storage) {
+      throw new Error('Video upload is not available at this time.');
+    }
+
+    const fileName = `${sellerId}_${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+    const storageRef = storage.ref().child(`house-videos/${sellerId}/${fileName}`);
+    const snapshot = await storageRef.put(file);
+    return snapshot.ref.getDownloadURL();
   }
 });

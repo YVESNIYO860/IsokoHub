@@ -74,16 +74,17 @@
               <label class="form-label">Listing Type</label>
               <select id="prod-listing-type" class="form-control">
                 <option value="">Select listing type</option>
+                <option value="Daily">Daily</option>
+                <option value="Weekly">Weekly</option>
                 <option value="Monthly">Monthly</option>
                 <option value="Yearly">Yearly</option>
-                <option value="One Day">One Day</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label class="form-label">House Video Link</label>
-              <input type="url" id="prod-video-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
-              <small class="text-muted d-block mt-1">Add a video link for the house or rental listing.</small>
+              <label class="form-label">House Video (Max 20MB)</label>
+              <input type="file" id="prod-video" class="form-control" accept="video/*">
+              <small class="text-muted d-block mt-1">Upload a local video for the house or rental listing. Maximum size is 20MB.</small>
             </div>
           </div>
 
