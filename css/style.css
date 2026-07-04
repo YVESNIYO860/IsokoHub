@@ -748,6 +748,13 @@ body.menu-open .menu-active-overlay {
   .nav-action-item span { font-size: 0.7rem; }
   .navbar-bottom { display: none; }
   .header-rate-badge { display: none; }
+
+  #pwa-install-banner {
+    width: calc(100vw - 0.8rem);
+    left: 0.4rem;
+    transform: none;
+    padding: 0.7rem 0.75rem;
+  }
 }
 
 .badge-condition {
@@ -782,6 +789,93 @@ body.menu-open .menu-active-overlay {
 .mb-4 { margin-bottom: var(--space-xl); }
 .text-danger { color: var(--danger); }
 .d-none { display: none !important; }
+
+#pwa-install-banner {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  width: min(92vw, 360px);
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.96);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 0.8rem 0.85rem;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.24);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  backdrop-filter: blur(8px);
+}
+
+.install-app-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: linear-gradient(135deg, #fbbf24, #febd69);
+  flex-shrink: 0;
+}
+
+.install-app-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-app-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.18rem;
+}
+
+.install-app-copy {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+.install-app-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.install-app-secondary,
+.install-app-primary {
+  border: none;
+  border-radius: 999px;
+  padding: 0.42rem 0.7rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.install-app-secondary {
+  background: transparent;
+  color: white;
+  border: 1px solid rgba(255,255,255,0.16);
+}
+
+.install-app-primary {
+  background: #febd69;
+  color: #0f172a;
+}
+
+.install-app-close {
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
 
 #app-loader {
   position: fixed;

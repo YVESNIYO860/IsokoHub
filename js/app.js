@@ -48,6 +48,7 @@ function ensurePwaMetaTags() {
 }
 
 let pwaDeferredPrompt = null;
+let installPromptDismissed = false;
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
@@ -61,8 +62,36 @@ function isAndroidDevice() {
   return /Android/i.test(navigator.userAgent);
 }
 
+function isIOSDevice() {
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
 function isInStandaloneMode() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function getInstallGuide() {
+  if (isIOSDevice()) {
+    return {
+      title: 'Install on iPhone',
+      message: 'Tap Share and choose Add to Home Screen to keep EasyMarket like a real app.',
+      actionLabel: 'Open guide'
+    };
+  }
+
+  if (isAndroidDevice()) {
+    return {
+      title: 'Install on Android',
+      message: 'Open the Chrome menu and tap Install app or Add to Home screen.',
+      actionLabel: 'Install now'
+    };
+  }
+
+  return {
+    title: 'Install on desktop',
+    message: 'Use your browser menu to install EasyMarket and launch it like an app.',
+    actionLabel: 'Install now'
+  };
 }
 
 function setupInstallPrompt() {
@@ -76,62 +105,70 @@ function setupInstallPrompt() {
     hideInstallBanner();
   });
 
-  if (isAndroidDevice() && !isInStandaloneMode()) {
+  if (!isInStandaloneMode() && !installPromptDismissed) {
     setTimeout(() => {
       showInstallBanner();
-    }, 1500);
+    }, 1400);
   }
 
   window.showInstallPrompt = async () => {
-    if (!pwaDeferredPrompt) {
-      showInstallBanner(true);
+    if (pwaDeferredPrompt) {
+      pwaDeferredPrompt.prompt();
+      const choice = await pwaDeferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        hideInstallBanner();
+      }
+      pwaDeferredPrompt = null;
       return;
     }
 
-    pwaDeferredPrompt.prompt();
-    const choice = await pwaDeferredPrompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      hideInstallBanner();
-    }
-    pwaDeferredPrompt = null;
+    const guide = getInstallGuide();
+    showInstallBanner(true, guide.message, guide.title, guide.actionLabel);
   };
 
   window.requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
-      showInstallBanner(true);
+      const guide = getInstallGuide();
+      showInstallBanner(true, guide.message, guide.title, guide.actionLabel);
       return;
     }
 
     if (Notification.permission === 'granted') {
-      showInstallBanner(true, 'Notifications are already enabled.');
+      showInstallBanner(true, 'Notifications are already enabled for EasyMarket.', 'Alerts ready', 'Continue');
       return;
     }
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      showInstallBanner(true, 'Notifications enabled. You will now receive updates from EasyMarket.');
+      showInstallBanner(true, 'Notifications are now enabled. You will get updates from EasyMarket.', 'Alerts ready', 'Continue');
     } else {
-      showInstallBanner(true, 'Notifications were not enabled. You can still install the app and use it normally.');
+      showInstallBanner(true, 'Notifications were not enabled. You can still install the app and use it normally.', 'Alerts skipped', 'Continue');
     }
+  };
+
+  window.dismissInstallPrompt = () => {
+    installPromptDismissed = true;
+    hideInstallBanner();
   };
 }
 
-function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your phone for a faster app-like experience.') {
-  if (document.getElementById('pwa-install-banner')) return;
+function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your phone for a faster app-like experience.', title = 'Install EasyMarket', actionLabel = 'Install') {
+  if (document.getElementById('pwa-install-banner') || isInStandaloneMode()) return;
 
+  const guide = getInstallGuide();
   const banner = document.createElement('div');
   banner.id = 'pwa-install-banner';
-  banner.style.cssText = 'position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:1600;background:#0f172a;color:white;padding:0.95rem 1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;flex-wrap:wrap;';
   banner.innerHTML = `
-    <div style="flex:1;min-width:220px;">
-      <strong style="display:block;margin-bottom:0.2rem;">Install EasyMarket</strong>
-      <span style="font-size:0.9rem;color:#cbd5e1;display:block;">${message}</span>
-      ${isFallback ? '<span style="font-size:0.8rem;color:#fbbf24;display:block;margin-top:0.25rem;">On Chrome, use the menu and choose Add to Home screen if the prompt does not appear.</span>' : ''}
+    <div class="install-app-badge">EM</div>
+    <div class="install-app-content">
+      <div class="install-app-title">${title}</div>
+      <div class="install-app-copy">${message || guide.message}</div>
+      <div class="install-app-actions">
+        <button class="install-app-secondary" onclick="requestNotificationPermission()">Alerts</button>
+        <button class="install-app-primary" onclick="showInstallPrompt()">${actionLabel}</button>
+      </div>
     </div>
-    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-      <button onclick="requestNotificationPermission()" style="border:1px solid #334155;border-radius:999px;padding:0.6rem 0.85rem;background:transparent;color:white;font-weight:600;cursor:pointer;">Enable alerts</button>
-      <button onclick="showInstallPrompt()" style="border:none;border-radius:999px;padding:0.6rem 0.9rem;background:#febd69;color:#0f172a;font-weight:700;cursor:pointer;">Install</button>
-    </div>
+    <button class="install-app-close" onclick="dismissInstallPrompt()" aria-label="Close install prompt">×</button>
   `;
   document.body.appendChild(banner);
 }
