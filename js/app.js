@@ -47,6 +47,8 @@ function ensurePwaMetaTags() {
   }
 }
 
+let pwaDeferredPrompt = null;
+
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -55,43 +57,81 @@ function registerServiceWorker() {
   }
 }
 
-function setupInstallPrompt() {
-  let deferredPrompt;
+function isAndroidDevice() {
+  return /Android/i.test(navigator.userAgent);
+}
 
+function isInStandaloneMode() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function setupInstallPrompt() {
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
-    deferredPrompt = event;
-    showInstallBanner(deferredPrompt);
+    pwaDeferredPrompt = event;
+    showInstallBanner();
   });
 
   window.addEventListener('appinstalled', () => {
     hideInstallBanner();
   });
 
+  if (isAndroidDevice() && !isInStandaloneMode()) {
+    setTimeout(() => {
+      showInstallBanner();
+    }, 1500);
+  }
+
   window.showInstallPrompt = async () => {
-    if (!deferredPrompt) {
-      alert('Install is not available yet. Please open this site in Chrome on Android and try again.');
+    if (!pwaDeferredPrompt) {
+      showInstallBanner(true);
       return;
     }
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    hideInstallBanner();
+
+    pwaDeferredPrompt.prompt();
+    const choice = await pwaDeferredPrompt.userChoice;
+    if (choice.outcome === 'accepted') {
+      hideInstallBanner();
+    }
+    pwaDeferredPrompt = null;
+  };
+
+  window.requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      showInstallBanner(true);
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      showInstallBanner(true, 'Notifications are already enabled.');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      showInstallBanner(true, 'Notifications enabled. You will now receive updates from EasyMarket.');
+    } else {
+      showInstallBanner(true, 'Notifications were not enabled. You can still install the app and use it normally.');
+    }
   };
 }
 
-function showInstallBanner(promptEvent) {
+function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your phone for a faster app-like experience.') {
   if (document.getElementById('pwa-install-banner')) return;
 
   const banner = document.createElement('div');
   banner.id = 'pwa-install-banner';
-  banner.style.cssText = 'position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:1600;background:#0f172a;color:white;padding:0.95rem 1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;';
+  banner.style.cssText = 'position:fixed;left:1rem;right:1rem;bottom:1rem;z-index:1600;background:#0f172a;color:white;padding:0.95rem 1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:space-between;gap:0.8rem;flex-wrap:wrap;';
   banner.innerHTML = `
-    <div>
-      <strong style="display:block; margin-bottom:0.2rem;">Install EasyMarket</strong>
-      <span style="font-size:0.9rem; color:#cbd5e1;">Add it to your home screen for a faster Android experience.</span>
+    <div style="flex:1;min-width:220px;">
+      <strong style="display:block;margin-bottom:0.2rem;">Install EasyMarket</strong>
+      <span style="font-size:0.9rem;color:#cbd5e1;display:block;">${message}</span>
+      ${isFallback ? '<span style="font-size:0.8rem;color:#fbbf24;display:block;margin-top:0.25rem;">On Chrome, use the menu and choose Add to Home screen if the prompt does not appear.</span>' : ''}
     </div>
-    <button onclick="showInstallPrompt()" style="border:none;border-radius:999px;padding:0.6rem 0.9rem;background:#febd69;color:#0f172a;font-weight:700;cursor:pointer;">Install</button>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+      <button onclick="requestNotificationPermission()" style="border:1px solid #334155;border-radius:999px;padding:0.6rem 0.85rem;background:transparent;color:white;font-weight:600;cursor:pointer;">Enable alerts</button>
+      <button onclick="showInstallPrompt()" style="border:none;border-radius:999px;padding:0.6rem 0.9rem;background:#febd69;color:#0f172a;font-weight:700;cursor:pointer;">Install</button>
+    </div>
   `;
   document.body.appendChild(banner);
 }
