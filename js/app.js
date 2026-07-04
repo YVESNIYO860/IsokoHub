@@ -1,10 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
   addDependencies();
   setupLoaderLogic();
+  ensureBackToHomeLink();
   renderNavbar();
   renderFooter();
   setupStickyHeader();
 });
+
+function ensureBackToHomeLink() {
+  if (document.querySelector('.back-to-home-link')) return;
+  if (document.querySelector('nav.navbar, header')) return;
+
+  const banner = document.createElement('div');
+  banner.className = 'back-to-home-link';
+  banner.innerHTML = '<a href="index.html"><i class="fa-solid fa-house"></i> Back to Home</a>';
+  document.body.insertBefore(banner, document.body.firstChild);
+}
+
+function openSupportMail(subject = 'EasyMarket Support') {
+  window.location.href = `mailto:yvesniyonkuru2022@gmail.com?subject=${encodeURIComponent(subject)}`;
+}
 
 function setupStickyHeader() {
   const navbar = document.querySelector('.navbar');
@@ -167,7 +182,7 @@ function renderNavbar() {
         <div class="drawer-section drawer-form-section">
           <h3><i class="fa-solid fa-headset" style="color:#ef4444"></i> Customer Support</h3>
           <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Have a question? Send us a message directly.</p>
-          <form id="drawer-support-form" onsubmit="event.preventDefault(); alert('Request sent! Our team will contact you shortly.')">
+          <form id="drawer-support-form" onsubmit="event.preventDefault(); openSupportMail('EasyMarket Support Request')">
             <div class="drawer-form-group">
               <input type="text" placeholder="Your Name" required>
             </div>

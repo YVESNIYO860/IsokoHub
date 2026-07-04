@@ -636,6 +636,63 @@ body.menu-open .menu-active-overlay {
   color: #999;
 }
 
+.back-to-home-link {
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  background: linear-gradient(90deg, #0f172a, #14213d);
+  color: white;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.back-to-home-link a {
+  color: #febd69;
+  text-decoration: none;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.mobile-download-section {
+  margin: 2rem 0 3rem;
+}
+
+.mobile-download-card {
+  background: linear-gradient(135deg, #0f172a 0%, #14213d 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.mobile-download-card h3 {
+  margin: 0.2rem 0 0.45rem;
+  font-size: 1.1rem;
+}
+
+.mobile-download-card p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+
+.mobile-download-actions {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.mobile-download-actions .btn {
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 /* Header Rate Badge */
 .header-rate-badge {
   background: rgba(254, 189, 105, 0.15);

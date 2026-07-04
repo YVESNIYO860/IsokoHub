@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const importBtn = document.getElementById('import-users-btn');
   const importInput = document.getElementById('user-json-input');
   const importStatus = document.getElementById('import-status');
+  const refreshBtn = document.getElementById('refresh-admin-btn');
 
   let activeTab = 'pending';
 
@@ -46,6 +47,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabPending.classList.remove('active-tab');
     renderAdmin();
   };
+
+  if (refreshBtn) {
+    refreshBtn.onclick = () => renderAdmin();
+  }
+
+  setInterval(() => {
+    renderAdmin();
+  }, 15000);
 
   window.handleApprove = async function(id) {
     if (confirm('Approve this product for public listing?')) {
