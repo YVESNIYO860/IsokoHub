@@ -48,7 +48,7 @@ function ensurePwaMetaTags() {
 
 let pwaDeferredPrompt = null;
 let installPromptDismissed = false;
-const INSTALL_PROMPT_DISMISS_KEY = 'easyMarketInstallPromptDismissed';
+const INSTALL_PROMPT_DISMISS_KEY = 'isokoHubInstallPromptDismissed';
 
 function setInstallUiState(isInstalling = false) {
   const installButtons = document.querySelectorAll('.install-nav-btn, .install-app-primary');
@@ -93,10 +93,10 @@ function getInstallGuide() {
   if (isIOSDevice()) {
     return {
       title: 'Install on iPhone',
-      message: 'Tap Share and choose Add to Home Screen to keep EasyMarket like a real app.',
+      message: 'Tap Share and choose Add to Home Screen to keep IsokoHub like a real app.',
       actionLabel: 'Open guide',
       steps: [
-        'Open EasyMarket in Safari',
+        'Open IsokoHub in Safari',
         'Tap the Share button',
         'Choose Add to Home Screen'
       ]
@@ -109,7 +109,7 @@ function getInstallGuide() {
       message: 'Open the browser menu and tap Install app or Add to Home screen.',
       actionLabel: 'Install now',
       steps: [
-        'Open EasyMarket in Chrome or Edge',
+        'Open IsokoHub in Chrome or Edge',
         'Tap the menu button',
         'Choose Install app or Add to Home screen'
       ]
@@ -118,12 +118,12 @@ function getInstallGuide() {
 
   return {
     title: 'Install on desktop',
-    message: 'Use your browser menu to install EasyMarket and launch it like an app.',
+    message: 'Use your browser menu to install IsokoHub and launch it like an app.',
     actionLabel: 'Install now',
     steps: [
-      'Open EasyMarket in Chrome, Edge or Firefox',
+      'Open IsokoHub in Chrome, Edge or Firefox',
       'Open the browser menu',
-      'Choose Install EasyMarket'
+      'Choose Install IsokoHub'
     ]
   };
 }
@@ -222,13 +222,13 @@ function setupInstallPrompt() {
     }
 
     if (Notification.permission === 'granted') {
-      showInstallBanner(true, 'Notifications are already enabled for EasyMarket.', 'Alerts ready', 'Continue');
+      showInstallBanner(true, 'Notifications are already enabled for IsokoHub.', 'Alerts ready', 'Continue');
       return;
     }
 
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
-      showInstallBanner(true, 'Notifications are now enabled. You will get updates from EasyMarket.', 'Alerts ready', 'Continue');
+      showInstallBanner(true, 'Notifications are now enabled. You will get updates from IsokoHub.', 'Alerts ready', 'Continue');
     } else {
       showInstallBanner(true, 'Notifications were not enabled. You can still install the app and use it normally.', 'Alerts skipped', 'Continue');
     }
@@ -242,7 +242,7 @@ function setupInstallPrompt() {
   };
 }
 
-function showInstallBanner(isFallback = false, message = 'Use EasyMarket as a quick app on your device.', title = 'Get the app view', actionLabel = 'Install') {
+function showInstallBanner(isFallback = false, message = 'Use IsokoHub as a quick app on your device.', title = 'Get the app view', actionLabel = 'Install') {
   if (document.getElementById('pwa-install-banner') || isInStandaloneMode() || installPromptDismissed) return;
 
   const guide = getInstallGuide();
@@ -250,7 +250,7 @@ function showInstallBanner(isFallback = false, message = 'Use EasyMarket as a qu
   banner.id = 'pwa-install-banner';
   banner.innerHTML = `
     <div class="install-app-badge">
-      <img src="assets/logo.png" alt="EasyMarket logo">
+      <img src="assets/logo.png" alt="IsokoHub logo">
     </div>
     <div class="install-app-content">
       <div class="install-app-title">${title}</div>
@@ -283,12 +283,14 @@ function hideInstallBanner() {
 
 const SUPPORT_EMAIL = 'yvesniyonkuru2022@gmail.com';
 
-function openSupportMail(subject = 'EasyMarket Support', body = '', email = SUPPORT_EMAIL) {
+function openSupportMail(subject = 'IsokoHub Support', body = '', email = SUPPORT_EMAIL) {
   const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailtoLink;
 }
 
 function openSupportPage() {
+  const isSupportPage = window.location.pathname.includes('support.html');
+  if (isSupportPage) return;
   window.location.href = 'support.html';
 }
 
@@ -317,7 +319,7 @@ function setupLoaderLogic() {
   }
 }
 
-function showAppLoader(message = 'Loading EasyMarket...') {
+function showAppLoader(message = 'Loading IsokoHub...') {
   if (document.getElementById('app-data-loader')) return;
   renderDataLoader(message);
 }
@@ -350,8 +352,8 @@ function renderStartupLoader() {
   const loaderHTML = `
     <div id="app-startup-loader" class="app-loader-overlay">
       <div class="loader-card">
-        <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
-        <div class="loader-title">EasyMarket</div>
+        <img src="assets/logo.png" class="loader-brand-logo" alt="IsokoHub Logo">
+        <div class="loader-title">IsokoHub</div>
         <div class="loader-bar">
           <span class="loader-bar-fill"></span>
         </div>
@@ -362,12 +364,12 @@ function renderStartupLoader() {
   document.body.insertAdjacentHTML('afterbegin', loaderHTML);
 }
 
-function renderDataLoader(message = 'Loading EasyMarket...') {
+function renderDataLoader(message = 'Loading IsokoHub...') {
   const loaderHTML = `
     <div id="app-data-loader" class="app-loader-overlay data-loader">
       <div class="loader-card compact-loader">
-        <img src="assets/logo.png" class="loader-brand-logo" alt="EasyMarket Logo">
-        <div class="loader-title">EasyMarket</div>
+        <img src="assets/logo.png" class="loader-brand-logo" alt="IsokoHub Logo">
+        <div class="loader-title">IsokoHub</div>
         <div class="loader-bar">
           <span class="loader-bar-fill"></span>
         </div>
@@ -391,8 +393,8 @@ function renderNavbar() {
         </div>
         
         <a href="index.html" class="navbar-brand">
-          <img src="assets/logo.png" alt="EasyMarket Logo" onerror="this.src=''; this.alt='EasyMarket'">
-          Easy<span>Market</span>
+          <img src="assets/logo.png" alt="IsokoHub Logo" onerror="this.src=''; this.alt='IsokoHub'">
+          <span>IsokoHub</span>
         </a>
         
         <form class="search-form" id="global-search-form" onsubmit="handleSearch(event)">
@@ -429,7 +431,7 @@ function renderNavbar() {
         <a href="products.html?category=Fashion">Fashion</a>
         <a href="products.html?category=Cars">Cars</a>
         <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">Houses & Rent</a>
-        <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on EasyMarket</a>
+        <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on IsokoHub</a>
       </div>
     </nav>
 
@@ -528,7 +530,7 @@ function renderFooter() {
           <ul>
             <li><a href="about.html#careers">Careers</a></li>
             <li><a href="about.html#blog">Blog</a></li>
-            <li><a href="about.html#about">About EasyMarket</a></li>
+            <li><a href="about.html#about">About IsokoHub</a></li>
             <li><a href="admin-profile.html">About Admin</a></li>
             <li><a href="about.html#investor">Investor Relations</a></li>
             <li><a href="about.html#help">Help Center</a></li>
@@ -539,9 +541,9 @@ function renderFooter() {
         <div class="footer-col">
           <h4>Make Money with Us</h4>
           <ul>
-            <li><a href="sell.html">Sell on EasyMarket</a></li>
-            <li><a href="#">Sell on EasyMarket Business</a></li>
-            <li><a href="#">Apps on EasyMarket</a></li>
+            <li><a href="sell.html">Sell on IsokoHub</a></li>
+            <li><a href="#">Sell on IsokoHub Business</a></li>
+            <li><a href="#">Apps on IsokoHub</a></li>
             <li><a href="#">Become an Affiliate</a></li>
             <li><a href="#">Advertise Your Products</a></li>
           </ul>
@@ -571,7 +573,7 @@ function renderFooter() {
       <div class="footer-bottom">
         <div class="container">
           <div class="footer-logo">Easy<span>Market</span></div>
-          <p>&copy; ${new Date().getFullYear()} EasyMarket Marketplace. All rights reserved. <span style="opacity: 0.2; font-weight: 700; margin-left: 8px;">DESIGNED BY NIYONKURU YVES</span></p>
+          <p>&copy; ${new Date().getFullYear()} IsokoHub Marketplace. All rights reserved. <span style="opacity: 0.2; font-weight: 700; margin-left: 8px;">DESIGNED BY NIYONKURU YVES</span></p>
         </div>
       </div>
     </footer>
@@ -599,7 +601,7 @@ function getQueryParam(name) {
 }
 
 // ---- Shopping Cart Logic ----
-const CART_KEY = 'easyMarketCart';
+const CART_KEY = 'isokoHubCart';
 
 function getCart() {
   const cartStr = localStorage.getItem(CART_KEY);
@@ -778,12 +780,12 @@ renderNavbar = function() {
 
 // ---- Test Mode (Developer Mode) Logic ----
 function isTestMode() {
-  return localStorage.getItem('easyMarketTestMode') === 'true';
+  return localStorage.getItem('isokoHubTestMode') === 'true';
 }
 
 function toggleTestMode() {
   const current = isTestMode();
-  localStorage.setItem('easyMarketTestMode', !current);
+  localStorage.setItem('isokoHubTestMode', !current);
   location.reload();
 }
 
@@ -801,6 +803,9 @@ function renderTestModeBanner() {
 
 // ---- Global Support Action ----
 function renderGlobalSupportButton() {
+  const isSupportPage = window.location.pathname.includes('support.html');
+  if (isSupportPage) return;
+
   const btnHTML = `
     <button class="support-fab" onclick="openSupportPage()" title="Contact Support">
       <i class="fa-solid fa-headset"></i>

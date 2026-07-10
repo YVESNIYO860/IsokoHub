@@ -52,14 +52,14 @@ document.addEventListener('DOMContentLoaded', () => {
           email: user.email,
           name: user.displayName || 'User'
         };
-        localStorage.setItem('easyMarketCurrentUser', JSON.stringify(userData));
+        localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
 
         // If on auth pages, redirect to dashboard
         if (window.location.pathname.includes('login.html') || window.location.pathname.includes('signup.html')) {
           window.location.href = 'dashboard.html';
         }
       } else {
-        localStorage.removeItem('easyMarketCurrentUser');
+        localStorage.removeItem('isokoHubCurrentUser');
       }
     });
   }

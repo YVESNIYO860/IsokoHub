@@ -1,7 +1,7 @@
 {
-  "name": "EasyMarket",
-  "short_name": "EasyMarket",
-  "description": "Buy, sell, and rent locally with EasyMarket.",
+  "name": "IsokoHub",
+  "short_name": "IsokoHub",
+  "description": "Buy, sell, and rent locally with IsokoHub.",
   "id": "./",
   "start_url": "./index.html",
   "scope": "./",

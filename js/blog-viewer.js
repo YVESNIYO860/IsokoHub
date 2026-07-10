@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const post = blogData[postId];
 
   // Update Page Title
-  document.title = `${post.title} - EasyMarket Blog`;
+  document.title = `${post.title} - IsokoHub Blog`;
 
   // Inject Meta Data
   document.getElementById('post-category').textContent = post.category;

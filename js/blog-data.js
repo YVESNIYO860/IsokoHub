@@ -3,13 +3,13 @@ const blogData = {
     title: "How to Spot a Real Deal: Verified Seller Guide 2026",
     category: "TIPS",
     date: "March 27, 2026",
-    author: "EasyMarket Security Team",
+    author: "IsokoHub Security Team",
     image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&q=80&w=1200&h=600",
     content: `
-      <p>In the evolving landscape of digital commerce, security is the foundation of trust. At EasyMarket, we’ve implemented a multi-layered verification system to ensure that every "deal" you see is a real deal. This guide will walk you through the essential steps to protect yourself while shopping on our platform.</p>
+      <p>In the evolving landscape of digital commerce, security is the foundation of trust. At IsokoHub, we’ve implemented a multi-layered verification system to ensure that every "deal" you see is a real deal. This guide will walk you through the essential steps to protect yourself while shopping on our platform.</p>
       
       <h3>1. Look for the Trust Badge</h3>
-      <p>Every seller on EasyMarket must undergo a manual review by our administrative team. Look for the 'Verified by NIYONKURU YVES' badge on product listings. This badge indicates that the seller has provided valid identification and has a proven track record of successful, honest transactions.</p>
+      <p>Every seller on IsokoHub must undergo a manual review by our administrative team. Look for the 'Verified by NIYONKURU YVES' badge on product listings. This badge indicates that the seller has provided valid identification and has a proven track record of successful, honest transactions.</p>
       
       <h3>2. Analyze Transaction History</h3>
       <p>Before making a purchase, click on the seller's profile. A "special and unique" seller will have transparent feedback and a consistent history of approved listings. If a seller has many rejected products in their history, proceed with caution.</p>
@@ -19,7 +19,7 @@ const blogData = {
       
       <blockquote>"Trust is built in drops and lost in buckets. Our mission is to keep your marketplace safe, one verified seller at a time."</blockquote>
       
-      <p>By following these simple steps, you can enjoy the best deals on EasyMarket with complete peace of mind.</p>
+      <p>By following these simple steps, you can enjoy the best deals on IsokoHub with complete peace of mind.</p>
     `
   },
   updates: {
@@ -32,7 +32,7 @@ const blogData = {
       <p>We are thrilled to announce the launch of our new **Global Advertisement System**. This feature is designed to empower our sellers by giving their products the visibility they deserve on a global scale.</p>
       
       <h3>How Global Ads Work</h3>
-      <p>Unlike traditional, intrusive advertising, EasyMarket Ads are integrated into the browsing experience. When a seller requests a "Boost," their product is featured in the 'Promoted Deals' section at the top of the homepage. Our algorithm uses search intent and category history to show ads only to the most relevant buyers.</p>
+      <p>Unlike traditional, intrusive advertising, IsokoHub Ads are integrated into the browsing experience. When a seller requests a "Boost," their product is featured in the 'Promoted Deals' section at the top of the homepage. Our algorithm uses search intent and category history to show ads only to the most relevant buyers.</p>
       
       <h3>Approval is Key</h3>
       <p>To maintain our "special" quality standards, every ad request must be manually approved by an admin. This ensures that only high-quality, verified products are given the spotlight, preventing the system from being cluttered with low-value listings.</p>
@@ -54,7 +54,7 @@ const blogData = {
     author: "Market Analysis Dept.",
     image: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&q=80&w=1200&h=600",
     content: `
-      <p>As we move further into 2026, the reselling market is undergoing a massive transformation. Consumer behavior is shifting away from massive, unmoderated social media groups toward specialized, high-trust platforms like EasyMarket. Here’s why.</p>
+      <p>As we move further into 2026, the reselling market is undergoing a massive transformation. Consumer behavior is shifting away from massive, unmoderated social media groups toward specialized, high-trust platforms like IsokoHub. Here’s why.</p>
       
       <h3>The Rise of Verified Electronics</h3>
       <p>Electronics remain the fastest-growing category. However, buyers are no longer willing to take risks on unverified second-hand devices. The demand for "Certified Pre-Owned" and "Admin-Approved" listings has increased by 45% in the last quarter alone.</p>
@@ -65,7 +65,7 @@ const blogData = {
       <h3>Community-Driven Commerce</h3>
       <p>The future is personal. Buyers want to know the person behind the product. Our Seller Hub is designed to help sellers build their "Unique and Special" brand identity, turning one-time sales into lifelong customer relationships.</p>
       
-      <p>At EasyMarket, we are committed to leading this charge by providing the tools and the security that modern buyers and sellers demand.</p>
+      <p>At IsokoHub, we are committed to leading this charge by providing the tools and the security that modern buyers and sellers demand.</p>
     `
   }
 };

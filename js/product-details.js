@@ -35,13 +35,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Update Page Title
-  document.title = `${product.name} - EasyMarket`;
+  document.title = `${product.name} - IsokoHub`;
 
   const images = Array.isArray(product.image) ? product.image : [product.image];
   const mainImage = images[0];
 
-  const contactButtonMsg = encodeURIComponent(`Hi, I'm interested in your product: ${product.name} listed on EasyMarket.`);
-  const waMessage = encodeURIComponent(`Hi, I saw your product "${product.name}" on EasyMarket and I'm interested!`);
+  const contactButtonMsg = encodeURIComponent(`Hi, I'm interested in your product: ${product.name} listed on IsokoHub.`);
+  const waMessage = encodeURIComponent(`Hi, I saw your product "${product.name}" on IsokoHub and I'm interested!`);
 
   wrapper.innerHTML = `
     <div class="product-detail-container">
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="contact-seller-card">
           <h4 style="margin-bottom:1rem;">Contact Seller</h4>
           <div class="pd-actions" style="display:flex; flex-direction:column; gap:0.8rem;">
-            <a href="mailto:seller_${product.sellerId}@easymarket.com?subject=Enquiry about ${product.name}&body=${contactButtonMsg}" class="btn btn-primary btn-block">
+            <a href="mailto:seller_${product.sellerId}@isokohub.com?subject=Enquiry about ${product.name}&body=${contactButtonMsg}" class="btn btn-primary btn-block">
               <i class="fa-solid fa-envelope"></i> Send Email
             </a>
             

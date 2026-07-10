@@ -1,5 +1,5 @@
-document.addEventListener('DOMContentLoaded', () => {
-  renderHeroSection();
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderHeroSection();
   renderPromotedProducts();
   renderCategories();
   renderFeaturedProducts();
@@ -55,9 +55,13 @@ function renderCategories() {
   }).join('');
 }
 
-function renderHeroSection() {
+async function renderHeroSection() {
   const container = document.getElementById('home-slideshow');
   if (!container) return;
+
+  const stats = await fetchHeroStats();
+  const productCountLabel = formatHeroProductCount(stats.productCount);
+  const responseLabel = formatHeroResponseTime(stats.responseMinutes);
 
   container.innerHTML = `
     <section class="hero-shell">
@@ -65,22 +69,15 @@ function renderHeroSection() {
         <div class="hero-title-row">
           <span class="hero-badge"><i class="fa-solid fa-certificate"></i> Trusted by local sellers</span>
           <div class="hero-logo-orb" aria-hidden="true">
-            <img src="assets/logo.png" alt="EasyMarket logo">
+            <img src="assets/logo.png" alt="IsokoHub logo">
           </div>
         </div>
         <h1>Shop trusted products from Rwanda sellers.</h1>
         <p>From groceries and fashion to phones, cars and homes, discover everyday essentials and premium finds in RWF.</p>
 
-        <div class="hero-chip-row">
-          <a href="products.html?category=Electronics" class="hero-chip">Electronics</a>
-          <a href="products.html?category=Cars" class="hero-chip">Cars</a>
-          <a href="products.html?category=Houses%20%26%20Rents" class="hero-chip">Homes</a>
-          <a href="products.html?category=Fashion" class="hero-chip">Fashion</a>
-        </div>
-
         <div class="hero-stats">
-          <div class="hero-stat-card"><strong>3k+</strong><span>Local products</span></div>
-          <div class="hero-stat-card"><strong>15 min</strong><span>Fast responses</span></div>
+          <div class="hero-stat-card"><strong>${productCountLabel}</strong><span>Local products</span></div>
+          <div class="hero-stat-card"><strong>${responseLabel}</strong><span>Fast responses</span></div>
           <div class="hero-stat-card"><strong>RWF</strong><span>Clear local pricing</span></div>
         </div>
       </div>

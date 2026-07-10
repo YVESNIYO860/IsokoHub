@@ -1,5 +1,5 @@
 // Firebase Firestore Data Layer
-const CURRENT_USER_KEY = 'easyMarketCurrentUser';
+const CURRENT_USER_KEY = 'isokoHubCurrentUser';
 const RWANDA_DISTRICTS = [
   'Bugesera', 'Burera', 'Gakenke', 'Gasabo', 'Gatsibo', 'Gicumbi', 'Gisagara', 'Huye',
   'Kamonyi', 'Karongi', 'Kayonza', 'Kicukiro', 'Kirehe', 'Muhanga', 'Musanze', 'Ngoma',
@@ -9,6 +9,53 @@ const RWANDA_DISTRICTS = [
 
 // Helper: Get Firestore collection
 const getProductCol = () => db ? db.collection('products') : null;
+
+function formatHeroProductCount(value) {
+  if (!Number.isFinite(value) || value < 0) return '0+';
+  if (value >= 1000) {
+    const scaled = value / 1000;
+    const rounded = scaled >= 10 ? Math.round(scaled) : Number(scaled.toFixed(1));
+    return `${rounded % 1 === 0 ? rounded : rounded.toFixed(1)}k+`;
+  }
+  return `${value}+`;
+}
+
+function formatHeroResponseTime(minutes) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return '15 min';
+  return `${minutes} min`;
+}
+
+async function fetchHeroStats() {
+  if (!db) {
+    return { productCount: 0, responseMinutes: 15 };
+  }
+
+  try {
+    const productsSnap = await getProductCol()
+      .where('status', '==', 'approved')
+      .get();
+
+    const productCount = productsSnap.size;
+
+    let responseMinutes = 15;
+    try {
+      const settingsDoc = await db.collection('settings').doc('hero').get();
+      if (settingsDoc.exists) {
+        const settingsData = settingsDoc.data() || {};
+        if (Number.isFinite(settingsData.responseTimeMinutes)) {
+          responseMinutes = settingsData.responseTimeMinutes;
+        }
+      }
+    } catch (settingsErr) {
+      console.warn('Unable to load hero settings:', settingsErr);
+    }
+
+    return { productCount, responseMinutes };
+  } catch (err) {
+    console.error('Error fetching hero stats:', err);
+    return { productCount: 0, responseMinutes: 15 };
+  }
+}
 
 /**
  * Fetch products from Firestore.

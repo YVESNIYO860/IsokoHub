@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Support - EasyMarket</title>
+  <title>Support - IsokoHub</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/style.css">
   <style>
@@ -28,11 +28,21 @@
       line-height: 1.7;
     }
 
+    .support-hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
     .support-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1.1fr 0.9fr;
       gap: 1.5rem;
       padding: 2rem 0 3rem;
+      align-items: start;
     }
 
     .support-card {
@@ -41,6 +51,13 @@
       border-radius: 18px;
       padding: 1.4rem;
       box-shadow: var(--shadow-sm);
+    }
+
+    .support-card--right {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 100%;
     }
 
     .support-card h2 {
@@ -54,6 +71,50 @@
       margin-bottom: 1rem;
     }
 
+    .support-intro {
+      padding: 1.2rem 1.3rem;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+      border: 1px solid #dbeafe;
+      margin-bottom: 0.25rem;
+    }
+
+    .support-intro strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: #1d4ed8;
+      font-size: 1rem;
+    }
+
+    .support-intro p {
+      margin: 0;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .home-link-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.7rem 1.1rem;
+      border-radius: 999px;
+      background: #0f172a;
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      width: fit-content;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .home-link-pill:hover {
+      transform: translateY(-1px);
+      background: #1e293b;
+      color: white;
+      text-decoration: none;
+    }
+
     .support-form .form-group {
       margin-bottom: 1rem;
     }
@@ -61,30 +122,6 @@
     .support-form textarea {
       min-height: 140px;
       resize: vertical;
-    }
-
-    .support-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.9rem;
-    }
-
-    .support-info-item {
-      padding: 0.95rem 1rem;
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-    }
-
-    .support-info-item strong {
-      display: block;
-      margin-bottom: 0.25rem;
-      color: #0f172a;
-    }
-
-    .support-info-item a {
-      color: var(--primary-blue);
-      font-weight: 600;
     }
 
     @media (max-width: 900px) {
@@ -98,6 +135,10 @@
   <main>
     <section class="support-hero">
       <div class="container">
+        <div class="support-hero-top">
+          <a href="index.html" class="home-link-pill" style="margin: 0;"><i class="fa-solid fa-house"></i> Go to home</a>
+          <span style="font-size: 0.95rem; color: #cbd5e1;">We’re here for you</span>
+        </div>
         <h1>Customer support</h1>
         <p>Need help with an order, account, listing, or general question? Send your request below and our admin team will get back to you through email.</p>
       </div>
@@ -106,7 +147,7 @@
     <div class="container support-grid">
       <section class="support-card">
         <h2>Send a support request</h2>
-        <p>We’ll open your email app with your message ready to send to the EasyMarket admin.</p>
+        <p>We’ll open your email app with your message ready to send to the IsokoHub admin.</p>
         <form class="support-form" onsubmit="event.preventDefault(); sendSupportRequest(this);">
           <div class="form-group">
             <label class="form-label" for="support-name">Your name</label>
@@ -128,21 +169,10 @@
         </form>
       </section>
 
-      <aside class="support-card">
-        <h2>Need quick help?</h2>
-        <div class="support-info">
-          <div class="support-info-item">
-            <strong>Admin email</strong>
-            <a href="mailto:yvesniyonkuru2022@gmail.com">yvesniyonkuru2022@gmail.com</a>
-          </div>
-          <div class="support-info-item">
-            <strong>Response time</strong>
-            <span>We aim to reply as quickly as possible.</span>
-          </div>
-          <div class="support-info-item">
-            <strong>Common requests</strong>
-            <span>Account access, listings, payments, app issues, and general questions.</span>
-          </div>
+      <aside class="support-card support-card--right">
+        <div class="support-intro">
+          <strong>We are ready to help you</strong>
+          <p>Whether it is an order, account, listing, or anything else, our team is here to support you quickly and clearly.</p>
         </div>
       </aside>
     </div>
@@ -159,7 +189,7 @@
       if (!name || !email || !subject || !message) return;
 
       const body = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
-      openSupportMail(`EasyMarket Support: ${subject}`, body, 'yvesniyonkuru2022@gmail.com');
+      openSupportMail(`IsokoHub Support: ${subject}`, body, 'yvesniyonkuru2022@gmail.com');
       form.reset();
     }
   </script>
