@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support - EasyMarket</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      background: #f8fafc;
+    }
+
+    .support-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #14213d 100%);
+      color: white;
+      padding: 4rem 0 3rem;
+    }
+
+    .support-hero h1 {
+      font-size: clamp(2rem, 3.6vw, 2.8rem);
+      margin-bottom: 0.8rem;
+    }
+
+    .support-hero p {
+      max-width: 720px;
+      color: #cbd5e1;
+      line-height: 1.7;
+    }
+
+    .support-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.5rem;
+      padding: 2rem 0 3rem;
+    }
+
+    .support-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .support-card h2 {
+      margin-bottom: 0.7rem;
+      font-size: 1.25rem;
+    }
+
+    .support-card p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .support-form .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .support-form textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .support-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .support-info-item {
+      padding: 0.95rem 1rem;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .support-info-item strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      color: #0f172a;
+    }
+
+    .support-info-item a {
+      color: var(--primary-blue);
+      font-weight: 600;
+    }
+
+    @media (max-width: 900px) {
+      .support-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="support-hero">
+      <div class="container">
+        <h1>Customer support</h1>
+        <p>Need help with an order, account, listing, or general question? Send your request below and our admin team will get back to you through email.</p>
+      </div>
+    </section>
+
+    <div class="container support-grid">
+      <section class="support-card">
+        <h2>Send a support request</h2>
+        <p>We’ll open your email app with your message ready to send to the EasyMarket admin.</p>
+        <form class="support-form" onsubmit="event.preventDefault(); sendSupportRequest(this);">
+          <div class="form-group">
+            <label class="form-label" for="support-name">Your name</label>
+            <input class="form-control" id="support-name" name="name" type="text" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="support-email">Your email</label>
+            <input class="form-control" id="support-email" name="email" type="email" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="support-subject">Subject</label>
+            <input class="form-control" id="support-subject" name="subject" type="text" placeholder="How can we help?" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="support-message">Message</label>
+            <textarea class="form-control" id="support-message" name="message" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Send support email</button>
+        </form>
+      </section>
+
+      <aside class="support-card">
+        <h2>Need quick help?</h2>
+        <div class="support-info">
+          <div class="support-info-item">
+            <strong>Admin email</strong>
+            <a href="mailto:yvesniyonkuru2022@gmail.com">yvesniyonkuru2022@gmail.com</a>
+          </div>
+          <div class="support-info-item">
+            <strong>Response time</strong>
+            <span>We aim to reply as quickly as possible.</span>
+          </div>
+          <div class="support-info-item">
+            <strong>Common requests</strong>
+            <span>Account access, listings, payments, app issues, and general questions.</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    function sendSupportRequest(form) {
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const subject = form.subject.value.trim();
+      const message = form.message.value.trim();
+
+      if (!name || !email || !subject || !message) return;
+
+      const body = `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`;
+      openSupportMail(`EasyMarket Support: ${subject}`, body, 'yvesniyonkuru2022@gmail.com');
+      form.reset();
+    }
+  </script>
+</body>
+</html>

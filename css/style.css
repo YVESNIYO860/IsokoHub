@@ -638,15 +638,15 @@ body.menu-open .menu-active-overlay {
 }
 
 .footer-install-col {
-  border: 1px solid rgba(254, 189, 105, 0.24);
+  border: 1px solid rgba(203, 213, 225, 0.22);
   border-radius: 12px;
   padding: 0.8rem 0.9rem;
-  background: rgba(254, 189, 105, 0.08);
+  background: rgba(255,255,255,0.03);
   box-shadow: none;
 }
 
 .footer-install-col h4 {
-  color: #febd69;
+  color: #e2e8f0;
   margin-bottom: 0.6rem;
   font-size: 0.95rem;
 }
@@ -670,8 +670,8 @@ body.menu-open .menu-active-overlay {
 }
 
 .footer-install-col ul li a:hover {
-  background: rgba(254, 189, 105, 0.16);
-  border-color: rgba(254, 189, 105, 0.35);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.16);
   color: #fff;
   text-decoration: none;
 }
@@ -1120,24 +1120,32 @@ body.menu-open .menu-active-overlay {
 
 .hero-shell {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1.1fr 0.9fr;
   gap: 2rem;
   align-items: center;
   padding: 2.5rem;
-  min-height: 480px;
+  min-height: 520px;
   border-radius: 2rem;
-  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 45%, #3b82f6 100%);
+  background: linear-gradient(125deg, #071423 0%, #0f3d7a 45%, #f59e0b 100%);
   color: white;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
 }
 
 .hero-shell::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at top right, rgba(255,255,255,0.2), transparent 28%);
+  background: radial-gradient(circle at top right, rgba(255,255,255,0.22), transparent 30%);
+  pointer-events: none;
+}
+
+.hero-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0.08) 0%, transparent 30%, rgba(255,255,255,0.05) 100%);
   pointer-events: none;
 }
 
@@ -1159,11 +1167,12 @@ body.menu-open .menu-active-overlay {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.85rem;
+  padding: 0.5rem 0.9rem;
   border-radius: 999px;
   background: rgba(255,255,255,0.16);
   border: 1px solid rgba(255,255,255,0.18);
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .hero-logo-orb {
@@ -1185,16 +1194,41 @@ body.menu-open .menu-active-overlay {
 }
 
 .hero-copy h1 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
   margin-bottom: 1rem;
-  line-height: 1.1;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  max-width: 720px;
 }
 
 .hero-copy p {
   font-size: 1.05rem;
-  color: rgba(255,255,255,0.88);
-  max-width: 620px;
-  margin-bottom: 1.5rem;
+  color: rgba(255,255,255,0.9);
+  max-width: 650px;
+  margin-bottom: 1.3rem;
+}
+
+.hero-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.18);
+  font-size: 0.9rem;
+  color: white;
+}
+
+.hero-chip:hover {
+  background: rgba(255,255,255,0.2);
+  color: white;
 }
 
 .hero-actions {
@@ -1254,12 +1288,69 @@ body.menu-open .menu-active-overlay {
   backdrop-filter: blur(12px);
 }
 
-.hero-panel-title {
-  font-size: 1rem;
+.hero-panel-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 0.95rem;
+}
+
+.hero-panel-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  font-size: 0.78rem;
   font-weight: 700;
-  margin-bottom: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+}
+
+.hero-panel-badge-alt {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fef3c7;
+}
+
+.hero-feature-image {
+  overflow: hidden;
+  border-radius: 1rem;
+  margin-bottom: 0.9rem;
+  border: 1px solid rgba(255,255,255,0.24);
+}
+
+.hero-feature-image img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.hero-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.hero-feature-box {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border-radius: 0.9rem;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.16);
+  font-size: 0.9rem;
+}
+
+.hero-feature-box i {
+  color: #fde68a;
+}
+
+.hero-feature-box strong {
+  font-size: 0.9rem;
+  color: white;
 }
 
 .seller-showcase {

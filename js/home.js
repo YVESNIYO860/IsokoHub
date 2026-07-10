@@ -63,61 +63,44 @@ function renderHeroSection() {
     <section class="hero-shell">
       <div class="hero-copy">
         <div class="hero-title-row">
-          <span class="hero-badge"><i class="fa-solid fa-bolt"></i> Rwanda’s trusted marketplace</span>
+          <span class="hero-badge"><i class="fa-solid fa-certificate"></i> Trusted by local sellers</span>
           <div class="hero-logo-orb" aria-hidden="true">
             <img src="assets/logo.png" alt="EasyMarket logo">
           </div>
         </div>
-        <h1>Buy smart, sell faster, and grow your business in RWF.</h1>
-        <p>Discover verified products, connect with real sellers, and list your own items in minutes with a smooth, secure experience.</p>
-        <div class="hero-actions">
-          <a href="products.html" class="btn btn-primary hero-btn">Browse Products</a>
-          <a href="sell.html" class="btn btn-secondary hero-btn hero-btn-secondary">Start Selling</a>
+        <h1>Shop trusted products from Rwanda sellers.</h1>
+        <p>From groceries and fashion to phones, cars and homes, discover everyday essentials and premium finds in RWF.</p>
+
+        <div class="hero-chip-row">
+          <a href="products.html?category=Electronics" class="hero-chip">Electronics</a>
+          <a href="products.html?category=Cars" class="hero-chip">Cars</a>
+          <a href="products.html?category=Houses%20%26%20Rents" class="hero-chip">Homes</a>
+          <a href="products.html?category=Fashion" class="hero-chip">Fashion</a>
         </div>
+
         <div class="hero-stats">
-          <div class="hero-stat-card"><strong>500+</strong><span>Verified listings</span></div>
-          <div class="hero-stat-card"><strong>24/7</strong><span>Seller support</span></div>
-          <div class="hero-stat-card"><strong>RWF</strong><span>Prices shown clearly</span></div>
+          <div class="hero-stat-card"><strong>3k+</strong><span>Local products</span></div>
+          <div class="hero-stat-card"><strong>15 min</strong><span>Fast responses</span></div>
+          <div class="hero-stat-card"><strong>RWF</strong><span>Clear local pricing</span></div>
         </div>
       </div>
       <div class="hero-panel">
         <div class="hero-panel-card">
-          <p class="hero-panel-title">Why sellers love EasyMarket</p>
-          <div class="seller-showcase" id="seller-showcase">
-            <div class="seller-slide active">
-              <div class="seller-slide-media">
-                <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=400&h=220" alt="Phone sale example">
-              </div>
-              <div class="seller-slide-copy">
-                <i class="fa-solid fa-mobile-screen-button"></i>
-                <strong>Phone sold in 24 hours</strong>
-                <span>A verified seller closed a fast deal with direct buyer contact.</span>
-              </div>
+          <div class="hero-panel-top">
+            <span class="hero-panel-badge">Made in Rwanda</span>
+            <span class="hero-panel-badge hero-panel-badge-alt">Verified sellers</span>
+          </div>
+          <div class="hero-feature-image">
+            <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=900&h=600" alt="Marketplace shopping scene">
+          </div>
+          <div class="hero-feature-grid">
+            <div class="hero-feature-box">
+              <i class="fa-solid fa-shield-halved"></i>
+              <strong>Secure deals</strong>
             </div>
-            <div class="seller-slide">
-              <div class="seller-slide-media">
-                <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&q=80&w=400&h=220" alt="House sale example">
-              </div>
-              <div class="seller-slide-copy">
-                <i class="fa-solid fa-house"></i>
-                <strong>Apartment listing gained attention</strong>
-                <span>Housing posts are getting real inquiries through EasyMarket.</span>
-              </div>
-            </div>
-            <div class="seller-slide">
-              <div class="seller-slide-media">
-                <img src="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&q=80&w=400&h=220" alt="Fashion sale example">
-              </div>
-              <div class="seller-slide-copy">
-                <i class="fa-solid fa-bag-shopping"></i>
-                <strong>Fashion bundle sold fast</strong>
-                <span>Shoppers are responding quickly to clear photos and RWF pricing.</span>
-              </div>
-            </div>
-            <div class="seller-showcase-indicators" aria-label="Showcase progress">
-              <span class="seller-indicator active"></span>
-              <span class="seller-indicator"></span>
-              <span class="seller-indicator"></span>
+            <div class="hero-feature-box">
+              <i class="fa-solid fa-bag-shopping"></i>
+              <strong>Easy checkout</strong>
             </div>
           </div>
         </div>

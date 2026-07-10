@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   addDependencies();
   setupLoaderLogic();
-  ensureBackToHomeLink();
   ensurePwaMetaTags();
   registerServiceWorker();
   setupInstallPrompt();
@@ -85,7 +84,9 @@ function isIOSDevice() {
 }
 
 function isInStandaloneMode() {
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  return window.matchMedia('(display-mode: standalone)').matches
+    || window.matchMedia('(display-mode: fullscreen)').matches
+    || window.navigator.standalone === true;
 }
 
 function getInstallGuide() {
@@ -163,6 +164,12 @@ function setupInstallPrompt() {
   const isDismissed = localStorage.getItem(INSTALL_PROMPT_DISMISS_KEY) === 'true';
   installPromptDismissed = isDismissed;
 
+  if (isInStandaloneMode()) {
+    installPromptDismissed = true;
+    hideInstallBanner();
+    return;
+  }
+
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     pwaDeferredPrompt = event;
@@ -235,7 +242,7 @@ function setupInstallPrompt() {
   };
 }
 
-function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your phone for a faster app-like experience.', title = 'Install EasyMarket', actionLabel = 'Install') {
+function showInstallBanner(isFallback = false, message = 'Use EasyMarket as a quick app on your device.', title = 'Get the app view', actionLabel = 'Install') {
   if (document.getElementById('pwa-install-banner') || isInStandaloneMode() || installPromptDismissed) return;
 
   const guide = getInstallGuide();
@@ -249,7 +256,7 @@ function showInstallBanner(isFallback = false, message = 'Add EasyMarket to your
       <div class="install-app-title">${title}</div>
       <div class="install-app-copy">${message || guide.message}</div>
       <div class="install-app-actions">
-        <button class="install-app-secondary" onclick="requestNotificationPermission()">Alerts</button>
+        <button class="install-app-secondary" onclick="requestNotificationPermission()">Notify me</button>
         <button class="install-app-primary" onclick="showInstallPrompt()">${actionLabel}</button>
       </div>
     </div>
@@ -273,18 +280,16 @@ function hideInstallBanner() {
   if (banner) banner.remove();
 }
 
-function ensureBackToHomeLink() {
-  if (document.querySelector('.back-to-home-link')) return;
-  if (document.querySelector('nav.navbar, header')) return;
 
-  const banner = document.createElement('div');
-  banner.className = 'back-to-home-link';
-  banner.innerHTML = '<a href="index.html"><i class="fa-solid fa-house"></i> Back to Home</a>';
-  document.body.insertBefore(banner, document.body.firstChild);
+const SUPPORT_EMAIL = 'yvesniyonkuru2022@gmail.com';
+
+function openSupportMail(subject = 'EasyMarket Support', body = '', email = SUPPORT_EMAIL) {
+  const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailtoLink;
 }
 
-function openSupportMail(subject = 'EasyMarket Support') {
-  window.location.href = `mailto:yvesniyonkuru2022@gmail.com?subject=${encodeURIComponent(subject)}`;
+function openSupportPage() {
+  window.location.href = 'support.html';
 }
 
 function setupStickyHeader() {
@@ -375,6 +380,7 @@ function renderDataLoader(message = 'Loading EasyMarket...') {
 
 function renderNavbar() {
   const user = getCurrentUser();
+  const showInstallAction = !isInStandaloneMode();
   const navbarHTML = `
     <nav class="navbar">
       <!-- Top Tier: Branding, Search, Actions -->
@@ -402,10 +408,12 @@ function renderNavbar() {
             <strong>Account</strong>
           </a>
 
+          ${showInstallAction ? `
           <button type="button" class="nav-action-item install-nav-btn" onclick="showInstallPrompt()">
             <i class="fa-solid fa-download"></i>
             <strong>Install</strong>
           </button>
+          ` : ''}
 
           <a href="#" class="nav-action-item cart-icon">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.5rem;"></i>
@@ -471,16 +479,8 @@ function renderNavbar() {
 
         <div class="drawer-section drawer-form-section">
           <h3><i class="fa-solid fa-headset" style="color:#ef4444"></i> Customer Support</h3>
-          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Have a question? Send us a message directly.</p>
-          <form id="drawer-support-form" onsubmit="event.preventDefault(); openSupportMail('EasyMarket Support Request')">
-            <div class="drawer-form-group">
-              <input type="text" placeholder="Your Name" required>
-            </div>
-            <div class="drawer-form-group">
-              <textarea placeholder="How can we help?" required></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Send Request</button>
-          </form>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Need help with a listing, account, or order? Visit our dedicated support page.</p>
+          <a href="support.html" class="btn btn-primary btn-block" style="padding: 0.8rem; border-radius: 8px;">Open support page</a>
         </div>
       </div>
     </div>
@@ -510,16 +510,19 @@ function renderNavbar() {
 }
 
 function renderFooter() {
+  const showInstallBlock = !isInStandaloneMode();
   const footerHTML = `
     <footer class="footer">
       <div class="container footer-grid">
+        ${showInstallBlock ? `
         <div class="footer-col footer-install-col">
-          <h4>Install EasyMarket</h4>
+          <h4>Get the app experience</h4>
           <ul>
-            <li><a href="#" onclick="event.preventDefault(); showInstallPrompt();">Install app on this device</a></li>
-            <li><a href="#" onclick="event.preventDefault(); requestNotificationPermission();">Enable alerts</a></li>
+            <li><a href="#" onclick="event.preventDefault(); showInstallPrompt();">Install on this device</a></li>
+            <li><a href="#" onclick="event.preventDefault(); requestNotificationPermission();">Turn on alerts</a></li>
           </ul>
         </div>
+        ` : ''}
         <div class="footer-col">
           <h4>Get to Know Us</h4>
           <ul>
@@ -799,7 +802,7 @@ function renderTestModeBanner() {
 // ---- Global Support Action ----
 function renderGlobalSupportButton() {
   const btnHTML = `
-    <button class="support-fab" onclick="openSupportDrawer()" title="Contact Support">
+    <button class="support-fab" onclick="openSupportPage()" title="Contact Support">
       <i class="fa-solid fa-headset"></i>
       <span>Contact Support</span>
     </button>
@@ -808,19 +811,7 @@ function renderGlobalSupportButton() {
 }
 
 function openSupportDrawer() {
-  const sideDrawer = document.getElementById('side-drawer');
-  const overlay = document.getElementById('side-drawer-overlay');
-  if (sideDrawer && overlay) {
-    sideDrawer.classList.add('active');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // Focus the support form
-    setTimeout(() => {
-      const form = document.getElementById('drawer-support-form');
-      if (form) form.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 400);
-  }
+  openSupportPage();
 }
 
 // Initialize Global UI Components
