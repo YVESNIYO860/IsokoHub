@@ -1,8 +1,10 @@
-// Firebase Configuration (Firestore only - Auth is now Supabase)
+// ============================================
+// FIRESTORE CONFIGURATION (Product Database)
+// Authentication is now handled by Supabase
+// ============================================
 const firebaseConfig = {
   apiKey: "AIzaSyBB27-mdZSTNBW4AsgZa98vOPAyAwTFZtA",
-  projectId: "easy-market-f7645",
-  databaseURL: "https://easy-market-f7645-default-rtdb.firebaseio.com"
+  projectId: "easy-market-f7645"
 };
 
 let db = null;
