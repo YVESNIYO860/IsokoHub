@@ -208,7 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = 'Connecting to Google...';
     
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      // Supabase v1.x uses signInWithProvider
+      const { error } = await supabase.auth.signInWithProvider({
         provider: 'google',
         options: {
           redirectTo: window.location.origin + '/dashboard.html'
