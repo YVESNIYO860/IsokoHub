@@ -356,6 +356,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         condition,
         sellerPhone: document.getElementById('prod-phone').value,
         district,
+        isAd:        false,
+        adRequested: false,
         ...(isHousing ? { propertyType, listingType, videoUrl: '' } : {})
       };
 

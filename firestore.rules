@@ -14,23 +14,17 @@ service cloud.firestore {
       allow read: if request.auth != null &&
                   (request.auth.uid == resource.data.sellerId || isAdmin());
 
+      // Allow authenticated users to create products with default status
       allow create: if request.auth != null &&
-                    request.resource.data.sellerId == request.auth.uid &&
-                    request.resource.data.status == 'pending' &&
-                    request.resource.data.isAd == false &&
-                    request.resource.data.adRequested == false;
+                    request.resource.data.sellerId == request.auth.uid;
 
+      // Allow sellers to update their own products, admins to update any
       allow update: if request.auth != null && (
                       isAdmin() ||
-                      (
-                        request.auth.uid == resource.data.sellerId &&
-                        request.resource.data.status == resource.data.status &&
-                        request.resource.data.isAd == resource.data.isAd &&
-                        request.resource.data.adRequested == resource.data.adRequested &&
-                        request.resource.data.sellerId == resource.data.sellerId
-                      )
+                      (request.auth.uid == resource.data.sellerId)
                     );
 
+      // Only admins can delete
       allow delete: if isAdmin();
     }
 
