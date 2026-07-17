@@ -591,8 +591,20 @@ function handleSearch(e) {
 
 function handleLogout(e) {
   e.preventDefault();
-  logoutUser();
-  window.location.href = 'index.html';
+  const btn = e.currentTarget;
+  const originalText = btn.textContent;
+  btn.textContent = 'Signing out...';
+  btn.disabled = true;
+  
+  logoutSupabaseUser().then(() => {
+    console.log('User logged out successfully');
+    window.location.href = 'index.html';
+  }).catch((err) => {
+    console.error('Logout failed:', err);
+    btn.textContent = originalText;
+    btn.disabled = false;
+    alert('Logout failed. Please try again.');
+  });
 }
 
 function getQueryParam(name) {

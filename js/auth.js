@@ -99,16 +99,20 @@ async function logoutSupabaseUser() {
     if (supabase && supabase.auth) {
       const { error } = await supabase.auth.signOut();
       if (error) {
-        console.error('Logout error:', error);
-        return false;
+        console.error('Supabase logout error:', error);
+        // Still clear local storage even if Supabase logout fails
+        localStorage.removeItem('isokoHubCurrentUser');
+        return true;
       }
     }
     localStorage.removeItem('isokoHubCurrentUser');
-    console.log('User logged out');
+    console.log('✓ User logged out successfully');
     return true;
   } catch (err) {
     console.error('Error in logoutSupabaseUser:', err);
-    return false;
+    // Always clear localStorage as fallback
+    localStorage.removeItem('isokoHubCurrentUser');
+    return true;
   }
 }
 
