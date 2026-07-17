@@ -120,11 +120,16 @@ async function fetchProductById(id) {
  */
 async function createProduct(productData) {
   if (!db) throw new Error("Database not initialized");
-  if (!auth || !auth.currentUser) throw new Error("You must be logged in to save a product.");
+  
+  // Get current Supabase user
+  const session = supabase && supabase.auth ? supabase.auth.session() : null;
+  if (!session || !session.user) {
+    throw new Error("You must be logged in to save a product.");
+  }
 
   const newProduct = {
     ...productData,
-    sellerId: auth.currentUser.uid,
+    sellerId: session.user.id,
     currency: productData.currency || 'RWF',
     status: 'pending', // Scam-prevention default
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
