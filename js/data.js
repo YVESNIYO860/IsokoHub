@@ -1,4 +1,4 @@
-// Firebase Firestore Data Layer
+// Supabase PostgreSQL Data Layer (100% Supabase, no Firebase)
 const CURRENT_USER_KEY = 'isokoHubCurrentUser';
 const RWANDA_DISTRICTS = [
   'Bugesera', 'Burera', 'Gakenke', 'Gasabo', 'Gatsibo', 'Gicumbi', 'Gisagara', 'Huye',
@@ -6,9 +6,6 @@ const RWANDA_DISTRICTS = [
   'Ngororero', 'Nyabihu', 'Nyagatare', 'Nyamagabe', 'Nyamasheke', 'Nyanza', 'Nyarugenge',
   'Nyaruguru', 'Rubavu', 'Ruhango', 'Rulindo', 'Rusizi', 'Rutsiro', 'Rwamagana'
 ];
-
-// Helper: Get Firestore collection
-const getProductCol = () => db ? db.collection('products') : null;
 
 function formatHeroProductCount(value) {
   if (!Number.isFinite(value) || value < 0) return '0+';
@@ -26,29 +23,18 @@ function formatHeroResponseTime(minutes) {
 }
 
 async function fetchHeroStats() {
-  if (!db) {
+  if (!supabase) {
     return { productCount: 0, responseMinutes: 15 };
   }
 
   try {
-    const productsSnap = await getProductCol()
-      .where('status', '==', 'approved')
-      .get();
+    const { count } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'approved');
 
-    const productCount = productsSnap.size;
-
-    let responseMinutes = 15;
-    try {
-      const settingsDoc = await db.collection('settings').doc('hero').get();
-      if (settingsDoc.exists) {
-        const settingsData = settingsDoc.data() || {};
-        if (Number.isFinite(settingsData.responseTimeMinutes)) {
-          responseMinutes = settingsData.responseTimeMinutes;
-        }
-      }
-    } catch (settingsErr) {
-      console.warn('Unable to load hero settings:', settingsErr);
-    }
+    const productCount = count || 0;
+    const responseMinutes = 15;
 
     return { productCount, responseMinutes };
   } catch (err) {
@@ -58,25 +44,28 @@ async function fetchHeroStats() {
 }
 
 /**
- * Fetch products from Firestore.
+ * Fetch products from Supabase PostgreSQL
  * @param {boolean} approvedOnly - If true, only returns products with status 'approved'
  * @param {string} sellerId - Optional: filter by seller
  */
 async function fetchProducts(approvedOnly = true, sellerId = null) {
-  if (!db) return [];
+  if (!supabase) return [];
   showAppLoader('Loading marketplace items...');
   try {
-    let query = getProductCol();
+    let query = supabase.from('products').select('*');
+    
     if (approvedOnly) {
-      query = query.where('status', '==', 'approved');
+      query = query.eq('status', 'approved');
     }
     if (sellerId) {
-      query = query.where('sellerId', '==', sellerId);
+      query = query.eq('seller_id', sellerId);
     }
     
-    const snapshot = await query.orderBy('createdAt', 'desc').get();
+    const { data, error } = await query.order('created_at', { ascending: false });
+    
     hideAppLoader();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (error) throw error;
+    return data || [];
   } catch (err) {
     hideAppLoader();
     console.error("Error fetching products:", err);
@@ -88,15 +77,18 @@ async function fetchProducts(approvedOnly = true, sellerId = null) {
  * Fetch all pending products (Admin only)
  */
 async function fetchPendingProducts() {
-  if (!db) return [];
+  if (!supabase) return [];
   showAppLoader('Loading pending listings...');
   try {
-    const snapshot = await getProductCol()
-      .where('status', '==', 'pending')
-      .orderBy('createdAt', 'desc')
-      .get();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+    
     hideAppLoader();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (error) throw error;
+    return data || [];
   } catch (err) {
     hideAppLoader();
     console.error("Error fetching pending products:", err);
@@ -105,10 +97,16 @@ async function fetchPendingProducts() {
 }
 
 async function fetchProductById(id) {
-  if (!db) return null;
+  if (!supabase) return null;
   try {
-    const doc = await getProductCol().doc(id).get();
-    return doc.exists ? { id: doc.id, ...doc.data() } : null;
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    return data;
   } catch (err) {
     console.error("Error fetching product by ID:", err);
     return null;
@@ -119,7 +117,7 @@ async function fetchProductById(id) {
  * Create a new product listing (Defaults to 'pending' status)
  */
 async function createProduct(productData) {
-  if (!db) throw new Error("Database not initialized");
+  if (!supabase) throw new Error("Database not initialized");
   
   // Get current Supabase user
   const session = supabase && supabase.auth ? supabase.auth.session() : null;
@@ -130,56 +128,88 @@ async function createProduct(productData) {
   console.log('Current Supabase User ID:', session.user.id);
   console.log('Creating product with data:', productData);
 
+  // Convert camelCase keys to snake_case for PostgreSQL
   const newProduct = {
-    ...productData,
-    sellerId: session.user.id,
+    name: productData.name,
+    category: productData.category,
+    price: productData.price,
     currency: productData.currency || 'RWF',
+    image: productData.image || [],
+    description: productData.description,
+    condition: productData.condition,
+    seller_phone: productData.sellerPhone,
+    district: productData.district,
+    seller_id: session.user.id,
     status: 'pending',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    is_ad: false,
+    ad_requested: false,
+    property_type: productData.propertyType || null,
+    listing_type: productData.listingType || null,
+    video_url: productData.videoUrl || null,
   };
   
-  console.log('Final product object for Firestore:', newProduct);
+  console.log('Final product object for Supabase:', newProduct);
   
   try {
-    const docRef = await getProductCol().add(newProduct);
-    console.log('✓ Product saved to Firestore with ID:', docRef.id);
-    return { id: docRef.id, ...newProduct };
-  } catch (error) {
-    console.error('✗ Error saving product to Firestore:', error);
-    console.error('Error code:', error.code);
-    console.error('Error message:', error.message);
+    const { data, error } = await supabase
+      .from('products')
+      .insert([newProduct])
+      .select()
+      .single();
     
-    // Help user fix permission errors
-    if (error.code === 'permission-denied' || error.message.includes('permission')) {
-      throw new Error(
-        'Permission denied. Make sure your Firestore rules are updated. ' +
-        'See FIRESTORE_RULES_UPDATE.md for instructions.'
-      );
-    }
+    if (error) throw error;
+    
+    console.log('✓ Product saved to Supabase with ID:', data.id);
+    return data;
+  } catch (error) {
+    console.error('✗ Error saving product to Supabase:', error);
+    console.error('Error message:', error.message);
     throw error;
   }
 }
 
 async function updateProductData(id, updatedData) {
-  if (!db) return;
-  await getProductCol().doc(id).update({
-    ...updatedData,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  if (!supabase) return;
+  
+  // Convert camelCase to snake_case
+  const snakeCaseData = {};
+  Object.keys(updatedData).forEach(key => {
+    const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+    snakeCaseData[snakeKey] = updatedData[key];
   });
+  
+  const { error } = await supabase
+    .from('products')
+    .update(snakeCaseData)
+    .eq('id', id);
+  
+  if (error) throw error;
 }
 
 async function updateProductStatus(id, status) {
-  if (!db) return;
-  await getProductCol().doc(id).update({ status });
+  if (!supabase) return;
+  
+  const { error } = await supabase
+    .from('products')
+    .update({ status })
+    .eq('id', id);
+  
+  if (error) throw error;
 }
 
 async function deleteProduct(id) {
-  if (!db) return;
-  await getProductCol().doc(id).delete();
+  if (!supabase) return;
+  
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw error;
 }
 
 /**
- * Auth Logic (Still partially local for session, but integrates with Firebase)
+ * Auth Logic (localStorage sync with Supabase)
  */
 function getCurrentUser() {
   const userStr = localStorage.getItem(CURRENT_USER_KEY);
@@ -208,36 +238,53 @@ function formatPrice(rwfPrice) {
  * Advertising Management
  */
 async function requestAdPlacement(productId) {
-  if (!db) return;
-  await getProductCol().doc(productId).update({ adRequested: true });
+  if (!supabase) return;
+  
+  const { error } = await supabase
+    .from('products')
+    .update({ ad_requested: true })
+    .eq('id', productId);
+  
+  if (error) throw error;
 }
 
 async function approveAdPlacement(productId) {
-  if (!db) return;
-  await getProductCol().doc(productId).update({ 
-    isAd: true, 
-    adRequested: false 
-  });
+  if (!supabase) return;
+  
+  const { error } = await supabase
+    .from('products')
+    .update({ is_ad: true, ad_requested: false })
+    .eq('id', productId);
+  
+  if (error) throw error;
 }
 
 async function rejectAdPlacement(productId) {
-  if (!db) return;
-  await getProductCol().doc(productId).update({ 
-    adRequested: false 
-  });
+  if (!supabase) return;
+  
+  const { error } = await supabase
+    .from('products')
+    .update({ ad_requested: false })
+    .eq('id', productId);
+  
+  if (error) throw error;
 }
 
 async function fetchPromotedProducts() {
-  if (!db) return [];
+  if (!supabase) return [];
   showAppLoader('Loading featured deals...');
   try {
-    const snapshot = await getProductCol()
-      .where('status', '==', 'approved')
-      .where('isAd', '==', true)
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('status', 'approved')
+      .eq('is_ad', true)
       .limit(6)
-      .get();
+      .order('created_at', { ascending: false });
+    
     hideAppLoader();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (error) throw error;
+    return data || [];
   } catch (err) {
     hideAppLoader();
     console.error("Error fetching promoted products:", err);
@@ -246,14 +293,18 @@ async function fetchPromotedProducts() {
 }
 
 async function fetchAdRequests() {
-  if (!db) return [];
+  if (!supabase) return [];
   showAppLoader('Loading ad requests...');
   try {
-    const snapshot = await getProductCol()
-      .where('adRequested', '==', true)
-      .get();
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('ad_requested', true)
+      .order('created_at', { ascending: false });
+    
     hideAppLoader();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (error) throw error;
+    return data || [];
   } catch (err) {
     hideAppLoader();
     console.error("Error fetching ad requests:", err);
