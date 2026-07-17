@@ -201,24 +201,37 @@ document.addEventListener('DOMContentLoaded', async function() {
   ──────────────────────────────────────── */
 
   async function uploadProductImages(files) {
-    if (!storage) throw new Error('Image upload is not available at this time.');
+    if (!supabase) throw new Error('Supabase storage is not available at this time.');
 
     progressWrap.classList.add('visible');
     if (uploadOverlay) uploadOverlay.classList.add('visible');
     progressLabel.textContent  = 'Uploading photos…';
     progressBar.style.width    = '0%';
     progressStatus.textContent = '0 of ' + files.length + ' uploaded';
-    if (overlayText) overlayText.textContent = 'Uploading photos…';
+    if (overlayText) overlayText.textContent = 'Uploading photos… 0%';
     if (overlaySubtext) overlaySubtext.textContent = '0%';
 
     const urls = [];
     for (let i = 0; i < files.length; i++) {
       const file     = files[i];
       const fileName = user.id + '_' + Date.now() + '_' + i + '_' + file.name.replace(/\s+/g, '_');
-      const ref      = storage.ref().child('product-images/' + user.id + '/' + fileName);
-      const snapshot = await ref.put(file);
-      const url      = await snapshot.ref.getDownloadURL();
-      urls.push(url);
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (error) {
+        throw new Error('Image upload failed: ' + error.message);
+      }
+
+      const { publicURL, error: urlError } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+
+      if (urlError || !publicURL) {
+        throw new Error('Unable to get image URL after upload.');
+      }
+
+      urls.push(publicURL);
 
       const pct = Math.round(((i + 1) / files.length) * 100);
       progressBar.style.width    = pct + '%';
@@ -227,18 +240,33 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (overlaySubtext) overlaySubtext.textContent = pct + '%';
     }
 
+    progressBar.style.width = '100%';
+    if (overlayText) overlayText.textContent = 'Sending to database…';
+    if (overlaySubtext) overlaySubtext.textContent = 'Saving listing...';
     progressLabel.textContent = 'All photos uploaded ✓';
-    if (overlayText) overlayText.textContent = 'Upload complete';
-    if (overlaySubtext) overlaySubtext.textContent = '100%';
     return urls;
   }
 
   async function uploadHousingVideo(file, sellerId) {
-    if (!storage) throw new Error('Video upload is not available at this time.');
+    if (!supabase) throw new Error('Supabase storage is not available at this time.');
     const fileName = sellerId + '_' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
-    const ref      = storage.ref().child('house-videos/' + sellerId + '/' + fileName);
-    const snapshot = await ref.put(file);
-    return snapshot.ref.getDownloadURL();
+    const { data, error } = await supabase.storage
+      .from('house-videos')
+      .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+    if (error) {
+      throw new Error('Video upload failed: ' + error.message);
+    }
+
+    const { publicURL, error: urlError } = supabase.storage
+      .from('house-videos')
+      .getPublicUrl(fileName);
+
+    if (urlError || !publicURL) {
+      throw new Error('Unable to get video URL after upload.');
+    }
+
+    return publicURL;
   }
 
   /* ────────────────────────────────────────
@@ -321,6 +349,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       let uploadedVideoUrl = '';
       if (isHousing && videoFile) {
         progressLabel.textContent = 'Uploading video…';
+        if (overlayText) overlayText.textContent = 'Uploading video…';
+        if (overlaySubtext) overlaySubtext.textContent = 'Please wait';
         uploadedVideoUrl = await uploadHousingVideo(videoFile, user.id);
         progressLabel.textContent = 'Video uploaded ✓';
       }

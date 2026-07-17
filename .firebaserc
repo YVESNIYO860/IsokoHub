@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "easy-market-f7645"
-  }
+    "default": "easy-market-f7645",
+    "Authenticatio": "easy-market-f7645"
+  },
+  "targets": {},
+  "etags": {}
 }
