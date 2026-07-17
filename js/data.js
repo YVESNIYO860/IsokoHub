@@ -200,12 +200,124 @@ async function updateProductStatus(id, status) {
 async function deleteProduct(id) {
   if (!supabase) return;
   
+  // Get product data to delete associated files
+  const product = await fetchProductById(id);
+  if (product) {
+    // Delete images from storage
+    if (Array.isArray(product.image) && product.image.length > 0) {
+      for (const imageUrl of product.image) {
+        await deleteFileFromBucket(imageUrl, 'product-images');
+      }
+    }
+    
+    // Delete video from storage if exists
+    if (product.video_url) {
+      await deleteFileFromBucket(product.video_url, 'house-videos');
+    }
+  }
+  
+  // Delete product record from database
   const { error } = await supabase
     .from('products')
     .delete()
     .eq('id', id);
   
   if (error) throw error;
+  console.log('✓ Product and associated files deleted');
+}
+
+/**
+ * Delete file from Supabase Storage bucket
+ * @param {string} fileUrl - Full URL of the file or just the path
+ * @param {string} bucketName - Name of the bucket (product-images, house-videos)
+ */
+async function deleteFileFromBucket(fileUrl, bucketName) {
+  if (!supabase || !fileUrl) return;
+  
+  try {
+    // Extract file path from URL
+    const filePath = extractFilePathFromUrl(fileUrl);
+    if (!filePath) {
+      console.warn('Could not extract file path:', fileUrl);
+      return;
+    }
+    
+    const { error } = await supabase
+      .storage
+      .from(bucketName)
+      .remove([filePath]);
+    
+    if (error) {
+      console.error(`Error deleting ${filePath} from ${bucketName}:`, error);
+      return false;
+    }
+    
+    console.log(`✓ Deleted: ${filePath} from ${bucketName}`);
+    return true;
+  } catch (err) {
+    console.error('Error in deleteFileFromBucket:', err);
+    return false;
+  }
+}
+
+/**
+ * Extract file path from Supabase Storage URL
+ * Converts: https://xxx.supabase.co/storage/v1/object/public/product-images/abc123.jpg
+ * To: abc123.jpg
+ */
+function extractFilePathFromUrl(url) {
+  if (!url) return null;
+  
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Path format: /storage/v1/object/public/bucket-name/file-path
+    const pathParts = pathname.split('/');
+    const bucketIndex = pathParts.indexOf('public');
+    
+    if (bucketIndex === -1) return null;
+    
+    // Get everything after 'public' and bucket name
+    const filePath = pathParts.slice(bucketIndex + 2).join('/');
+    return decodeURIComponent(filePath);
+  } catch (err) {
+    console.error('Error extracting file path:', err);
+    return null;
+  }
+}
+
+/**
+ * Delete multiple files from bucket
+ * @param {array} fileUrls - Array of file URLs
+ * @param {string} bucketName - Bucket name
+ */
+async function deleteMultipleFilesFromBucket(fileUrls, bucketName) {
+  if (!supabase || !Array.isArray(fileUrls)) return;
+  
+  const filePaths = fileUrls
+    .map(url => extractFilePathFromUrl(url))
+    .filter(path => path !== null);
+  
+  if (filePaths.length === 0) return;
+  
+  try {
+    const { error } = await supabase
+      .storage
+      .from(bucketName)
+      .remove(filePaths);
+    
+    if (error) {
+      console.error(`Error deleting files from ${bucketName}:`, error);
+      return false;
+    }
+    
+    console.log(`✓ Deleted ${filePaths.length} files from ${bucketName}`);
+    return true;
+  } catch (err) {
+    console.error('Error in deleteMultipleFilesFromBucket:', err);
+    return false;
+  }
 }
 
 /**
