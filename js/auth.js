@@ -74,6 +74,7 @@ async function logoutSupabaseUser() {
 /**
  * Import users from JSON array (admin function)
  */
+async function importUsersFromJson(usersArray) {
   if (!Array.isArray(usersArray) || !supabase) {
     throw new Error('A valid user JSON array is required.');
   }
