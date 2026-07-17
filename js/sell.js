@@ -149,6 +149,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const progressStatus = document.getElementById('upload-progress-status');
   const progressLabel  = document.getElementById('upload-progress-label');
   const submitBtn      = form.querySelector('button[type="submit"]');
+  const imageInput     = document.getElementById('prod-images');
 
   /* ── Edit-mode pre-fill ── */
   const urlParams    = new URLSearchParams(window.location.search);
@@ -239,8 +240,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     errorEl.textContent = '';
 
     try {
-      // Read from the global store — never from the file input directly
-      const files = window._sellImages.slice(); // copy to protect against mutation
+      // If the global preview store is empty but the input has files,
+      // preserve the selected files from the actual file input.
+      const selectedInputFiles = Array.from(imageInput.files || []);
+      const files = window._sellImages.length > 0
+        ? window._sellImages.slice()
+        : selectedInputFiles.slice();
 
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 

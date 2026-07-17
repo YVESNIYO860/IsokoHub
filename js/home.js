@@ -63,47 +63,108 @@ async function renderHeroSection() {
   const productCountLabel = formatHeroProductCount(stats.productCount);
   const responseLabel = formatHeroResponseTime(stats.responseMinutes);
 
-  container.innerHTML = `
-    <section class="hero-shell">
-      <div class="hero-copy">
-        <div class="hero-title-row">
-          <span class="hero-badge"><i class="fa-solid fa-certificate"></i> Trusted by local sellers</span>
-          <div class="hero-logo-orb" aria-hidden="true">
-            <img src="assets/logo.png" alt="IsokoHub logo">
-          </div>
-        </div>
-        <h1>Shop trusted products from Rwanda sellers.</h1>
-        <p>From groceries and fashion to phones, cars and homes, discover everyday essentials and premium finds in RWF.</p>
+  const slides = [
+    {
+      image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=1600&h=900',
+      imageMobile: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=900&h=1200',
+      title: 'Shop trusted products from Rwanda sellers.',
+      desc: `${productCountLabel} local listings, ${responseLabel} responses, and clear RWF pricing — all in one marketplace.`,
+      cta: { label: 'Browse products', href: 'products.html' }
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=1600&h=900',
+      imageMobile: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=900&h=1200',
+      title: 'Sell smarter. Reach buyers faster.',
+      desc: 'List electronics, fashion, cars, and more. Get your products in front of local buyers with verified listings.',
+      cta: { label: 'Start selling', href: 'sell.html' }
+    },
+    {
+      image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1600&h=900',
+      imageMobile: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=900&h=1200',
+      title: 'Find homes and rentals across Rwanda.',
+      desc: 'Explore apartments, houses, and rental listings with transparent pricing and direct seller contact.',
+      cta: { label: 'View homes', href: 'houses-rent.html' }
+    }
+  ];
 
-        <div class="hero-stats">
-          <div class="hero-stat-card"><strong>${productCountLabel}</strong><span>Local products</span></div>
-          <div class="hero-stat-card"><strong>${responseLabel}</strong><span>Fast responses</span></div>
-          <div class="hero-stat-card"><strong>RWF</strong><span>Clear local pricing</span></div>
+  container.innerHTML = `
+    ${slides.map((slide, index) => `
+      <div class="slide${index === 0 ? ' active' : ''}" data-slide="${index}">
+        <img
+          class="slide-img"
+          src="${slide.image}"
+          srcset="${slide.imageMobile} 900w, ${slide.image} 1600w"
+          sizes="100vw"
+          alt=""
+          ${index === 0 ? 'fetchpriority="high"' : 'loading="lazy"'}
+        >
+        <div class="slide-content">
+          <span class="slide-eyebrow"><i class="fa-solid fa-certificate"></i> IsokoHub Marketplace</span>
+          <h2 class="slide-title">${slide.title}</h2>
+          <p class="slide-desc">${slide.desc}</p>
+          <a href="${slide.cta.href}" class="btn btn-primary slide-btn">${slide.cta.label}</a>
         </div>
       </div>
-      <div class="hero-panel">
-        <div class="hero-panel-card">
-          <div class="hero-panel-top">
-            <span class="hero-panel-badge">Made in Rwanda</span>
-            <span class="hero-panel-badge hero-panel-badge-alt">Verified sellers</span>
-          </div>
-          <div class="hero-feature-image">
-            <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&q=80&w=900&h=600" alt="Marketplace shopping scene">
-          </div>
-          <div class="hero-feature-grid">
-            <div class="hero-feature-box">
-              <i class="fa-solid fa-shield-halved"></i>
-              <strong>Secure deals</strong>
-            </div>
-            <div class="hero-feature-box">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <strong>Easy checkout</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    `).join('')}
+    <div class="slideshow-nav" aria-label="Hero slideshow navigation">
+      ${slides.map((_, index) => `<button type="button" class="dot${index === 0 ? ' active' : ''}" data-slide="${index}" aria-label="Go to slide ${index + 1}"></button>`).join('')}
+    </div>
   `;
+
+  startHeroSlideshow(container);
+}
+
+function startHeroSlideshow(container) {
+  const slides = container.querySelectorAll('.slide');
+  const dots = container.querySelectorAll('.dot');
+  if (!slides.length) return;
+
+  let current = 0;
+  let timer;
+
+  function goTo(index) {
+    current = (index + slides.length) % slides.length;
+    slides.forEach((slide, i) => slide.classList.toggle('active', i === current));
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
+  }
+
+  function next() {
+    goTo(current + 1);
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(next, 5500);
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      goTo(Number(dot.dataset.slide));
+      resetTimer();
+    });
+  });
+
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  container.addEventListener('touchstart', (event) => {
+    touchStartX = event.changedTouches[0].screenX;
+    touchStartY = event.changedTouches[0].screenY;
+  }, { passive: true });
+
+  container.addEventListener('touchend', (event) => {
+    const touchEndX = event.changedTouches[0].screenX;
+    const touchEndY = event.changedTouches[0].screenY;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    if (Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+
+    goTo(deltaX > 0 ? current - 1 : current + 1);
+    resetTimer();
+  }, { passive: true });
+
+  resetTimer();
 }
 
 async function renderFeaturedProducts() {
