@@ -216,15 +216,15 @@ document.addEventListener('DOMContentLoaded', async function() {
       const file     = files[i];
       const fileName = user.id + '_' + Date.now() + '_' + i + '_' + file.name.replace(/\s+/g, '_');
       const { data, error } = await supabase.storage
-        .from('product-images')
+        .from(SUPABASE_IMAGE_BUCKET)
         .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
       if (error) {
-        throw new Error('Image upload failed: ' + error.message);
+        throw new Error(`Image upload failed for bucket "${SUPABASE_IMAGE_BUCKET}": ${error.message}`);
       }
 
       const { publicURL, error: urlError } = supabase.storage
-        .from('product-images')
+        .from(SUPABASE_IMAGE_BUCKET)
         .getPublicUrl(fileName);
 
       if (urlError || !publicURL) {
@@ -251,15 +251,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
     const fileName = sellerId + '_' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
     const { data, error } = await supabase.storage
-      .from('house-videos')
+      .from(SUPABASE_VIDEO_BUCKET)
       .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
     if (error) {
-      throw new Error('Video upload failed: ' + error.message);
+      throw new Error(`Video upload failed for bucket "${SUPABASE_VIDEO_BUCKET}": ${error.message}`);
     }
 
     const { publicURL, error: urlError } = supabase.storage
-      .from('house-videos')
+      .from(SUPABASE_VIDEO_BUCKET)
       .getPublicUrl(fileName);
 
     if (urlError || !publicURL) {

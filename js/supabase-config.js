@@ -2,6 +2,8 @@
 // Replace these values with your Supabase project settings.
 const SUPABASE_URL = 'https://foxfyzytxcuxsncaawwb.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_pDzdVJiRND0MDnD67oTAZw_F0NlKI7P';
+const SUPABASE_IMAGE_BUCKET = 'product-images';
+const SUPABASE_VIDEO_BUCKET = 'house-videos';
 
 const supabaseSdk = window.supabase || window.Supabase;
 if (!supabaseSdk || typeof supabaseSdk.createClient !== 'function') {
