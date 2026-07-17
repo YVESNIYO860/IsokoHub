@@ -127,15 +127,18 @@ async function createProduct(productData) {
     throw new Error("You must be logged in to save a product.");
   }
 
+  console.log('Current Supabase User ID:', session.user.id);
   console.log('Creating product with data:', productData);
 
   const newProduct = {
     ...productData,
     sellerId: session.user.id,
     currency: productData.currency || 'RWF',
-    status: 'pending', // Scam-prevention default
+    status: 'pending',
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
+  
+  console.log('Final product object for Firestore:', newProduct);
   
   try {
     const docRef = await getProductCol().add(newProduct);
@@ -143,6 +146,16 @@ async function createProduct(productData) {
     return { id: docRef.id, ...newProduct };
   } catch (error) {
     console.error('✗ Error saving product to Firestore:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
+    
+    // Help user fix permission errors
+    if (error.code === 'permission-denied' || error.message.includes('permission')) {
+      throw new Error(
+        'Permission denied. Make sure your Firestore rules are updated. ' +
+        'See FIRESTORE_RULES_UPDATE.md for instructions.'
+      );
+    }
     throw error;
   }
 }
