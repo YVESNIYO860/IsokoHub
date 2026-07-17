@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   </div>
                 </td>
                 <td style="padding: 1rem; font-size: 0.85rem;">
-                  <div><i class="fa-solid fa-phone"></i> ${p.sellerPhone || 'N/A'}</div>
+                  <div><i class="fa-solid fa-phone"></i> ${p.seller_phone || 'N/A'}</div>
                 </td>
                 <td style="padding: 1rem; font-weight: 700;">${formatPrice(p.price)}</td>
                 <td style="padding: 1rem; text-align: right;">

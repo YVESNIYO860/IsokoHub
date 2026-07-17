@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Update Stats
     const activeCount = myProducts.filter(p => p.status === 'approved').length;
     const totalValue = myProducts.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
-    const adCount = myProducts.filter(p => p.isAd).length;
+    const adCount = myProducts.filter(p => p.is_ad).length;
 
     document.getElementById('stat-active').textContent = activeCount;
     document.getElementById('stat-value').textContent = formatPrice(totalValue);
@@ -68,8 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         ${myProducts.map(p => {
           const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
           const isApproved = p.status === 'approved';
-          const adRequested = p.adRequested || false;
-          const isAd = p.isAd || false;
+          const adRequested = p.ad_requested || false;
+          const isAd = p.is_ad || false;
 
           let statusBg = '#fef9c3'; 
           let statusText = '#854d0e';
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="status-badge" style="background: ${statusBg}; color: ${statusText};">
               ${statusLabel}
             </div>
-            ${isAd ? '<div class="status-badge" style="top:45px; background: #fff7ed; color: #9a3412; border: 1px solid #ffedd1;">Promoted</div>' : ''}
+            ${isAd ? '<div class="status-badge" style="top:45px; background: #fff7ed; color: #9a3412; border: 1px solid #ffedd1;">✨ Promoted</div>' : ''}
             
             <img src="${displayImg}" class="seller-card-img" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
             
