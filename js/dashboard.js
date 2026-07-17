@@ -5,10 +5,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Display user avatar
+  // Display user avatar from database
   const avatarImg = document.getElementById('user-avatar');
-  if (avatarImg && user.avatar_url) {
-    avatarImg.src = user.avatar_url;
+  if (avatarImg) {
+    const avatarUrl = await getUserAvatar(user.id);
+    avatarImg.src = avatarUrl;
   }
 
   document.getElementById('user-greeting').textContent = `Manage your inventory and promotions, ${user.name.split(' ')[0]}`;

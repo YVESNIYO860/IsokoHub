@@ -30,6 +30,29 @@ function getGravatarUrl(email) {
 }
 
 /**
+ * Get user avatar from database
+ */
+async function getUserAvatar(userId) {
+  if (!supabase) return getGravatarUrl('');
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('avatar_url')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !data?.avatar_url) {
+      return 'https://ui-avatars.com/api/?name=User&background=random';
+    }
+    return data.avatar_url;
+  } catch (err) {
+    console.error('Error fetching avatar:', err);
+    return 'https://ui-avatars.com/api/?name=User&background=random';
+  }
+}
+
+/**
  * MD5 hash function for Gravatar (simple implementation)
  */
 function md5(str) {
@@ -129,12 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (session && session.user) {
         // User is signed in
         const user = session.user;
-        const avatarUrl = getGravatarUrl(user.email);
         const userData = {
           id: user.id,
           email: user.email,
-          name: user.user_metadata?.full_name || 'User',
-          avatar_url: avatarUrl
+          name: user.user_metadata?.full_name || 'User'
         };
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
         console.log('User logged in:', user.email);
@@ -300,14 +321,12 @@ document.addEventListener('DOMContentLoaded', () => {
           errorMsg.classList.remove('d-none');
           console.error('Signup error:', error);
         } else if (data.user) {
-          // Save user profile with avatar
+          // Save user profile
           const userRole = email === adminEmail ? 'admin' : 'seller';
-          const avatarUrl = getGravatarUrl(email);
           const { data: profileData, error: profileError } = await saveUserProfile(data.user.id, {
             email: email,
             full_name: name,
             role: userRole,
-            avatar_url: avatarUrl,
             created_at: new Date().toISOString()
           });
           
