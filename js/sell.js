@@ -150,6 +150,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   const progressLabel  = document.getElementById('upload-progress-label');
   const submitBtn      = form.querySelector('button[type="submit"]');
   const imageInput     = document.getElementById('prod-images');
+  const uploadOverlay  = document.getElementById('upload-overlay');
+  const overlayText    = document.getElementById('upload-overlay-text');
+  const overlaySubtext = document.getElementById('upload-overlay-subtext');
 
   /* ── Edit-mode pre-fill ── */
   const urlParams    = new URLSearchParams(window.location.search);
@@ -201,9 +204,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!storage) throw new Error('Image upload is not available at this time.');
 
     progressWrap.classList.add('visible');
+    if (uploadOverlay) uploadOverlay.classList.add('visible');
     progressLabel.textContent  = 'Uploading photos…';
     progressBar.style.width    = '0%';
     progressStatus.textContent = '0 of ' + files.length + ' uploaded';
+    if (overlayText) overlayText.textContent = 'Uploading photos…';
+    if (overlaySubtext) overlaySubtext.textContent = '0%';
 
     const urls = [];
     for (let i = 0; i < files.length; i++) {
@@ -217,9 +223,13 @@ document.addEventListener('DOMContentLoaded', async function() {
       const pct = Math.round(((i + 1) / files.length) * 100);
       progressBar.style.width    = pct + '%';
       progressStatus.textContent = (i + 1) + ' of ' + files.length + ' uploaded';
+      if (overlayText) overlayText.textContent = 'Uploading photos… ' + pct + '%';
+      if (overlaySubtext) overlaySubtext.textContent = pct + '%';
     }
 
     progressLabel.textContent = 'All photos uploaded ✓';
+    if (overlayText) overlayText.textContent = 'Upload complete';
+    if (overlaySubtext) overlaySubtext.textContent = '100%';
     return urls;
   }
 
@@ -328,6 +338,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           ...(isHousing ? { videoUrl: uploadedVideoUrl } : {})
         });
         window._sellImages = []; // clear after success
+        if (uploadOverlay) uploadOverlay.classList.remove('visible');
         window.location.href = 'dashboard.html?message=Your listing was added and sent to admin for review.';
       }
 
@@ -344,6 +355,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       submitBtn.disabled    = false;
       submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
       progressWrap.classList.remove('visible');
+      if (uploadOverlay) uploadOverlay.classList.remove('visible');
     }
   });
 });
