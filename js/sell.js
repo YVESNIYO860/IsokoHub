@@ -359,6 +359,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         ...(isHousing ? { propertyType, listingType, videoUrl: '' } : {})
       };
 
+      console.log('Product data to save:', productData);
+
       let uploadedVideoUrl = '';
       if (isHousing && videoFile) {
         progressLabel.textContent = 'Uploading video…';

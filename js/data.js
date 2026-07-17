@@ -127,6 +127,8 @@ async function createProduct(productData) {
     throw new Error("You must be logged in to save a product.");
   }
 
+  console.log('Creating product with data:', productData);
+
   const newProduct = {
     ...productData,
     sellerId: session.user.id,
@@ -135,8 +137,14 @@ async function createProduct(productData) {
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
   
-  const docRef = await getProductCol().add(newProduct);
-  return { id: docRef.id, ...newProduct };
+  try {
+    const docRef = await getProductCol().add(newProduct);
+    console.log('✓ Product saved to Firestore with ID:', docRef.id);
+    return { id: docRef.id, ...newProduct };
+  } catch (error) {
+    console.error('✗ Error saving product to Firestore:', error);
+    throw error;
+  }
 }
 
 async function updateProductData(id, updatedData) {
