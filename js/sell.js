@@ -203,6 +203,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   async function uploadProductImages(files) {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
 
+    // Check if user is authenticated with Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) {
+      throw new Error('You must be logged in with Supabase to upload images. Please sign in first.');
+    }
+
     progressWrap.classList.add('visible');
     if (uploadOverlay) uploadOverlay.classList.add('visible');
     progressLabel.textContent  = 'Uploading photos…';
@@ -249,6 +255,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   async function uploadHousingVideo(file, sellerId) {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
+    
+    // Check if user is authenticated with Supabase
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session || !session.user) {
+      throw new Error('You must be logged in with Supabase to upload videos. Please sign in first.');
+    }
+    
     const fileName = sellerId + '_' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
     const { data, error } = await supabase.storage
       .from(SUPABASE_VIDEO_BUCKET)

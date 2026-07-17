@@ -1,39 +1,46 @@
-// Handle login and signup logic with Firebase
-function saveUserProfile(userId, userData) {
-  if (typeof db === 'undefined' || !db) return Promise.resolve();
+// Supabase Authentication Handler
+async function saveUserProfile(userId, userData) {
+  if (!supabase) return Promise.resolve();
 
-  const profileDoc = {
-    ...userData,
-    uid: userId,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  };
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .upsert({
+        id: userId,
+        ...userData,
+        updated_at: new Date().toISOString()
+      });
 
-  return Promise.all([
-    db.collection('users').doc(userId).set(profileDoc, { merge: true }),
-    db.collection('userProfiles').doc(userId).set(profileDoc, { merge: true })
-  ]);
+    if (error) {
+      console.error('Error saving user profile:', error);
+    }
+    return { data, error };
+  } catch (err) {
+    console.error('Error in saveUserProfile:', err);
+  }
 }
 
 async function importUsersFromJson(usersArray) {
-  if (!Array.isArray(usersArray) || typeof db === 'undefined' || !db) {
+  if (!Array.isArray(usersArray) || !supabase) {
     throw new Error('A valid user JSON array is required.');
   }
 
-  const operations = usersArray.map((userItem) => {
+  const results = [];
+  for (const userItem of usersArray) {
     const userId = userItem.uid || userItem.id || userItem.email;
-    if (!userId) return Promise.resolve();
+    if (!userId) continue;
 
-    return saveUserProfile(userId, {
-      name: userItem.name || userItem.fullName || userItem.email || 'User',
+    const result = await saveUserProfile(userId, {
       email: userItem.email || '',
+      full_name: userItem.name || userItem.fullName || userItem.email || 'User',
       role: userItem.role || 'seller',
       phone: userItem.phone || '',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      created_at: new Date().toISOString()
     });
-  });
+    results.push(result);
+  }
 
-  await Promise.all(operations);
-  return { imported: operations.filter(Boolean).length };
+  return { imported: results.length };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,15 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signup-form');
   const adminEmail = 'yvesniyonkuru2022@gmail.com';
 
-  // Firebase Auth State Listener
-  if (typeof firebase !== 'undefined') {
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        // User is signed in, sync with local storage for app consistency
+  // Supabase Auth State Listener
+  if (supabase) {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        // User is signed in
+        const user = session.user;
         const userData = {
-          id: user.uid,
+          id: user.id,
           email: user.email,
-          name: user.displayName || 'User'
+          name: user.user_metadata?.full_name || 'User'
         };
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
 
@@ -65,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const termsAccepted = document.getElementById('accept-terms-login').checked;
       if (!termsAccepted) {
@@ -76,43 +84,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const email = document.getElementById('email').value;
       const pw = document.getElementById('password').value;
-      
-      firebase.auth().signInWithEmailAndPassword(email, pw)
-        .catch((error) => {
+
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: pw
+        });
+
+        if (error) {
           errorMsg.textContent = error.message;
           errorMsg.classList.remove('d-none');
-        });
+        }
+      } catch (error) {
+        errorMsg.textContent = 'Login failed. Please try again.';
+        errorMsg.classList.remove('d-none');
+        console.error('Login error:', error);
+      }
     });
   }
 
   const googleLoginBtn = document.getElementById('google-login-btn');
   const googleSignupBtn = document.getElementById('google-signup-btn');
 
-  const handleGoogleSignIn = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().signInWithPopup(provider)
-      .then((result) => {
-        const user = result.user;
-        if (typeof db === 'undefined') return;
-
-        const userRole = user.email === adminEmail ? 'admin' : 'seller';
-
-        return saveUserProfile(user.uid, {
-          name: user.displayName || user.email,
-          email: user.email,
-          role: userRole,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      })
-      .catch((error) => {
-        console.error('Google sign-in error:', error);
-        if (error.code === 'auth/popup-blocked-request' || error.code === 'auth/cancelled-popup-request') {
-          firebase.auth().signInWithRedirect(provider);
-          return;
+  const handleGoogleSignIn = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/dashboard.html'
         }
+      });
+
+      if (error) {
+        console.error('Google sign-in error:', error);
         errorMsg.textContent = error.message || 'Google sign-in failed. Please try again.';
         errorMsg.classList.remove('d-none');
-      });
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      errorMsg.textContent = 'Google sign-in failed. Please try again.';
+      errorMsg.classList.remove('d-none');
+    }
   };
 
   if (googleLoginBtn) {
@@ -123,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
+    signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const termsAccepted = document.getElementById('accept-terms-signup').checked;
       if (!termsAccepted) {
@@ -135,27 +147,43 @@ document.addEventListener('DOMContentLoaded', () => {
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const pw = document.getElementById('password').value;
-      
-      firebase.auth().createUserWithEmailAndPassword(email, pw)
-        .then((userCredential) => {
-          const user = userCredential.user;
-          // Step 1: Update Auth Profile
-          return user.updateProfile({ displayName: name }).then(() => {
-            // Step 2: Create Firestore User Document
-            if (typeof db !== 'undefined') {
-              return saveUserProfile(user.uid, {
-                name: name,
-                email: email,
-                role: email === 'yvesniyonkuru2022@gmail.com' ? 'admin' : 'seller', // Auto-set admin for Yves
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-              });
+
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email: email,
+          password: pw,
+          options: {
+            data: {
+              full_name: name
             }
-          });
-        })
-        .catch((error) => {
+          }
+        });
+
+        if (error) {
           errorMsg.textContent = error.message;
           errorMsg.classList.remove('d-none');
-        });
+        } else if (data.user) {
+          // Save user profile
+          const userRole = email === adminEmail ? 'admin' : 'seller';
+          await saveUserProfile(data.user.id, {
+            email: email,
+            full_name: name,
+            role: userRole,
+            created_at: new Date().toISOString()
+          });
+
+          errorMsg.textContent = 'Sign up successful! Please check your email to confirm your account.';
+          errorMsg.style.color = '#28a745';
+          errorMsg.classList.remove('d-none');
+
+          // Clear form
+          signupForm.reset();
+        }
+      } catch (error) {
+        errorMsg.textContent = 'Sign up failed. Please try again.';
+        errorMsg.classList.remove('d-none');
+        console.error('Signup error:', error);
+      }
     });
   }
 });

@@ -162,7 +162,9 @@ function getCurrentUser() {
 
 function logoutUser() {
   localStorage.removeItem(CURRENT_USER_KEY);
-  if (auth) auth.signOut();
+  if (typeof supabase !== 'undefined' && supabase.auth) {
+    supabase.auth.signOut();
+  }
 }
 
 /**
