@@ -1,6 +1,33 @@
-// Supabase Authentication Handler
+// ============================================
+// SUPABASE AUTHENTICATION HANDLER
+// ============================================
+
+/**
+ * Check if user is currently authenticated
+ */
+async function isUserAuthenticated() {
+  if (!supabase || !supabase.auth) return false;
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session?.user;
+}
+
+/**
+ * Get current authenticated user
+ */
+async function getCurrentAuthUser() {
+  if (!supabase || !supabase.auth) return null;
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
+}
+
+/**
+ * Save or update user profile in user_profiles table
+ */
 async function saveUserProfile(userId, userData) {
-  if (!supabase) return Promise.resolve();
+  if (!supabase) {
+    console.warn('Supabase not initialized');
+    return Promise.resolve();
+  }
 
   try {
     const { data, error } = await supabase
@@ -9,18 +36,44 @@ async function saveUserProfile(userId, userData) {
         id: userId,
         ...userData,
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: 'id' });
 
     if (error) {
       console.error('Error saving user profile:', error);
+    } else {
+      console.log('User profile saved successfully');
     }
     return { data, error };
   } catch (err) {
     console.error('Error in saveUserProfile:', err);
+    return { data: null, error: err };
   }
 }
 
-async function importUsersFromJson(usersArray) {
+/**
+ * Logout current user
+ */
+async function logoutSupabaseUser() {
+  try {
+    if (supabase && supabase.auth) {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+        return false;
+      }
+    }
+    localStorage.removeItem('isokoHubCurrentUser');
+    console.log('User logged out');
+    return true;
+  } catch (err) {
+    console.error('Error in logoutSupabaseUser:', err);
+    return false;
+  }
+}
+
+/**
+ * Import users from JSON array (admin function)
+ */
   if (!Array.isArray(usersArray) || !supabase) {
     throw new Error('A valid user JSON array is required.');
   }
@@ -50,9 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminEmail = 'yvesniyonkuru2022@gmail.com';
 
   // Supabase Auth State Listener
-  if (supabase) {
+  if (supabase && supabase.auth) {
     supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      console.log('Auth state changed:', event);
+      
+      if (session && session.user) {
         // User is signed in
         const user = session.user;
         const userData = {
@@ -61,13 +116,34 @@ document.addEventListener('DOMContentLoaded', () => {
           name: user.user_metadata?.full_name || 'User'
         };
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
+        console.log('User logged in:', user.email);
 
         // If on auth pages, redirect to dashboard
-        if (window.location.pathname.includes('login.html') || window.location.pathname.includes('signup.html')) {
-          window.location.href = 'dashboard.html';
+        const currentPath = window.location.pathname.toLowerCase();
+        if (currentPath.includes('login.html') || currentPath.includes('signup.html')) {
+          // Prevent redirect loop
+          if (window.location.hostname !== 'localhost' || window.location.port !== '3000') {
+            window.location.href = 'dashboard.html';
+          } else if (currentPath.includes('login') && !currentPath.includes('signup')) {
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
+          } else if (currentPath.includes('signup')) {
+            // Don't redirect immediately on signup - wait for email confirmation message
+          }
         }
       } else {
+        // User is signed out
         localStorage.removeItem('isokoHubCurrentUser');
+        console.log('User logged out');
+        
+        // If on protected page, redirect to login
+        const currentPath = window.location.pathname.toLowerCase();
+        const protectedPages = ['dashboard', 'sell', 'admin', 'product-details', 'admin-profile'];
+        const isProtected = protectedPages.some(page => currentPath.includes(page));
+        
+        if (isProtected && !currentPath.includes('index.html') && !currentPath.includes('/')) {
+          console.log('Redirecting to login - page is protected');
+          setTimeout(() => { window.location.href = 'login.html'; }, 500);
+        }
       }
     });
   }
@@ -75,10 +151,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const submitBtn = loginForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in...';
+      
       const termsAccepted = document.getElementById('accept-terms-login').checked;
       if (!termsAccepted) {
         errorMsg.textContent = 'You must accept the Terms and Conditions to log in.';
         errorMsg.classList.remove('d-none');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
         return;
       }
 
@@ -92,13 +176,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (error) {
-          errorMsg.textContent = error.message;
+          errorMsg.textContent = error.message || 'Login failed. Please check your credentials.';
           errorMsg.classList.remove('d-none');
+          console.error('Login error:', error);
+        } else {
+          // Clear error message on success
+          errorMsg.classList.add('d-none');
+          console.log('Login successful for:', email);
+          // Redirect happens automatically via auth state listener
         }
       } catch (error) {
         errorMsg.textContent = 'Login failed. Please try again.';
         errorMsg.classList.remove('d-none');
         console.error('Login error:', error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     });
   }
@@ -106,7 +199,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const googleLoginBtn = document.getElementById('google-login-btn');
   const googleSignupBtn = document.getElementById('google-signup-btn');
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (e) => {
+    e.preventDefault();
+    const btn = e.currentTarget;
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Connecting to Google...';
+    
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -119,11 +218,16 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Google sign-in error:', error);
         errorMsg.textContent = error.message || 'Google sign-in failed. Please try again.';
         errorMsg.classList.remove('d-none');
+      } else {
+        console.log('Google OAuth initiated');
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
       errorMsg.textContent = 'Google sign-in failed. Please try again.';
       errorMsg.classList.remove('d-none');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = originalText;
     }
   };
 
@@ -137,10 +241,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const submitBtn = signupForm.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+      
       const termsAccepted = document.getElementById('accept-terms-signup').checked;
       if (!termsAccepted) {
         errorMsg.textContent = 'You must accept the Terms and Conditions to sign up.';
         errorMsg.classList.remove('d-none');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
         return;
       }
 
@@ -160,17 +272,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (error) {
-          errorMsg.textContent = error.message;
+          errorMsg.textContent = error.message || 'Sign up failed. Please try again.';
           errorMsg.classList.remove('d-none');
+          console.error('Signup error:', error);
         } else if (data.user) {
           // Save user profile
           const userRole = email === adminEmail ? 'admin' : 'seller';
-          await saveUserProfile(data.user.id, {
+          const { data: profileData, error: profileError } = await saveUserProfile(data.user.id, {
             email: email,
             full_name: name,
             role: userRole,
             created_at: new Date().toISOString()
           });
+          
+          if (profileError) {
+            console.error('Error saving profile:', profileError);
+          }
 
           errorMsg.textContent = 'Sign up successful! Please check your email to confirm your account.';
           errorMsg.style.color = '#28a745';
@@ -178,11 +295,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Clear form
           signupForm.reset();
+          console.log('User registered:', email);
         }
       } catch (error) {
         errorMsg.textContent = 'Sign up failed. Please try again.';
         errorMsg.classList.remove('d-none');
         console.error('Signup error:', error);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
       }
     });
   }
