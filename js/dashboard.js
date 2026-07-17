@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Display user avatar
+  const avatarImg = document.getElementById('user-avatar');
+  if (avatarImg && user.avatar_url) {
+    avatarImg.src = user.avatar_url;
+  }
+
   document.getElementById('user-greeting').textContent = `Manage your inventory and promotions, ${user.name.split(' ')[0]}`;
 
   const urlParams = new URLSearchParams(window.location.search);
