@@ -103,5 +103,67 @@ CREATE POLICY "Users can insert their own profile"
 - **Auth logic**: `js/auth.js`
 - **Login form**: `login.html`
 - **Signup form**: `signup.html`
+- **Admin panel**: `admin.html`
 
 All code is ready! Just complete the Supabase setup above.
+
+---
+
+## Admin Dashboard - Product Management
+
+### Access the Admin Panel
+- Go to: `http://localhost:3000/admin.html` (local) or `https://yourdomain.com/admin.html` (production)
+- Only users with `role: 'admin'` can access
+
+### Admin Features
+
+**View Pending Products**
+- List shows all pending products awaiting approval
+- Each product displays: Name, Price, Category, Seller, Status
+
+**Product Actions**
+For each product, admins can:
+
+1. **Approve** ✓
+   - Moves product status from `pending` → `approved`
+   - Product becomes visible to public on marketplace
+
+2. **Reject** ✗
+   - Changes status to `rejected`
+   - Seller notified via email (configure in Firebase)
+
+3. **View Details** 👁️
+   - See full product description
+   - View all product images
+   - Check seller contact info
+
+4. **Delete** 🗑️
+   - Remove inappropriate or duplicate listings
+   - Cannot be undone
+
+### Admin Permissions in Firestore
+- Only admins can change `status` field
+- Only admins can delete products
+- Admins can see all products (approved/pending/rejected)
+
+### Making a User Admin
+1. Go to **Firebase Console** → **Firestore Database**
+2. Navigate to **users** collection
+3. Find the user document (use their uid)
+4. Set field: `role: "admin"`
+5. User now has admin access
+
+Example user document:
+```json
+{
+  "email": "admin@example.com",
+  "full_name": "Admin Name",
+  "role": "admin",
+  "phone": "+250..."
+}
+```
+
+### Admin Default User
+Default admin email: `yvesniyonkuru2022@gmail.com`
+- Automatically set as admin on first signup
+
