@@ -5,19 +5,19 @@
 /**
  * Check if user is currently authenticated
  */
-async function isUserAuthenticated() {
+function isUserAuthenticated() {
   if (!supabase || !supabase.auth) return false;
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = supabase.auth.session();
   return !!session?.user;
 }
 
 /**
  * Get current authenticated user
  */
-async function getCurrentAuthUser() {
+function getCurrentAuthUser() {
   if (!supabase || !supabase.auth) return null;
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  const session = supabase.auth.session();
+  return session?.user || null;
 }
 
 /**

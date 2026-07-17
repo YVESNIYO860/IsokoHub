@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
 
     // Check if user is authenticated with Supabase
-    const { data: { session } } = await supabase.auth.getSession();
+    const session = supabase.auth.session();
     if (!session || !session.user) {
       throw new Error('You must be logged in with Supabase to upload images. Please sign in first.');
     }
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
     
     // Check if user is authenticated with Supabase
-    const { data: { session } } = await supabase.auth.getSession();
+    const session = supabase.auth.session();
     if (!session || !session.user) {
       throw new Error('You must be logged in with Supabase to upload videos. Please sign in first.');
     }
