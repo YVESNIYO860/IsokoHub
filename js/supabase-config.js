@@ -14,24 +14,32 @@ const SUPABASE_VIDEO_BUCKET = 'house-videos';
 const SUPABASE_USER_PROFILES_TABLE = 'user_profiles';
 
 // Initialize Supabase client
-const supabaseSdk = window.supabase || window.Supabase;
-if (!supabaseSdk || typeof supabaseSdk.createClient !== 'function') {
-  throw new Error('Supabase SDK is not loaded. Make sure the CDN script is included before js/supabase-config.js.');
-}
+let supabase = null;
 
-const supabase = supabaseSdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+try {
+  // Supabase CDN exposes window.supabase
+  if (typeof window.supabase === 'undefined') {
+    console.error('Supabase SDK not loaded. Check CDN script tag.');
+    throw new Error('Supabase SDK is not loaded. Make sure the CDN script is included.');
+  }
 
-// Supabase auth listener - keep user session in localStorage
-if (supabase && supabase.auth) {
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (session?.user) {
-      localStorage.setItem('isokoHubCurrentUser', JSON.stringify({
-        id: session.user.id,
-        email: session.user.email,
-        name: session.user.user_metadata?.full_name || 'User'
-      }));
-    } else {
-      localStorage.removeItem('isokoHubCurrentUser');
-    }
-  });
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log('✓ Supabase initialized successfully');
+  
+  // Supabase auth listener - keep user session in localStorage
+  if (supabase && supabase.auth) {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        localStorage.setItem('isokoHubCurrentUser', JSON.stringify({
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name || 'User'
+        }));
+      } else {
+        localStorage.removeItem('isokoHubCurrentUser');
+      }
+    });
+  }
+} catch (err) {
+  console.error('Failed to initialize Supabase:', err);
 }

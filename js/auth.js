@@ -208,12 +208,15 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = 'Connecting to Google...';
     
     try {
-      // Supabase v1.x uses signInWithProvider
-      const { error } = await supabase.auth.signInWithProvider({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/dashboard.html'
-        }
+      // Supabase v1.35.7 uses signIn with provider option
+      if (!supabase || !supabase.auth) {
+        throw new Error('Supabase not initialized');
+      }
+
+      console.log('Attempting Google sign-in with Supabase v1.35.7...');
+      
+      const { error } = await supabase.auth.signIn({
+        provider: 'google'
       });
 
       if (error) {
@@ -221,11 +224,11 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.textContent = error.message || 'Google sign-in failed. Please try again.';
         errorMsg.classList.remove('d-none');
       } else {
-        console.log('Google OAuth initiated');
+        console.log('Google OAuth initiated successfully');
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
-      errorMsg.textContent = 'Google sign-in failed. Please try again.';
+      errorMsg.textContent = error.message || 'Google sign-in failed. Please try again.';
       errorMsg.classList.remove('d-none');
     } finally {
       btn.disabled = false;
