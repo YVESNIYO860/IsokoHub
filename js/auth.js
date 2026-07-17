@@ -122,14 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // If on auth pages, redirect to dashboard
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('login.html') || currentPath.includes('signup.html')) {
-          // Prevent redirect loop
-          if (window.location.hostname !== 'localhost' || window.location.port !== '3000') {
-            window.location.href = 'dashboard.html';
-          } else if (currentPath.includes('login') && !currentPath.includes('signup')) {
-            setTimeout(() => { window.location.href = 'dashboard.html'; }, 500);
-          } else if (currentPath.includes('signup')) {
-            // Don't redirect immediately on signup - wait for email confirmation message
-          }
+          // Redirect to dashboard on current domain
+          const dashboardUrl = window.location.protocol + '//' + window.location.host + '/dashboard.html';
+          setTimeout(() => { window.location.href = dashboardUrl; }, 500);
         }
       } else {
         // User is signed out
@@ -143,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (isProtected && !currentPath.includes('index.html') && !currentPath.includes('/')) {
           console.log('Redirecting to login - page is protected');
-          setTimeout(() => { window.location.href = 'login.html'; }, 500);
+          const loginUrl = window.location.protocol + '//' + window.location.host + '/login.html';
+          setTimeout(() => { window.location.href = loginUrl; }, 500);
         }
       }
     });
@@ -214,6 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       console.log('Attempting Google sign-in with Supabase v1.35.7...');
+      
+      // Get redirect URL based on current domain
+      const redirectUrl = window.location.protocol + '//' + window.location.host + '/dashboard.html';
       
       const { error } = await supabase.auth.signIn({
         provider: 'google'
