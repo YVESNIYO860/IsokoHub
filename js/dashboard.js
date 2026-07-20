@@ -55,32 +55,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function renderDashboard() {
     const content = document.getElementById('dashboard-content');
-    const myProducts = await fetchProducts(false, user.id);
-
-    // Update Stats
-    const activeCount = myProducts.filter(p => p.status === 'approved').length;
-    const totalValue = myProducts.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
-    const adCount = myProducts.filter(p => p.is_ad).length;
-
-    document.getElementById('stat-active').textContent = activeCount;
-    document.getElementById('stat-value').textContent = formatPrice(totalValue);
-    document.getElementById('stat-ads').textContent = adCount;
-
-    if (myProducts.length === 0) {
-      content.innerHTML = `
-        <div style="text-align:center; padding: 5rem 2rem;">
-          <i class="fa-solid fa-store-slash fa-4x" style="color: #cbd5e1; margin-bottom: 1.5rem;"></i>
-          <h3 style="color: #475569;">No Listings Found</h3>
-          <p class="text-muted mt-1">Start selling today by creating your first product listing.</p>
-          <a href="sell.html" class="btn btn-primary mt-3" style="border-radius: 50px; padding: 1rem 2.5rem;">Create First Listing</a>
-        </div>
-      `;
-      return;
-    }
-
     content.innerHTML = `
-      <div class="listing-grid">
-        ${myProducts.map(p => {
+      <div style="text-align:center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
+    `;
+
+    try {
+      const myProducts = await fetchProducts(false, user.id);
+
+      // Update Stats
+      const activeCount = myProducts.filter(p => p.status === 'approved').length;
+      const totalValue = myProducts.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
+      const adCount = myProducts.filter(p => p.is_ad).length;
+
+      document.getElementById('stat-active').textContent = activeCount;
+      document.getElementById('stat-value').textContent = formatPrice(totalValue);
+      document.getElementById('stat-ads').textContent = adCount;
+
+      if (myProducts.length === 0) {
+        content.innerHTML = `
+          <div style="text-align:center; padding: 5rem 2rem;">
+            <i class="fa-solid fa-store-slash fa-4x" style="color: #cbd5e1; margin-bottom: 1.5rem;"></i>
+            <h3 style="color: #475569;">No Listings Found</h3>
+            <p class="text-muted mt-1">Start selling today by creating your first product listing.</p>
+            <a href="sell.html" class="btn btn-primary mt-3" style="border-radius: 50px; padding: 1rem 2.5rem;">Create First Listing</a>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="listing-grid">
+          ${myProducts.map(p => {
           const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
           const isApproved = p.status === 'approved';
           const adRequested = p.ad_requested || false;
@@ -142,6 +147,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('')}
       </div>
     `;
+    } catch (err) {
+      console.error('Error rendering dashboard:', err);
+      content.innerHTML = `
+        <div style="text-align:center; padding: 3rem;">
+          <h3 style="color:#b91c1c;">Failed to load listings</h3>
+          <p class="text-muted">${(err && err.message) ? err.message : 'An unexpected error occurred.'}</p>
+          <p style="font-size:0.85rem; color:#6b7280;">Check the browser console for details.</p>
+        </div>
+      `;
+    } finally {
+      try { hideAppLoader(); } catch(e) { /* ignore */ }
+    }
   }
 
   await renderDashboard();
