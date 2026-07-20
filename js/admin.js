@@ -33,19 +33,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
   const tabInventory = document.getElementById('tab-inventory');
+  const tabUsers = document.getElementById('tab-users');
   const refreshBtn = document.getElementById('refresh-admin-btn');
 
   let activeTab = 'pending';
 
   const switchTab = (tab) => {
     activeTab = tab;
-    [tabPending, tabAds, tabInventory].forEach((btn) => btn.classList.toggle('active-tab', btn.id === `tab-${tab}`));
+    [tabPending, tabAds, tabInventory, tabUsers].forEach((btn) => {
+      if (!btn) return;
+      btn.classList.toggle('active-tab', btn.id === `tab-${tab}`);
+    });
     renderAdmin();
   };
 
   tabPending.onclick = () => switchTab('pending');
   tabAds.onclick = () => switchTab('ads');
   tabInventory.onclick = () => switchTab('inventory');
+  if (tabUsers) tabUsers.onclick = () => switchTab('users');
 
   if (refreshBtn) {
     refreshBtn.onclick = () => renderAdmin();
@@ -148,6 +153,74 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       };
     }, 50);
+
+    // If Users tab active, render users management and return
+    if (activeTab === 'users') {
+      const users = await fetchUserProfiles();
+      if (!users || users.length === 0) {
+        content.innerHTML = `
+          <div style="text-align:center; padding: 4rem 0;">
+            <h3>No users found</h3>
+            <p class="text-muted">There are no user profiles in the database.</p>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = `
+        <table style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #eee;">
+              <th style="padding: 1rem;">User</th>
+              <th style="padding: 1rem;">Email</th>
+              <th style="padding: 1rem;">Role</th>
+              <th style="padding: 1rem;">Joined</th>
+              <th style="padding: 1rem; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => `
+              <tr style="border-bottom:1px solid #f4f4f4;">
+                <td style="padding:1rem;">${u.full_name || 'User'}</td>
+                <td style="padding:1rem;">${u.email || 'N/A'}</td>
+                <td style="padding:1rem;">${u.role || 'seller'}</td>
+                <td style="padding:1rem;">${u.created_at ? new Date(u.created_at).toLocaleString() : ''}</td>
+                <td style="padding:1rem; text-align:right;">
+                  <button onclick="window.changeUserRole('${u.id}', '${u.role === 'admin' ? 'seller' : 'admin'}')" class="btn btn-secondary" style="margin-right:0.5rem;">${u.role === 'admin' ? 'Demote' : 'Promote'}</button>
+                  <button onclick="window.deleteUserProfileHandler('${u.id}')" class="btn btn-danger">Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      window.changeUserRole = async function(id, newRole) {
+        if (!confirm(`Change role of user to ${newRole}?`)) return;
+        try {
+          await updateUserProfileRole(id, newRole);
+          alert('Role updated');
+          renderAdmin();
+        } catch (err) {
+          console.error('Failed to update role:', err);
+          alert('Failed to update role. Check console.');
+        }
+      };
+
+      window.deleteUserProfileHandler = async function(id) {
+        if (!confirm('Delete this user profile? (This will not delete the auth account)')) return;
+        try {
+          await deleteUserProfile(id);
+          alert('Profile deleted');
+          renderAdmin();
+        } catch (err) {
+          console.error('Failed to delete profile:', err);
+          alert('Failed to delete profile. Check console.');
+        }
+      };
+
+      return;
+    }
 
     let items = [];
     let emptyMessage = '';

@@ -424,3 +424,50 @@ async function fetchAdRequests() {
   }
 }
 
+/**
+ * Fetch user profiles for admin management
+ */
+async function fetchUserProfiles() {
+  if (!supabase) return [];
+  showAppLoader('Loading users...');
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id, full_name, email, phone, role, created_at')
+      .order('created_at', { ascending: false });
+    hideAppLoader();
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    hideAppLoader();
+    console.error('Error fetching user profiles:', err);
+    return [];
+  }
+}
+
+/**
+ * Update user profile role (e.g., promote to admin or seller)
+ */
+async function updateUserProfileRole(userId, newRole) {
+  if (!supabase) throw new Error('Supabase not initialized');
+  const { error } = await supabase
+    .from('user_profiles')
+    .update({ role: newRole })
+    .eq('id', userId);
+  if (error) throw error;
+  return true;
+}
+
+/**
+ * Delete user profile record from `user_profiles` (does NOT delete auth user)
+ */
+async function deleteUserProfile(userId) {
+  if (!supabase) throw new Error('Supabase not initialized');
+  const { error } = await supabase
+    .from('user_profiles')
+    .delete()
+    .eq('id', userId);
+  if (error) throw error;
+  return true;
+}
+
