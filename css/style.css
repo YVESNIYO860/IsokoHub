@@ -480,23 +480,11 @@ body.menu-open .menu-active-overlay {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: inherit;
   text-decoration: none;
   flex-shrink: 0;
-}
-
-.navbar-brand img {
-  height: 45px;
-  width: 45px;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 50%;
-  transform: scale(1.4); /* Zoom into logo frame */
-  border: 2px solid var(--primary-blue);
-  background: white;
-  filter: drop-shadow(0 0 5px rgba(0, 102, 204, 0.4));
 }
 
 /* Global Search (Amazon Style) */

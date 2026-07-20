@@ -609,16 +609,23 @@ async function handleLogout(e) {
   btn.disabled = true;
 
   try {
-    if (typeof logoutSupabaseUser === 'function') {
+    // Try direct Supabase signOut first to ensure server-side session cleared
+    if (window.supabase && supabase && supabase.auth && typeof supabase.auth.signOut === 'function') {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Supabase signOut error:', error);
+        // fallback to local cleanup
+      }
+    } else if (typeof logoutSupabaseUser === 'function') {
+      // fallback to helper if present
       await logoutSupabaseUser();
-    } else {
-      // Fallback if auth.js wasn't loaded: clear local session data locally
-      localStorage.removeItem('isokoHubCurrentUser');
     }
 
+    // Always clear local/session storage and redirect
     localStorage.removeItem('isokoHubCurrentUser');
     localStorage.removeItem(CART_KEY);
     sessionStorage.clear();
+    // Force reload to ensure UI updates
     window.location.href = 'index.html';
   } catch (err) {
     console.error('Logout failed:', err);
