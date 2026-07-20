@@ -198,22 +198,11 @@ async function renderFeaturedProducts() {
           </div>
           <h3 class="product-title">${p.name}</h3>
           <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
-          <div class="product-card-actions">
+          <div class="product-card-foot">
             <span class="product-price">${formatPrice(p.price)}</span>
-            <div class="product-action-buttons">
-              <a href="product.html?id=${p.id}" class="product-icon-btn product-view-btn" onclick='event.stopPropagation();' title="View product">
-                <i class="fa-solid fa-eye"></i>
-              </a>
-              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl)}, "_blank", "noopener,noreferrer")' class="product-icon-btn whatsapp-btn" title="WhatsApp seller">
-                <i class="fa-brands fa-whatsapp"></i>
-              </button>
-              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.location.href=${JSON.stringify(emailUrl)}' class="product-icon-btn email-btn" title="Email seller">
-                <i class="fa-solid fa-envelope"></i>
-              </button>
-              <button onclick='event.preventDefault(); event.stopPropagation(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="product-icon-btn product-cart-btn">
-                <i class="fa-solid fa-cart-plus"></i>
-              </button>
-            </div>
+            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Contact seller">
+              <i class="fa-solid fa-phone"></i>
+            </button>
           </div>
         </div>
       </a>
