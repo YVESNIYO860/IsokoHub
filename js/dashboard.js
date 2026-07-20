@@ -77,7 +77,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     try {
-      const myProducts = await fetchProducts(false, user.id);
+      // Prefer the Supabase session user id, fallback to localStorage user id
+      let sellerId = (user && user.id) ? user.id : null;
+      try {
+        if (window.supabase && supabase && supabase.auth) {
+          const session = supabase.auth.session ? supabase.auth.session() : null;
+          if (session && session.user && session.user.id) sellerId = session.user.id;
+        }
+      } catch (e) {
+        console.warn('Could not read supabase session for sellerId fallback', e);
+      }
+
+      console.debug('Dashboard: fetching products for sellerId=', sellerId);
+      const myProducts = await fetchProducts(false, sellerId);
 
       // Update Stats
       const activeCount = myProducts.filter(p => p.status === 'approved').length;
