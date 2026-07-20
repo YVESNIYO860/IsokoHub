@@ -107,6 +107,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     countSpan.textContent = pendingProducts.length;
     adCountSpan.textContent = adRequests.length;
 
+    // Debug info for admin to diagnose empty queues
+    const supabaseStatus = (typeof supabase !== 'undefined' && supabase) ? 'initialized' : 'missing';
+    const debugHtml = `
+      <div style="margin: 0.5rem 0 1rem; padding: 0.75rem; border-radius:8px; background:#0f172a; color:#fff; font-size:0.9rem;">
+        <strong>Debug:</strong>
+        <div>Supabase: ${supabaseStatus}</div>
+        <div>Pending fetched: ${pendingProducts.length}</div>
+        <div>Ad requests fetched: ${adRequests.length}</div>
+        <div>Total products fetched: ${allProducts.length}</div>
+        <div style="margin-top:0.5rem;"><button id="admin-debug-toggle" class="btn btn-secondary" style="border-radius:50px; padding:0.25rem 0.8rem; font-size:0.85rem;">Show raw fetch data</button></div>
+        <div id="admin-debug-json" style="display:none; margin-top:0.75rem; max-height:220px; overflow:auto; background:#fff; color:#111; padding:0.75rem; border-radius:6px;"></div>
+      </div>
+    `;
+
+    // Insert or replace debug block above content
+    const existingDebug = document.getElementById('admin-debug-block');
+    if (!existingDebug) {
+      const wrapper = document.createElement('div');
+      wrapper.id = 'admin-debug-block';
+      wrapper.innerHTML = debugHtml;
+      content.parentNode.insertBefore(wrapper, content);
+    } else {
+      existingDebug.innerHTML = debugHtml;
+    }
+
+    // Hook toggle button
+    setTimeout(() => {
+      const btn = document.getElementById('admin-debug-toggle');
+      const jsonDiv = document.getElementById('admin-debug-json');
+      if (!btn || !jsonDiv) return;
+      btn.onclick = () => {
+        if (jsonDiv.style.display === 'none') {
+          jsonDiv.style.display = 'block';
+          jsonDiv.textContent = 'Pending:\n' + JSON.stringify(pendingProducts.slice(0,10), null, 2) + '\n\nAd Requests:\n' + JSON.stringify(adRequests.slice(0,10), null, 2) + '\n\nAll Products:\n' + JSON.stringify(allProducts.slice(0,10), null, 2);
+          btn.textContent = 'Hide raw fetch data';
+        } else {
+          jsonDiv.style.display = 'none';
+          btn.textContent = 'Show raw fetch data';
+        }
+      };
+    }, 50);
+
     let items = [];
     let emptyMessage = '';
 
