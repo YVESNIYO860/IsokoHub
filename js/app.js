@@ -609,7 +609,13 @@ async function handleLogout(e) {
   btn.disabled = true;
 
   try {
-    await logoutSupabaseUser();
+    if (typeof logoutSupabaseUser === 'function') {
+      await logoutSupabaseUser();
+    } else {
+      // Fallback if auth.js wasn't loaded: clear local session data locally
+      localStorage.removeItem('isokoHubCurrentUser');
+    }
+
     localStorage.removeItem('isokoHubCurrentUser');
     localStorage.removeItem(CART_KEY);
     sessionStorage.clear();
