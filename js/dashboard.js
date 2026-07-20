@@ -41,6 +41,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  window.updateAvailability = async function(id, mode) {
+    if (!['unavailable', 'available'].includes(mode)) return;
+    const confirmMsg = mode === 'unavailable' ? 'Mark this listing as unavailable (hide from marketplace)?' : 'Make this listing available on the marketplace?';
+    if (!confirm(confirmMsg)) return;
+    try {
+      if (mode === 'unavailable') {
+        await updateProductData(id, { sold: true, status: 'unavailable' });
+      } else {
+        await updateProductData(id, { sold: false, status: 'approved' });
+      }
+      await renderDashboard();
+    } catch (err) {
+      console.error('Failed to update availability:', err);
+      alert('Failed to update availability. Check console.');
+    }
+  };
+
   window.handleRequestAd = async function(id) {
     if(confirm('Request a premium Ad placement for this product? Admin will review your request.')) {
       try {
@@ -125,10 +142,11 @@ document.addEventListener('DOMContentLoaded', async () => {
               ` : ''}
 
               ${isApproved ? `
-                <div class="manage-actions" style="margin-top: 0.75rem;">
-                  <button onclick="window.updateSoldStatus('${p.id}', true)" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Mark Sold</button>
-                  <button onclick="window.updateSoldStatus('${p.id}', false)" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Available</button>
-                </div>
+                    <div class="manage-actions" style="margin-top: 0.75rem;">
+                      <button onclick="window.updateSoldStatus('${p.id}', true)" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Mark Sold</button>
+                      <button onclick="window.updateSoldStatus('${p.id}', false)" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Available</button>
+                      <button onclick="window.updateAvailability('${p.id}', '${isSold ? 'available' : 'unavailable'}')" class="btn btn-warning" style="flex:1; border-radius:50px; font-size: 0.85rem;">${isSold ? 'Make Available' : 'Make Unavailable'}</button>
+                    </div>
               ` : ''}
 
               ${adRequested ? `
