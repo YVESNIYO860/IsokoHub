@@ -2,20 +2,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = getCurrentUser();
   const ADMIN_EMAIL = 'yvesniyonkuru2022@gmail.com';
 
-  // Secure Backend Check: Verify role from Firestore
+  // Secure Backend Check: Verify role from Supabase `user_profiles` table
   let isAdminUser = false;
-  if (user && typeof db !== 'undefined') {
+  if (user && typeof supabase !== 'undefined' && supabase) {
     try {
-      const userDoc = await db.collection('users').doc(user.id).get();
-      if (userDoc.exists && userDoc.data().role === 'admin') {
+      const { data: profile, error } = await supabase
+        .from(SUPABASE_USER_PROFILES_TABLE || 'user_profiles')
+        .select('role,email')
+        .eq('id', user.id)
+        .single();
+
+      if (!error && profile && profile.role === 'admin') {
         isAdminUser = true;
       }
     } catch (err) {
-      console.error("Auth verify error:", err);
+      console.error('Auth verify error (supabase):', err);
     }
   }
 
-  // Fallback: Check email if DB check failed or document missing
+  // Final fallback: Check email if DB check failed or document missing
   if (!isAdminUser && (!user || user.email !== ADMIN_EMAIL)) {
     alert('Access Denied: Administrative privileges required.');
     window.location.href = 'index.html';
