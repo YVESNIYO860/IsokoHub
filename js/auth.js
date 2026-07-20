@@ -20,35 +20,68 @@ function getCurrentAuthUser() {
   return session?.user || null;
 }
 
+function getInitialsFromName(name, fallback = 'U') {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return fallback;
+
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length === 1) {
+    return words[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${words[0][0] || ''}${words[1][0] || ''}`.toUpperCase();
+}
+
+function createInitialsAvatarUrl(name = '', email = '') {
+  const initials = getInitialsFromName(name, email ? email.charAt(0).toUpperCase() : 'U');
+  const seed = `${name}${email}`.toLowerCase();
+  const hash = Array.from(seed).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const background = ['#2563eb', '#0f766e', '#7c3aed', '#dc2626', '#ca8a04', '#475569'][hash % 6];
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+      <rect width="240" height="240" rx="120" fill="${background}" />
+      <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="92" font-weight="700" fill="#ffffff">${initials}</text>
+    </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 /**
  * Generate Gravatar avatar URL from email
  */
 function getGravatarUrl(email) {
-  if (!email) return 'https://ui-avatars.com/api/?name=User&background=random';
+  if (!email) return createInitialsAvatarUrl('', '');
   const emailHash = md5(email.toLowerCase().trim());
   return `https://www.gravatar.com/avatar/${emailHash}?d=identicon&s=200`;
 }
 
 /**
- * Get user avatar from database
+ * Get user avatar from database or current auth session
  */
 async function getUserAvatar(userId) {
-  if (!supabase) return getGravatarUrl('');
+  const authUser = getCurrentAuthUser();
+  const googleAvatar = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || authUser?.user_metadata?.profile_image || authUser?.avatar_url || null;
+  if (googleAvatar) return googleAvatar;
+
+  if (!supabase) {
+    const currentUser = getCurrentUser();
+    return createInitialsAvatarUrl(currentUser?.name || currentUser?.full_name || '', currentUser?.email || '');
+  }
   
   try {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('avatar_url')
+      .select('avatar_url, full_name, email')
       .eq('id', userId)
       .single();
     
     if (error || !data?.avatar_url) {
-      return 'https://ui-avatars.com/api/?name=User&background=random';
+      return createInitialsAvatarUrl(data?.full_name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || '', data?.email || authUser?.email || '');
     }
     return data.avatar_url;
   } catch (err) {
     console.error('Error fetching avatar:', err);
-    return 'https://ui-avatars.com/api/?name=User&background=random';
+    const currentUser = getCurrentUser();
+    return createInitialsAvatarUrl(currentUser?.name || currentUser?.full_name || '', currentUser?.email || '');
   }
 }
 
@@ -134,6 +167,7 @@ async function importUsersFromJson(usersArray) {
       full_name: userItem.name || userItem.fullName || userItem.email || 'User',
       role: userItem.role || 'seller',
       phone: userItem.phone || '',
+      avatar_url: userItem.avatar_url || null,
       created_at: new Date().toISOString()
     });
     results.push(result);
@@ -156,12 +190,25 @@ document.addEventListener('DOMContentLoaded', () => {
       if (session && session.user) {
         // User is signed in
         const user = session.user;
+        const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.preferred_username || 'User';
+        const profilePhone = user.user_metadata?.phone || user.user_metadata?.telephone || user.user_metadata?.phone_number || '';
+        const profileAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.profile_image || '';
         const userData = {
           id: user.id,
           email: user.email,
-          name: user.user_metadata?.full_name || 'User'
+          name: profileName,
+          phone: profilePhone,
+          avatarUrl: profileAvatar
         };
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
+        saveUserProfile(user.id, {
+          email: user.email,
+          full_name: profileName,
+          phone: profilePhone,
+          avatar_url: profileAvatar || null,
+          role: user.email === adminEmail ? 'admin' : 'seller',
+          created_at: new Date().toISOString()
+        });
         console.log('User logged in:', user.email);
 
         // If on auth pages, redirect to dashboard
@@ -307,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value.trim();
       const pw = document.getElementById('password').value;
 
       try {
@@ -331,6 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
             email: email,
             full_name: name,
             role: userRole,
+            phone: phone,
+            avatar_url: null,
             created_at: new Date().toISOString()
           });
           

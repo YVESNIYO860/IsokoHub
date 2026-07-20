@@ -79,13 +79,28 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="pd-price">${formatPrice(product.price)}</div>
         </div>
 
+        <div class="pd-description" style="margin-top: 0.5rem;">
+          <strong>Location:</strong><br>
+          <i class="fa-solid fa-location-dot"></i> ${product.district || 'District not set'}
+        </div>
+
         <div class="pd-description">
           <strong>About this item:</strong><br>
           ${escapeHtml(product.description || '').replace(/\n/g, '<br>')}
         </div>
 
-        <div class="product-actions">
-          <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn">
+        <div class="product-actions" style="display:flex; flex-direction:column; gap:0.75rem;">
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+            <a href="https://wa.me/250798269987?text=${encodeURIComponent(`Hello, I am interested in your listing: ${product.name}`)}" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #16a34a; color: white; border: 1px solid #16a34a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem;">
+              <i class="fa-brands fa-whatsapp" style="font-size: 1.1rem;"></i>
+              <span style="font-size:0.82rem; font-weight:700;">WhatsApp</span>
+            </a>
+            <a href="mailto:yvesniyonkuru2022@gmail.com?subject=${encodeURIComponent(`Question about ${product.name}`)}" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #2563eb; color: white; border: 1px solid #2563eb; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem;">
+              <i class="fa-solid fa-envelope" style="font-size: 1.1rem;"></i>
+              <span style="font-size:0.82rem; font-weight:700;">Email</span>
+            </a>
+          </div>
+          <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
             <i class="fa-solid fa-cart-plus"></i> Add to Cart
           </button>
         </div>

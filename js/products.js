@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (currentDistrict !== 'all') {
-      allProducts = allProducts.filter(p => (p.district || 'Unknown') === currentDistrict);
+      allProducts = allProducts.filter(p => (String(p.district || '').split(' • ')[0] || 'Unknown') === currentDistrict);
     }
     
     if (queryStr) {

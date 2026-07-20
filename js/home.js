@@ -183,21 +183,37 @@ async function renderFeaturedProducts() {
   container.innerHTML = featured.map(p => {
     const categoryObj = { icon: 'fa-solid fa-box' }; // Simplified for now
     const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
+    const phone = p.seller_phone ? String(p.seller_phone).trim() : '250798269987';
+    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}`;
+    const emailUrl = `mailto:yvesniyonkuru2022@gmail.com?subject=${encodeURIComponent(`Question about ${p.name}`)}`;
+
     return `
       <a href="product.html?id=${p.id}" class="product-card">
+        <div class="product-card-badge">Featured</div>
         <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
         <div class="product-card-content">
-          <div style="display:flex; align-items:center; gap: 0.5rem;">
-            <i class="${categoryObj.icon}" style="color: var(--primary-blue); font-size: 0.8rem;"></i>
+          <div class="product-card-meta-row">
             <span class="product-category">${p.category}</span>
             <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
           </div>
           <h3 class="product-title">${p.name}</h3>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+          <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
+          <div class="product-card-actions">
             <span class="product-price">${formatPrice(p.price)}</span>
-            <button onclick='event.preventDefault(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="btn btn-primary" style="padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; background: #febd69; color: #131921; border:none;">
-              <i class="fa-solid fa-cart-plus"></i>
-            </button>
+            <div class="product-action-buttons">
+              <a href="product.html?id=${p.id}" class="product-icon-btn product-view-btn" onclick='event.stopPropagation();' title="View product">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl)}, "_blank", "noopener,noreferrer")' class="product-icon-btn whatsapp-btn" title="WhatsApp seller">
+                <i class="fa-brands fa-whatsapp"></i>
+              </button>
+              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.location.href=${JSON.stringify(emailUrl)}' class="product-icon-btn email-btn" title="Email seller">
+                <i class="fa-solid fa-envelope"></i>
+              </button>
+              <button onclick='event.preventDefault(); event.stopPropagation(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="product-icon-btn product-cart-btn">
+                <i class="fa-solid fa-cart-plus"></i>
+              </button>
+            </div>
           </div>
         </div>
       </a>
@@ -224,16 +240,22 @@ async function renderPromotedProducts() {
         <div class="ad-badge" style="position:absolute; top:10px; right:10px; background: #febd69; color:#131921; padding: 0.2rem 0.6rem; border-radius:4px; font-weight:800; font-size:0.7rem; z-index:10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">AD</div>
         <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
         <div class="product-card-content">
-          <div style="display:flex; align-items:center; gap: 0.5rem;">
+          <div class="product-card-meta-row">
             <span class="product-category">${p.category}</span>
             <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
           </div>
           <h3 class="product-title" style="color: #1e293b;">${p.name}</h3>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+          <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
+          <div class="product-card-actions">
             <span class="product-price" style="color: #2563eb;">${formatPrice(p.price)}</span>
-            <button onclick='event.preventDefault(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="btn btn-primary" style="padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; background: #febd69; color: #131921; border:none;">
-              <i class="fa-solid fa-cart-plus"></i>
-            </button>
+            <div class="product-action-buttons">
+              <a href="product.html?id=${p.id}" class="product-icon-btn product-view-btn" onclick='event.stopPropagation();' title="View product">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              <button onclick='event.preventDefault(); event.stopPropagation(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="product-icon-btn product-cart-btn">
+                <i class="fa-solid fa-cart-plus"></i>
+              </button>
+            </div>
           </div>
         </div>
       </a>

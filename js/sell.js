@@ -173,7 +173,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('prod-price').value             = product.price;
       document.getElementById('prod-description').value       = product.description;
       document.getElementById('prod-phone').value             = product.sellerPhone || '';
-      document.getElementById('prod-district').value          = product.district    || '';
+      const districtParts = String(product.district || '').split(' • ');
+      document.getElementById('prod-district').value          = districtParts[0] || '';
+      document.getElementById('prod-location').value          = districtParts.slice(1).join(' • ').trim();
       document.getElementById('prod-property-type').value      = product.property_type || '';
       document.getElementById('prod-listing-type').value       = product.listing_type || '';
       if (product.condition) {
@@ -182,6 +184,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       window.location.href = 'dashboard.html';
     }
+  }
+
+  const currentUser = getCurrentUser();
+  if (currentUser?.phone && document.getElementById('prod-phone').value.trim() === '') {
+    document.getElementById('prod-phone').value = currentUser.phone;
   }
 
   /* ── District dropdown ── */
@@ -331,6 +338,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       // Validate district
       const district = districtSelect.value.trim();
       if (!district) throw new Error('Please select your district.');
+      const locationDetail = document.getElementById('prod-location').value.trim();
+      const fullLocation = locationDetail ? `${district} • ${locationDetail}` : district;
 
       // Housing-specific
       const category     = categorySelect.value;
@@ -357,7 +366,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         description: document.getElementById('prod-description').value,
         condition,
         sellerPhone: document.getElementById('prod-phone').value,
-        district,
+        district: fullLocation,
         isAd:        false,
         adRequested: false,
         sold: false,

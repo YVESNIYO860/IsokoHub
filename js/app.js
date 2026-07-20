@@ -298,13 +298,22 @@ function setupStickyHeader() {
   const navbar = document.querySelector('.navbar');
   if (!navbar) return;
 
+  let ticking = false;
+
+  const updateHeaderState = () => {
+    const shouldScroll = window.scrollY > 8;
+    navbar.classList.toggle('scrolled', shouldScroll);
+    ticking = false;
+  };
+
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      navbar.classList.add('scrolled');
-    } else {
-      navbar.classList.remove('scrolled');
+    if (!ticking) {
+      window.requestAnimationFrame(updateHeaderState);
+      ticking = true;
     }
-  });
+  }, { passive: true });
+
+  updateHeaderState();
 }
 
 function setupLoaderLogic() {
@@ -522,19 +531,9 @@ function renderNavbar() {
 }
 
 function renderFooter() {
-  const showInstallBlock = !isInStandaloneMode();
   const footerHTML = `
     <footer class="footer">
       <div class="container footer-grid">
-        ${showInstallBlock ? `
-        <div class="footer-col footer-install-col">
-          <h4>Get the app experience</h4>
-          <ul>
-            <li><a href="#" onclick="event.preventDefault(); showInstallPrompt();">Install on this device</a></li>
-            <li><a href="#" onclick="event.preventDefault(); requestNotificationPermission();">Turn on alerts</a></li>
-          </ul>
-        </div>
-        ` : ''}
         <div class="footer-col">
           <h4>Get to Know Us</h4>
           <ul>
@@ -566,6 +565,9 @@ function renderFooter() {
             <li><a href="about.html#help">Help Center</a></li>
             <li><a href="https://wa.me/250798269987" target="_blank" class="whatsapp-support">
               <i class="fa-brands fa-whatsapp whatsapp-icon-anim"></i> WhatsApp Support
+            </a></li>
+            <li><a href="mailto:yvesniyonkuru2022@gmail.com">
+              <i class="fa-solid fa-envelope"></i> Email Support
             </a></li>
           </ul>
         </div>
@@ -599,22 +601,25 @@ function handleSearch(e) {
   }
 }
 
-function handleLogout(e) {
+async function handleLogout(e) {
   e.preventDefault();
   const btn = e.currentTarget;
   const originalText = btn.textContent;
   btn.textContent = 'Signing out...';
   btn.disabled = true;
-  
-  logoutSupabaseUser().then(() => {
-    console.log('User logged out successfully');
+
+  try {
+    await logoutSupabaseUser();
+    localStorage.removeItem('isokoHubCurrentUser');
+    localStorage.removeItem(CART_KEY);
+    sessionStorage.clear();
     window.location.href = 'index.html';
-  }).catch((err) => {
+  } catch (err) {
     console.error('Logout failed:', err);
     btn.textContent = originalText;
     btn.disabled = false;
     alert('Logout failed. Please try again.');
-  });
+  }
 }
 
 function getQueryParam(name) {
