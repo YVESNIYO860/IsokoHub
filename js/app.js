@@ -412,10 +412,7 @@ function renderNavbar() {
         </div>
         
         <a href="index.html" class="navbar-brand">
-          <picture>
-            <source srcset="assets/logo-light.svg" media="(prefers-color-scheme: dark)">
-            <img src="assets/logo-dark.svg" alt="IsokoHub" class="site-logo" width="160" height="40" onerror="this.src='assets/logo.png'">
-          </picture>
+          <img src="assets/logo.png" alt="IsokoHub" class="site-logo" loading="eager" onerror="this.style.display='none'">
           <span>IsokoHub</span>
         </a>
         
