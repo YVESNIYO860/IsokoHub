@@ -350,12 +350,17 @@ function addDependencies() {
 
 function renderStartupLoader() {
   const loaderHTML = `
-    <div id="app-startup-loader" class="app-loader-overlay">
+    <div id="app-startup-loader" class="app-loader-overlay" role="status" aria-live="polite">
       <div class="loader-card">
-        <img src="assets/logo.png" class="loader-brand-logo" alt="IsokoHub Logo">
+        <div class="loader-visual" aria-hidden="true">
+          <div class="loader-ring"></div>
+          <div class="loader-core">
+            <img src="assets/logo.png" alt="">
+          </div>
+        </div>
         <div class="loader-title">IsokoHub</div>
-        <div class="loader-bar">
-          <span class="loader-bar-fill"></span>
+        <div class="loader-dots" aria-hidden="true">
+          <span></span><span></span><span></span>
         </div>
         <div class="loader-subtext">Preparing your marketplace experience</div>
       </div>
@@ -366,12 +371,17 @@ function renderStartupLoader() {
 
 function renderDataLoader(message = 'Loading IsokoHub...') {
   const loaderHTML = `
-    <div id="app-data-loader" class="app-loader-overlay data-loader">
+    <div id="app-data-loader" class="app-loader-overlay data-loader" role="status" aria-live="polite">
       <div class="loader-card compact-loader">
-        <img src="assets/logo.png" class="loader-brand-logo" alt="IsokoHub Logo">
+        <div class="loader-visual" aria-hidden="true">
+          <div class="loader-ring"></div>
+          <div class="loader-core">
+            <img src="assets/logo.png" alt="">
+          </div>
+        </div>
         <div class="loader-title">IsokoHub</div>
-        <div class="loader-bar">
-          <span class="loader-bar-fill"></span>
+        <div class="loader-dots" aria-hidden="true">
+          <span></span><span></span><span></span>
         </div>
         <div class="loader-subtext">${message}</div>
       </div>

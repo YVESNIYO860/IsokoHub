@@ -27,23 +27,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   const adCountSpan = document.getElementById('ad-request-count');
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
+  const tabInventory = document.getElementById('tab-inventory');
   const refreshBtn = document.getElementById('refresh-admin-btn');
 
   let activeTab = 'pending';
 
-  tabPending.onclick = () => {
-    activeTab = 'pending';
-    tabPending.classList.add('active-tab');
-    tabAds.classList.remove('active-tab');
+  const switchTab = (tab) => {
+    activeTab = tab;
+    [tabPending, tabAds, tabInventory].forEach((btn) => btn.classList.toggle('active-tab', btn.id === `tab-${tab}`));
     renderAdmin();
   };
 
-  tabAds.onclick = () => {
-    activeTab = 'ads';
-    tabAds.classList.add('active-tab');
-    tabPending.classList.remove('active-tab');
-    renderAdmin();
-  };
+  tabPending.onclick = () => switchTab('pending');
+  tabAds.onclick = () => switchTab('ads');
+  tabInventory.onclick = () => switchTab('inventory');
 
   if (refreshBtn) {
     refreshBtn.onclick = () => renderAdmin();
@@ -81,23 +78,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  window.handleMarkSold = async function(id) {
+    if (confirm('Mark this product as sold?')) {
+      await updateProductData(id, { sold: true, status: 'approved' });
+      renderAdmin();
+    }
+  };
+
+  window.handleMarkAvailable = async function(id) {
+    if (confirm('Mark this product as available again?')) {
+      await updateProductData(id, { sold: false, status: 'approved' });
+      renderAdmin();
+    }
+  };
+
   async function renderAdmin() {
     content.innerHTML = `<div style="text-align:center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>`;
 
     const pendingProducts = await fetchPendingProducts();
     const adRequests = await fetchAdRequests();
+    const allProducts = await fetchProducts(false);
 
     countSpan.textContent = pendingProducts.length;
     adCountSpan.textContent = adRequests.length;
 
-    const items = activeTab === 'pending' ? pendingProducts : adRequests;
+    let items = [];
+    let emptyMessage = '';
+
+    if (activeTab === 'pending') {
+      items = pendingProducts;
+      emptyMessage = 'No listings are waiting for approval.';
+    } else if (activeTab === 'ads') {
+      items = adRequests;
+      emptyMessage = 'No ad requests are waiting for review.';
+    } else {
+      items = allProducts;
+      emptyMessage = 'No inventory items found.';
+    }
 
     if (items.length === 0) {
       content.innerHTML = `
         <div style="text-align:center; padding: 4rem 0;">
           <i class="fa-solid fa-circle-check fa-4x" style="color: #dcfce7; margin-bottom: 1rem;"></i>
           <h3>Queue Clear!</h3>
-          <p class="text-muted">No ${activeTab === 'pending' ? 'listings' : 'ad requests'} to review.</p>
+          <p class="text-muted">${emptyMessage}</p>
         </div>
       `;
       return;
@@ -116,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <tbody>
           ${items.map(p => {
             const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
+            const isSold = p.sold === true;
             return `
               <tr style="border-bottom: 1px solid #f0f0f0;">
                 <td style="padding: 1rem;">
@@ -124,6 +149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div>
                       <h4 style="margin:0;">${p.name}</h4>
                       <p style="margin:0; font-size:0.8rem; color:#666;">Category: ${p.category}</p>
+                      ${isSold ? '<p style="margin:0.2rem 0 0; color:#b91c1c; font-weight:700;">Sold</p>' : ''}
                     </div>
                   </div>
                 </td>
@@ -135,9 +161,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                   ${activeTab === 'pending' ? `
                     <button onclick="handleApprove('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Approve</button>
                     <button onclick="handleReject('${p.id}')" class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Reject</button>
-                  ` : `
+                  ` : activeTab === 'ads' ? `
                     <button onclick="handleApproveAd('${p.id}')" class="btn btn-primary" style="background:#f59e0b; padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; border:none;">Boost Ad</button>
                     <button onclick="handleRejectAd('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Ignore</button>
+                  ` : `
+                    <button onclick="handleMarkSold('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Mark Sold</button>
+                    <button onclick="handleMarkAvailable('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Available</button>
+                    <button onclick="handleReject('${p.id}')" class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Delete</button>
                   `}
                 </td>
               </tr>

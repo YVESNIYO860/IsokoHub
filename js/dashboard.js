@@ -33,6 +33,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  window.updateSoldStatus = async function(id, sold) {
+    const action = sold ? 'sold' : 'available again';
+    if (confirm(`Mark this listing as ${action}?`)) {
+      await updateProductData(id, { sold, status: 'approved' });
+      await renderDashboard();
+    }
+  };
+
   window.handleRequestAd = async function(id) {
     if(confirm('Request a premium Ad placement for this product? Admin will review your request.')) {
       try {
@@ -77,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const isApproved = p.status === 'approved';
           const adRequested = p.ad_requested || false;
           const isAd = p.is_ad || false;
+          const isSold = p.sold === true;
 
           let statusBg = '#fef9c3'; 
           let statusText = '#854d0e';
@@ -85,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (isApproved) {
             statusBg = '#dcfce7';
             statusText = '#166534';
-            statusLabel = 'Live On Site';
+            statusLabel = isSold ? 'Sold' : 'Live On Site';
           }
 
           return `
@@ -108,6 +117,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <button onclick="handleRequestAd('${p.id}')" class="btn promote-btn">
                   <i class="fa-solid fa-bullhorn"></i> Advertise My Product
                 </button>
+              ` : ''}
+
+              ${isApproved ? `
+                <div class="manage-actions" style="margin-top: 0.75rem;">
+                  <button onclick="window.updateSoldStatus('${p.id}', true)" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Mark Sold</button>
+                  <button onclick="window.updateSoldStatus('${p.id}', false)" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Available</button>
+                </div>
               ` : ''}
 
               ${adRequested ? `

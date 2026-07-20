@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const product = await fetchProductById(productId);
 
-  // Security: If product doesn't exist or is not approved, don't show it to public
   if (!product || (product.status !== 'approved' && getCurrentUser()?.email !== 'yvesniyonkuru2022@gmail.com')) {
     wrapper.innerHTML = `
       <div style="text-align: center; padding: 5rem;">
@@ -34,88 +33,91 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Update Page Title
   document.title = `${product.name} - IsokoHub`;
 
-  const images = Array.isArray(product.image) ? product.image : [product.image];
-  const mainImage = images[0];
-
-  const contactButtonMsg = encodeURIComponent(`Hi, I'm interested in your product: ${product.name} listed on IsokoHub.`);
-  const waMessage = encodeURIComponent(`Hi, I saw your product "${product.name}" on IsokoHub and I'm interested!`);
+  const images = Array.isArray(product.image) ? product.image.filter(Boolean) : [product.image].filter(Boolean);
+  const mainImage = images[0] || 'https://via.placeholder.com/600x600?text=No+Image';
+  const reviewKey = `isoko-product-reviews-${productId}`;
+  const reviews = getStoredReviews(reviewKey);
+  const averageRating = reviews.length ? (reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviews.length).toFixed(1) : '0.0';
 
   wrapper.innerHTML = `
-    <div class="product-detail-container">
-      <div class="product-image-box">
-        <div style="width:100%; text-align:center;">
+    <div class="product-detail-shell">
+      <div class="product-gallery-card">
+        <div class="gallery-main">
+          ${images.length > 1 ? `<button class="gallery-nav gallery-prev" type="button" id="gallery-prev" aria-label="Previous image"><i class="fa-solid fa-chevron-left"></i></button>` : ''}
           <img src="${mainImage}" id="main-product-image" alt="${product.name}" class="product-main-img" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
-          
-          ${images.length > 1 ? `
-            <div class="gallery-thumbnails">
-              ${images.map((img, idx) => `
-                <img src="${img}" class="thumbnail-item ${idx === 0 ? 'active' : ''}" 
-                     onclick="document.getElementById('main-product-image').src='${img}'; 
-                              document.querySelectorAll('.thumbnail-item').forEach(t=>t.classList.remove('active'));
-                              this.classList.add('active');" 
-                     onerror="this.style.display='none'">
-              `).join('')}
-            </div>
-          ` : ''}
+          ${images.length > 1 ? `<button class="gallery-nav gallery-next" type="button" id="gallery-next" aria-label="Next image"><i class="fa-solid fa-chevron-right"></i></button>` : ''}
+          <button class="gallery-zoom-btn" type="button" id="gallery-zoom-btn"><i class="fa-solid fa-maximize"></i> Zoom</button>
         </div>
+
+        ${images.length > 1 ? `
+          <div class="gallery-thumbs">
+            ${images.map((img, idx) => `
+              <button type="button" class="gallery-thumb ${idx === 0 ? 'active' : ''}" data-index="${idx}" aria-label="View image ${idx + 1}">
+                <img src="${img}" alt="${product.name} ${idx + 1}" onerror="this.style.display='none'">
+              </button>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
-      <div class="product-info-box">
+
+      <div class="product-info-card" id="product-description-panel">
         <div class="pd-header">
           <div class="pd-category">${product.category}</div>
           <span class="pd-badge ${product.condition === 'New' ? 'badge-new' : 'badge-used'}">${product.condition || 'Used'}</span>
           <h1 class="pd-title">${product.name}</h1>
-          <div class="pd-rating">
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star"></i>
-            <i class="fa-solid fa-star-half-stroke"></i>
-            <span style="color:#007185; margin-left:5px;">(4.5 / 5)</span>
+          <div class="review-summary" id="review-summary">
+            <div class="review-summary-stars">${buildStarsMarkup(Number(averageRating))}</div>
+            <div class="review-summary-score">${averageRating} / 5</div>
+            <div class="review-summary-count">${reviews.length} review${reviews.length === 1 ? '' : 's'}</div>
           </div>
         </div>
 
         <div class="pd-price-row">
-           <div class="pd-price-label">Price:</div>
-           <div class="pd-price">${formatPrice(product.price)}</div>
+          <div class="pd-price-label">Price:</div>
+          <div class="pd-price">${formatPrice(product.price)}</div>
         </div>
 
         <div class="pd-description">
           <strong>About this item:</strong><br>
-          ${product.description.replace(/\n/g, '<br>')}
+          ${escapeHtml(product.description || '').replace(/\n/g, '<br>')}
         </div>
 
-        <div style="margin-top: 2rem;">
-          <button id="add-to-cart-btn" class="btn btn-primary btn-block" style="background:#febd69; color:#131921; border:none; padding:1rem; font-size:1.1rem;">
+        <div class="product-actions">
+          <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn">
             <i class="fa-solid fa-cart-plus"></i> Add to Cart
           </button>
         </div>
-        
-        <div class="contact-seller-card">
-          <h4 style="margin-bottom:1rem;">Contact Seller</h4>
-          <div class="pd-actions" style="display:flex; flex-direction:column; gap:0.8rem;">
-            <a href="mailto:seller_${product.sellerId}@isokohub.com?subject=Enquiry about ${product.name}&body=${contactButtonMsg}" class="btn btn-primary btn-block">
-              <i class="fa-solid fa-envelope"></i> Send Email
-            </a>
-            
-            ${product.sellerPhone ? `
-              <a href="https://wa.me/${product.sellerPhone.replace(/\D/g,'')}?text=${waMessage}" target="_blank" class="btn btn-secondary btn-block" style="background:#25d366; color:white; border:none;">
-                <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
-              </a>
-              <a href="tel:${product.sellerPhone}" class="btn btn-secondary btn-block">
-                <i class="fa-solid fa-phone"></i> Call ${product.sellerPhone}
-              </a>
-            ` : `
-               <p class="text-muted" style="font-size:0.8rem;">No phone number provided by seller.</p>
-            `}
+
+        <div class="review-card">
+          <div class="review-card-header">
+            <h3>Ratings & Reviews</h3>
+            <p>Share your experience after adding your email.</p>
+          </div>
+
+          <form id="review-form" class="review-form">
+            <label class="form-label" for="review-email">Your email</label>
+            <input id="review-email" type="email" class="form-control" placeholder="name@example.com" required>
+
+            <label class="form-label">Your rating</label>
+            <div class="rating-picker" id="rating-picker">
+              ${[1, 2, 3, 4, 5].map((value) => `<button type="button" class="rating-star" data-value="${value}" aria-label="Rate ${value} star${value > 1 ? 's' : ''}"><i class="fa-solid fa-star"></i></button>`).join('')}
+            </div>
+
+            <label class="form-label" for="review-comment">Your comment</label>
+            <textarea id="review-comment" class="form-control review-textarea" rows="4" placeholder="Tell others what you liked or disliked..." required></textarea>
+
+            <button type="submit" class="btn btn-primary btn-block">Submit review</button>
+          </form>
+
+          <div class="review-list" id="review-list">
+            ${renderReviewList(reviews)}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Advanced Description Sections -->
     <div class="pd-details-section">
       <h3 class="pd-section-title">Product Specifications</h3>
       <div class="pd-specs-grid">
@@ -135,10 +137,213 @@ document.addEventListener('DOMContentLoaded', async () => {
         <li>Fast delivery options available across the region.</li>
       </ul>
     </div>
+
+    <div class="gallery-modal" id="gallery-modal" aria-hidden="true">
+      <div class="gallery-modal-backdrop" data-close="true"></div>
+      <div class="gallery-modal-body">
+        <button class="gallery-modal-close" type="button" id="gallery-modal-close" aria-label="Close zoom view"><i class="fa-solid fa-xmark"></i></button>
+        ${images.length > 1 ? `<button class="gallery-modal-nav gallery-modal-prev" type="button" id="gallery-modal-prev" aria-label="Previous image"><i class="fa-solid fa-chevron-left"></i></button>` : ''}
+        <img src="${mainImage}" id="gallery-modal-image" alt="${product.name}" class="gallery-modal-image" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
+        ${images.length > 1 ? `<button class="gallery-modal-nav gallery-modal-next" type="button" id="gallery-modal-next" aria-label="Next image"><i class="fa-solid fa-chevron-right"></i></button>` : ''}
+        <div class="gallery-controls">
+          <button type="button" id="gallery-zoom-out" aria-label="Zoom out"><i class="fa-solid fa-minus"></i></button>
+          <button type="button" id="gallery-zoom-reset" aria-label="Reset zoom"><i class="fa-solid fa-rotate-left"></i></button>
+          <button type="button" id="gallery-zoom-in" aria-label="Zoom in"><i class="fa-solid fa-plus"></i></button>
+        </div>
+      </div>
+    </div>
   `;
 
-  // Attach Add to Cart listener
+  let activeImageIndex = 0;
+  let selectedRating = 0;
+  let zoomLevel = 1;
+  const mainImageEl = document.getElementById('main-product-image');
+  const modal = document.getElementById('gallery-modal');
+  const modalImage = document.getElementById('gallery-modal-image');
+  const reviewForm = document.getElementById('review-form');
+  const reviewList = document.getElementById('review-list');
+  const ratingPicker = document.getElementById('rating-picker');
+
+  function updateActiveImage(index) {
+    activeImageIndex = index;
+    const safeIndex = (index + images.length) % images.length;
+    if (mainImageEl) mainImageEl.src = images[safeIndex];
+    if (modalImage) modalImage.src = images[safeIndex];
+
+    document.querySelectorAll('.gallery-thumb').forEach((thumb, thumbIndex) => {
+      thumb.classList.toggle('active', thumbIndex === safeIndex);
+    });
+  }
+
+  function openGalleryModal(index = activeImageIndex) {
+    updateActiveImage(index);
+    if (modal) {
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'false');
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+      updateZoom(1);
+    }
+  }
+
+  function closeGalleryModal() {
+    if (modal) {
+      modal.hidden = true;
+      modal.setAttribute('aria-hidden', 'true');
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+      updateZoom(1);
+      const descriptionPanel = document.getElementById('product-description-panel');
+      if (descriptionPanel) {
+        descriptionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
+  function updateZoom(level) {
+    zoomLevel = Math.max(1, Math.min(3, level));
+    if (modalImage) {
+      modalImage.style.setProperty('--zoom-level', zoomLevel.toFixed(1));
+    }
+  }
+
+  function setSelectedRating(value) {
+    selectedRating = value;
+    ratingPicker?.querySelectorAll('.rating-star').forEach((star) => {
+      star.classList.toggle('active', Number(star.dataset.value) <= value);
+    });
+  }
+
+  function renderReviews(reviewsToRender) {
+    const average = reviewsToRender.length ? (reviewsToRender.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviewsToRender.length).toFixed(1) : '0.0';
+    const reviewSummary = document.getElementById('review-summary');
+    if (reviewSummary) {
+      reviewSummary.innerHTML = `
+        <div class="review-summary-stars">${buildStarsMarkup(Number(average))}</div>
+        <div class="review-summary-score">${average} / 5</div>
+        <div class="review-summary-count">${reviewsToRender.length} review${reviewsToRender.length === 1 ? '' : 's'}</div>
+      `;
+    }
+
+    if (reviewList) {
+      reviewList.innerHTML = renderReviewList(reviewsToRender);
+    }
+  }
+
+  document.querySelectorAll('.gallery-thumb').forEach((thumb) => {
+    thumb.addEventListener('click', () => {
+      openGalleryModal(Number(thumb.dataset.index));
+    });
+  });
+
+  document.getElementById('gallery-prev')?.addEventListener('click', () => {
+    updateActiveImage(activeImageIndex - 1);
+  });
+
+  document.getElementById('gallery-next')?.addEventListener('click', () => {
+    updateActiveImage(activeImageIndex + 1);
+  });
+
+  document.getElementById('gallery-zoom-btn')?.addEventListener('click', () => openGalleryModal(activeImageIndex));
+  mainImageEl?.addEventListener('click', () => openGalleryModal(activeImageIndex));
+  document.getElementById('gallery-modal-prev')?.addEventListener('click', () => updateActiveImage(activeImageIndex - 1));
+  document.getElementById('gallery-modal-next')?.addEventListener('click', () => updateActiveImage(activeImageIndex + 1));
+  document.getElementById('gallery-zoom-in')?.addEventListener('click', () => updateZoom(zoomLevel + 0.25));
+  document.getElementById('gallery-zoom-out')?.addEventListener('click', () => updateZoom(zoomLevel - 0.25));
+  document.getElementById('gallery-zoom-reset')?.addEventListener('click', () => updateZoom(1));
+  document.getElementById('gallery-modal-close')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    closeGalleryModal();
+  });
+  modal?.addEventListener('click', (event) => {
+    if (event.target === modal || event.target.dataset.close === 'true') {
+      closeGalleryModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (modal && modal.hidden === false && event.key === 'Escape') {
+      closeGalleryModal();
+    }
+  });
+
+  ratingPicker?.querySelectorAll('.rating-star').forEach((star) => {
+    star.addEventListener('click', () => {
+      setSelectedRating(Number(star.dataset.value));
+    });
+  });
+
+  reviewForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const emailInput = reviewForm.querySelector('#review-email');
+    const commentInput = reviewForm.querySelector('#review-comment');
+    const email = emailInput?.value.trim() || '';
+    const comment = commentInput?.value.trim() || '';
+
+    if (!email || !comment || selectedRating === 0) {
+      alert('Please add your email, choose a rating, and leave a comment.');
+      return;
+    }
+
+    const review = {
+      id: Date.now(),
+      email,
+      rating: selectedRating,
+      comment,
+      createdAt: new Date().toISOString()
+    };
+
+    const updatedReviews = [...getStoredReviews(reviewKey), review];
+    localStorage.setItem(reviewKey, JSON.stringify(updatedReviews));
+    reviewForm.reset();
+    setSelectedRating(0);
+    renderReviews(updatedReviews);
+  });
+
   document.getElementById('add-to-cart-btn')?.addEventListener('click', () => {
     addToCart(product);
   });
 });
+
+function getStoredReviews(key) {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.warn('Unable to read reviews from storage:', error);
+    return [];
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildStarsMarkup(rating) {
+  const rounded = Math.round(rating);
+  return Array.from({ length: 5 }, (_, idx) => {
+    const active = idx < rounded;
+    return `<i class="fa-solid fa-star ${active ? 'review-star-active' : 'review-star-inactive'}"></i>`;
+  }).join('');
+}
+
+function renderReviewList(reviews) {
+  if (!reviews.length) {
+    return `<div class="review-empty">No reviews yet. Be the first to share your experience.</div>`;
+  }
+
+  return reviews.slice().reverse().map((review) => `
+    <div class="review-item">
+      <div class="review-item-top">
+        <div class="review-author">${escapeHtml(review.email || 'Anonymous')}</div>
+        <div class="review-rating">${buildStarsMarkup(Number(review.rating || 0))}</div>
+      </div>
+      <p class="review-comment">${escapeHtml(review.comment || '')}</p>
+    </div>
+  `).join('');
+}

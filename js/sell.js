@@ -174,6 +174,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('prod-description').value       = product.description;
       document.getElementById('prod-phone').value             = product.sellerPhone || '';
       document.getElementById('prod-district').value          = product.district    || '';
+      document.getElementById('prod-property-type').value      = product.property_type || '';
+      document.getElementById('prod-listing-type').value       = product.listing_type || '';
       if (product.condition) {
         document.getElementById('prod-condition').value = product.condition;
       }
@@ -358,6 +360,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         district,
         isAd:        false,
         adRequested: false,
+        sold: false,
         ...(isHousing ? { propertyType, listingType, videoUrl: '' } : {})
       };
 
