@@ -1,4 +1,4 @@
-npm run // ============================================
+// ============================================
 // SUPABASE CONFIGURATION
 // Primary system for: Authentication, User Management, File Storage
 // ============================================
@@ -19,24 +19,37 @@ let isokoSupabaseClient = null;
 function getSupabaseClient() {
   if (isokoSupabaseClient && typeof isokoSupabaseClient.from === 'function') return isokoSupabaseClient;
   if (window.supabaseClient && typeof window.supabaseClient.from === 'function') return window.supabaseClient;
-  if (window.supabase && typeof window.supabase.from === 'function' && typeof window.supabase.createClient === 'function') return window.supabase;
+  if (window.supabase && typeof window.supabase.from === 'function') return window.supabase;
   return null;
 }
 
 try {
-  // Supabase CDN exposes window.supabase
-  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-    console.error('Supabase SDK not loaded or window.supabase is invalid:', window.supabase);
-    throw new Error('Supabase SDK is not loaded or window.supabase is invalid. Check that the CDN script loaded successfully.');
+  const sdk = window.supabase;
+  const hasSdk = sdk && typeof sdk.createClient === 'function';
+  const hasClient = sdk && typeof sdk.from === 'function';
+
+  if (hasClient) {
+    isokoSupabaseClient = sdk;
+    console.log('✓ Supabase client already available on window.supabase');
+  } else if (hasSdk) {
+    isokoSupabaseClient = sdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✓ Supabase client created from SDK');
+  } else if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
+    isokoSupabaseClient = window.supabaseClient;
+    console.log('✓ Supabase client loaded from window.supabaseClient fallback');
   }
 
-  isokoSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!isokoSupabaseClient) {
+    console.error('Supabase initialization failed. window.supabase:', window.supabase, 'window.supabaseClient:', window.supabaseClient);
+    throw new Error('Supabase SDK failed to initialize. Confirm the SDK script loaded successfully and that the remote host can access the CDN.');
+  }
+
   window.supabaseClient = isokoSupabaseClient;
   window.supabase = isokoSupabaseClient;
-  console.log('✓ Supabase initialized successfully');
-  
+  window.isokoSupabaseClient = isokoSupabaseClient;
+
   // Supabase auth listener - keep user session in localStorage
-  if (isokoSupabaseClient && isokoSupabaseClient.auth) {
+  if (isokoSupabaseClient.auth && typeof isokoSupabaseClient.auth.onAuthStateChange === 'function') {
     isokoSupabaseClient.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify({
