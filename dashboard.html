@@ -3,12 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="/">
   <title>Seller Hub - IsokoHub</title>
+  <script>
+    // Shim to rewrite live-server injected WebSocket paths that are relative to the current document.
+    (function () {
+      try {
+        const OriginalWebSocket = window.WebSocket;
+        function PatchedWebSocket(url, protocols) {
+          try {
+            if (typeof url === 'string') {
+              // If live-server injected a path like /dashboard.html/ws, rewrite to absolute /ws
+              url = url.replace(/\/[^\s]*dashboard\.html\/ws/, '/ws');
+              url = url.replace('/dashboard.html/ws', '/ws');
+            }
+          } catch (e) {
+            // ignore
+          }
+          return protocols ? new OriginalWebSocket(url, protocols) : new OriginalWebSocket(url);
+        }
+        PatchedWebSocket.prototype = OriginalWebSocket.prototype;
+        Object.getOwnPropertyNames(OriginalWebSocket).forEach((k) => { try { PatchedWebSocket[k] = OriginalWebSocket[k]; } catch (e) {} });
+        window.WebSocket = PatchedWebSocket;
+      } catch (err) {
+        // noop
+      }
+    })();
+  </script>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/style.css">
   <!-- Supabase SDK (Auth, User Management) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
   <!-- Firebase SDK (Firestore for product database) -->
 
   <style>

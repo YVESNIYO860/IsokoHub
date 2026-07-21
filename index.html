@@ -17,7 +17,7 @@
   <!-- Firebase SDK -->
   <!-- Supabase SDK (Auth, User Management) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
   <!-- Firebase SDK (Firestore for product database) -->
 
   <style>
@@ -53,16 +53,29 @@
     }
   </style>
 </head>
-<head>
+<body>
   <main>
     <div id="home-slideshow" class="slideshow-container">
       <!-- Slides injected via JS -->
     </div>
     <div class="container ad-section" id="promoted-section" style="display:none; margin-bottom: 4rem;">
-      <h2 class="section-title" style="display:flex; align-items:center; justify-content:center; gap:0.8rem; color: #1e293b;">
-        <i class="fa-solid fa-star" style="color: #febd69"></i>
-        Promoted Deals
-      </h2>
+      <div class="promoted-hero">
+        <div>
+          <div class="promoted-hero-badge">
+            <i class="fa-solid fa-shield-heart"></i>
+            Trusted picks
+          </div>
+          <h2 class="section-title promoted-section-title">
+            <i class="fa-solid fa-bolt" style="color: #2563eb"></i>
+            Featured picks for you
+          </h2>
+          <p class="promoted-section-subtitle">Handpicked deals from verified sellers with great value and friendly support.</p>
+        </div>
+        <div class="promoted-hero-tip">
+          <i class="fa-solid fa-comments"></i>
+          <span>Quick chat • easy contact</span>
+        </div>
+      </div>
       <div class="product-grid" id="promoted-products">
         <!-- JS will render ads here -->
       </div>

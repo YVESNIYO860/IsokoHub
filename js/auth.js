@@ -62,27 +62,8 @@ async function getUserAvatar(userId) {
   const googleAvatar = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || authUser?.user_metadata?.profile_image || authUser?.avatar_url || null;
   if (googleAvatar) return googleAvatar;
 
-  if (!supabase) {
-    const currentUser = getCurrentUser();
-    return createInitialsAvatarUrl(currentUser?.name || currentUser?.full_name || '', currentUser?.email || '');
-  }
-  
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('avatar_url, full_name, email')
-      .eq('id', userId)
-      .single();
-    
-    if (error || !data?.avatar_url) {
-      return createInitialsAvatarUrl(data?.full_name || authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || '', data?.email || authUser?.email || '');
-    }
-    return data.avatar_url;
-  } catch (err) {
-    console.error('Error fetching avatar:', err);
-    const currentUser = getCurrentUser();
-    return createInitialsAvatarUrl(currentUser?.name || currentUser?.full_name || '', currentUser?.email || '');
-  }
+  const currentUser = getCurrentUser();
+  return createInitialsAvatarUrl(currentUser?.name || currentUser?.full_name || '', currentUser?.email || '');
 }
 
 /**
@@ -98,30 +79,17 @@ function md5(str) {
  * Save or update user profile in user_profiles table
  */
 async function saveUserProfile(userId, userData) {
-  if (!supabase) {
-    console.warn('Supabase not initialized');
-    return Promise.resolve();
+  const localProfile = {
+    id: userId,
+    ...userData,
+    updated_at: new Date().toISOString()
+  };
+
+  if (typeof upsertStoredUserProfile === 'function') {
+    upsertStoredUserProfile(localProfile);
   }
 
-  try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .upsert({
-        id: userId,
-        ...userData,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'id' });
-
-    if (error) {
-      console.error('Error saving user profile:', error);
-    } else {
-      console.log('User profile saved successfully');
-    }
-    return { data, error };
-  } catch (err) {
-    console.error('Error in saveUserProfile:', err);
-    return { data: null, error: err };
-  }
+  return Promise.resolve({ data: [localProfile], error: null });
 }
 
 /**
@@ -198,7 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
           email: user.email,
           name: profileName,
           phone: profilePhone,
-          avatarUrl: profileAvatar
+          avatarUrl: profileAvatar,
+          role: user.email === adminEmail ? 'admin' : 'seller'
         };
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
         saveUserProfile(user.id, {

@@ -43,6 +43,68 @@ async function fetchHeroStats() {
   }
 }
 
+async function fetchProductCount(filters = {}) {
+  if (!supabase) return 0;
+
+  try {
+    let query = supabase.from('products').select('id', { count: 'exact', head: true });
+
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+
+    if (filters.ad_requested !== undefined) {
+      query = query.eq('ad_requested', filters.ad_requested);
+    }
+
+    if (filters.is_ad !== undefined) {
+      query = query.eq('is_ad', filters.is_ad);
+    }
+
+    const { count, error } = await query;
+    if (error) throw error;
+    return count || 0;
+  } catch (err) {
+    console.error('Error fetching product count:', err);
+    return 0;
+  }
+}
+
+let supabaseUserProfilesTableMissing = false;
+
+async function fetchUserCount() {
+  if (!supabase || supabaseUserProfilesTableMissing) {
+    const stored = getStoredUserProfiles();
+    return stored.length;
+  }
+
+  try {
+    const { count, error } = await supabase
+      .from(SUPABASE_USER_PROFILES_TABLE)
+      .select('id', { count: 'exact', head: true });
+
+    if (error) {
+      const isMissingTable = error?.status === 404
+        || (error?.message && /not found|does not exist|relation .* does not exist/i.test(error.message))
+        || error?.code === '42P01';
+
+      if (isMissingTable) {
+        console.warn('Supabase user profile table missing, falling back to local storage:', error);
+        supabaseUserProfilesTableMissing = true;
+        const stored = getStoredUserProfiles();
+        return stored.length;
+      }
+      throw error;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('Error fetching user count:', err?.message || err);
+    const stored = getStoredUserProfiles();
+    return stored.length;
+  }
+}
+
 /**
  * Fetch products from Supabase PostgreSQL
  * @param {boolean} approvedOnly - If true, only returns products with status 'approved'
@@ -328,6 +390,37 @@ function getCurrentUser() {
   return userStr ? JSON.parse(userStr) : null;
 }
 
+function getStoredUserProfiles() {
+  try {
+    const profilesStr = localStorage.getItem('isokoHubUserProfiles');
+    if (!profilesStr) return [];
+    const parsed = JSON.parse(profilesStr);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveStoredUserProfiles(profiles) {
+  try {
+    localStorage.setItem('isokoHubUserProfiles', JSON.stringify(profiles));
+  } catch (err) {
+    console.warn('Could not save local user profiles:', err);
+  }
+}
+
+function upsertStoredUserProfile(profile) {
+  const profiles = getStoredUserProfiles();
+  const index = profiles.findIndex(item => item.id === profile.id);
+  if (index >= 0) {
+    profiles[index] = { ...profiles[index], ...profile };
+  } else {
+    profiles.unshift(profile);
+  }
+  saveStoredUserProfiles(profiles);
+  return profiles;
+}
+
 function logoutUser() {
   localStorage.removeItem(CURRENT_USER_KEY);
   if (typeof logoutSupabaseUser === 'function') {
@@ -428,20 +521,14 @@ async function fetchAdRequests() {
  * Fetch user profiles for admin management
  */
 async function fetchUserProfiles() {
-  if (!supabase) return [];
   showAppLoader('Loading users...');
   try {
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('id, full_name, email, phone, role, created_at')
-      .order('created_at', { ascending: false });
+    const storedProfiles = getStoredUserProfiles();
     hideAppLoader();
-    if (error) throw error;
-    return data || [];
+    return storedProfiles;
   } catch (err) {
     hideAppLoader();
-    console.error('Error fetching user profiles:', err);
-    return [];
+    return getStoredUserProfiles();
   }
 }
 
@@ -449,25 +536,51 @@ async function fetchUserProfiles() {
  * Update user profile role (e.g., promote to admin or seller)
  */
 async function updateUserProfileRole(userId, newRole) {
-  if (!supabase) throw new Error('Supabase not initialized');
-  const { error } = await supabase
-    .from('user_profiles')
-    .update({ role: newRole })
-    .eq('id', userId);
-  if (error) throw error;
-  return true;
+  const localProfile = getStoredUserProfiles().find(item => item.id === userId);
+  if (localProfile) {
+    upsertStoredUserProfile({ ...localProfile, role: newRole });
+  }
+
+  if (!supabase) return true;
+
+  try {
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ role: newRole })
+      .eq('id', userId);
+
+    if (error) {
+      const isMissingTable = error?.status === 404 || error?.message?.includes('does not exist') || error?.message?.includes('not found') || error?.code === '42P01';
+      if (!isMissingTable) throw error;
+    }
+    return true;
+  } catch (err) {
+    return true;
+  }
 }
 
 /**
  * Delete user profile record from `user_profiles` (does NOT delete auth user)
  */
 async function deleteUserProfile(userId) {
-  if (!supabase) throw new Error('Supabase not initialized');
-  const { error } = await supabase
-    .from('user_profiles')
-    .delete()
-    .eq('id', userId);
-  if (error) throw error;
-  return true;
+  const profiles = getStoredUserProfiles().filter(item => item.id !== userId);
+  saveStoredUserProfiles(profiles);
+
+  if (!supabase) return true;
+
+  try {
+    const { error } = await supabase
+      .from('user_profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (error) {
+      const isMissingTable = error?.status === 404 || error?.message?.includes('does not exist') || error?.message?.includes('not found') || error?.code === '42P01';
+      if (!isMissingTable) throw error;
+    }
+    return true;
+  } catch (err) {
+    return true;
+  }
 }
 

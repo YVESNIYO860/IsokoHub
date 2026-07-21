@@ -69,6 +69,10 @@ function setInstallUiState(isInstalling = false) {
 
 function registerServiceWorker() {
   if ('serviceWorker' in navigator) {
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+    if (isLocalhost) return;
+
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     });
@@ -171,7 +175,6 @@ function setupInstallPrompt() {
   }
 
   window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
     pwaDeferredPrompt = event;
     showInstallBanner();
   });
@@ -449,7 +452,7 @@ function renderNavbar() {
         <a href="products.html?category=Electronics">Electronics</a>
         <a href="products.html?category=Fashion">Fashion</a>
         <a href="products.html?category=Cars">Cars</a>
-        <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">Houses & Rent</a>
+        <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">HOUSEHUB</a>
         <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on IsokoHub</a>
       </div>
     </nav>
@@ -493,7 +496,7 @@ function renderNavbar() {
           <h3 style="display:flex; align-items:center; gap:0.6rem;"><i class="fa-solid fa-gear" style="color:#64748b"></i> Help & Settings</h3>
           <ul>
             <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            ${user?.email === 'yvesniyonkuru2022@gmail.com' ? '<li><a href="admin.html" style="color: #febd69; font-weight: bold;"><i class="fa-solid fa-user-shield"></i> Admin Panel <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>' : ''}
+            ${(user?.role === 'admin' || user?.email?.toLowerCase() === 'yvesniyonkuru2022@gmail.com') ? '<li><a href="admin.html" style="color: #febd69; font-weight: bold;"><i class="fa-solid fa-user-shield"></i> Admin Panel <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>' : ''}
             ${user ? `<li><a href="#" onclick="handleLogout(event)" style="color:var(--danger)"><i class="fa-solid fa-right-from-bracket" style="margin-right:0.5rem; opacity:0.7;"></i> Sign Out</a></li>` : ''}
           </ul>
         </div>
@@ -584,7 +587,7 @@ function renderFooter() {
       </div>
       <div class="footer-bottom">
         <div class="container">
-          <div class="footer-logo">Easy<span>Market</span></div>
+          <div class="footer-logo">Isoko<span>Hub</span></div>
           <p>&copy; ${new Date().getFullYear()} IsokoHub Marketplace. All rights reserved. <span style="opacity: 0.2; font-weight: 700; margin-left: 8px;">DESIGNED BY NIYONKURU YVES</span></p>
         </div>
       </div>

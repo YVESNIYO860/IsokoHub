@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "live-server --port=3000",
+    "claude-proxy": "node claude-proxy-server.js",
     "emulators:start": "npx firebase emulators:start --only auth,firestore",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

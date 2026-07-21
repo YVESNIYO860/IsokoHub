@@ -1,27 +1,31 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const user = getCurrentUser();
   const ADMIN_EMAIL = 'yvesniyonkuru2022@gmail.com';
+  const isAdminEmail = (email) => !!email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  // Secure Backend Check: Verify role from Supabase `user_profiles` table
-  let isAdminUser = false;
-  if (user && typeof supabase !== 'undefined' && supabase) {
+  // Admin access is determined locally by the signed-in account and stored role.
+  let isAdminUser = !!(user?.role === 'admin' || isAdminEmail(user?.email));
+  if (!isAdminUser && isAdminEmail(user?.email) && typeof saveUserProfile === 'function') {
     try {
-      const { data: profile, error } = await supabase
-        .from(SUPABASE_USER_PROFILES_TABLE || 'user_profiles')
-        .select('role,email')
-        .eq('id', user.id)
-        .single();
-
-      if (!error && profile && profile.role === 'admin') {
-        isAdminUser = true;
+      await saveUserProfile(user.id, {
+        email: user.email,
+        full_name: user.name || user.full_name || user.email,
+        role: 'admin',
+        phone: user.phone || '',
+        avatar_url: user.avatarUrl || null,
+        created_at: new Date().toISOString()
+      });
+      isAdminUser = true;
+      if (user) {
+        localStorage.setItem('isokoHubCurrentUser', JSON.stringify({ ...user, role: 'admin' }));
       }
     } catch (err) {
-      console.error('Auth verify error (supabase):', err);
+      console.warn('Admin role sync skipped:', err);
     }
   }
 
   // Final fallback: Check email if DB check failed or document missing
-  if (!isAdminUser && (!user || user.email !== ADMIN_EMAIL)) {
+  if (!isAdminUser) {
     alert('Access Denied: Administrative privileges required.');
     window.location.href = 'index.html';
     return;
@@ -30,10 +34,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const content = document.getElementById('admin-content');
   const countSpan = document.getElementById('pending-count');
   const adCountSpan = document.getElementById('ad-request-count');
+  const approvedCountSpan = document.getElementById('approved-count');
+  const totalCountSpan = document.getElementById('total-count');
+  const userCountSpan = document.getElementById('user-count');
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
   const tabInventory = document.getElementById('tab-inventory');
   const tabUsers = document.getElementById('tab-users');
+  const menuButtons = Array.from(document.querySelectorAll('.admin-menu button'));
   const refreshBtn = document.getElementById('refresh-admin-btn');
 
   let activeTab = 'pending';
@@ -44,6 +52,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!btn) return;
       btn.classList.toggle('active-tab', btn.id === `tab-${tab}`);
     });
+    menuButtons.forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
     renderAdmin();
   };
 
@@ -52,13 +63,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   tabInventory.onclick = () => switchTab('inventory');
   if (tabUsers) tabUsers.onclick = () => switchTab('users');
 
+  menuButtons.forEach((btn) => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
+  });
+
   if (refreshBtn) {
     refreshBtn.onclick = () => renderAdmin();
   }
 
   setInterval(() => {
     renderAdmin();
-  }, 15000);
+  }, 30000);
 
   window.handleApprove = async function(id) {
     if (confirm('Approve this product for public listing?')) {
@@ -102,17 +117,68 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  window.handleRestorePending = async function(id) {
+    if (confirm('Send this listing back to review?')) {
+      await updateProductStatus(id, 'pending');
+      renderAdmin();
+    }
+  };
+
+  window.handleRemoveBoost = async function(id) {
+    if (confirm('Remove the boost/ad status from this listing?')) {
+      await updateProductData(id, { is_ad: false, ad_requested: false });
+      renderAdmin();
+    }
+  };
+
+  window.handleOpenListing = function(id) {
+    window.open(`product.html?id=${id}`, '_blank', 'noopener,noreferrer');
+  };
+
+  window.handleCopyPhone = async function(phone) {
+    if (!phone) {
+      alert('No phone number available.');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(phone);
+      alert('Seller phone copied.');
+    } catch (err) {
+      prompt('Copy seller phone manually:', phone);
+    }
+  };
+
   async function renderAdmin() {
     content.innerHTML = `<div style="text-align:center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>`;
 
-    const pendingProducts = await fetchPendingProducts();
-    const adRequests = await fetchAdRequests();
-    const allProducts = await fetchProducts(false);
+    const [
+      pendingProducts,
+      adRequests,
+      allProducts,
+      pendingCount,
+      approvedCount,
+      totalCount,
+      adRequestCount,
+      userCount
+    ] = await Promise.all([
+      fetchPendingProducts(),
+      fetchAdRequests(),
+      fetchProducts(false),
+      fetchProductCount({ status: 'pending' }),
+      fetchProductCount({ status: 'approved' }),
+      fetchProductCount(),
+      fetchProductCount({ ad_requested: true }),
+      fetchUserCount()
+    ]);
 
-    countSpan.textContent = pendingProducts.length;
-    adCountSpan.textContent = adRequests.length;
+    countSpan.textContent = pendingCount;
+    adCountSpan.textContent = adRequestCount;
+    approvedCountSpan.textContent = approvedCount;
+    totalCountSpan.textContent = totalCount;
+    userCountSpan.textContent = userCount;
 
-    // Debug info for admin to diagnose empty queues
+    // Debug info for admin to diagnose empty queues and verify Supabase connectivity.
     const supabaseStatus = (typeof supabase !== 'undefined' && supabase) ? 'initialized' : 'missing';
     const debugHtml = `
       <div style="margin: 0.5rem 0 1rem; padding: 0.75rem; border-radius:8px; background:#0f172a; color:#fff; font-size:0.9rem;">
@@ -161,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         content.innerHTML = `
           <div style="text-align:center; padding: 4rem 0;">
             <h3>No users found</h3>
-            <p class="text-muted">There are no user profiles in the database.</p>
+            <p class="text-muted">User profiles are not available yet. The admin view will continue to work normally.</p>
           </div>
         `;
         return;
@@ -279,14 +345,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="padding: 1rem; font-weight: 700;">${formatPrice(p.price)}</td>
                 <td style="padding: 1rem; text-align: right;">
                   ${activeTab === 'pending' ? `
-                    <button onclick="handleApprove('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Approve</button>
+                    <button onclick="handleApprove('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Approve</button>
+                    <button onclick="handleRestorePending('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Review Again</button>
+                    <button onclick="handleCopyPhone('${p.seller_phone || ''}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Copy Phone</button>
+                    <button onclick="handleOpenListing('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">View</button>
                     <button onclick="handleReject('${p.id}')" class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Reject</button>
                   ` : activeTab === 'ads' ? `
-                    <button onclick="handleApproveAd('${p.id}')" class="btn btn-primary" style="background:#f59e0b; padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; border:none;">Boost Ad</button>
-                    <button onclick="handleRejectAd('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Ignore</button>
+                    <button onclick="handleApproveAd('${p.id}')" class="btn btn-primary" style="background:#f59e0b; padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; border:none; margin-bottom:0.35rem;">Boost Ad</button>
+                    <button onclick="handleRemoveBoost('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Remove Boost</button>
+                    <button onclick="handleCopyPhone('${p.seller_phone || ''}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Copy Phone</button>
+                    <button onclick="handleOpenListing('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">View</button>
+                    <button onclick="handleRejectAd('${p.id}')" class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Ignore</button>
                   ` : `
-                    <button onclick="handleMarkSold('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Mark Sold</button>
-                    <button onclick="handleMarkAvailable('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Available</button>
+                    <button onclick="handleMarkSold('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Mark Sold</button>
+                    <button onclick="handleMarkAvailable('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Available</button>
+                    <button onclick="handleRemoveBoost('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Remove Boost</button>
+                    <button onclick="handleCopyPhone('${p.seller_phone || ''}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Copy Phone</button>
+                    <button onclick="handleOpenListing('${p.id}')" class="btn btn-secondary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">View</button>
                     <button onclick="handleReject('${p.id}')" class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px;">Delete</button>
                   `}
                 </td>

@@ -1,4 +1,4 @@
-// ============================================
+npm run // ============================================
 // SUPABASE CONFIGURATION
 // Primary system for: Authentication, User Management, File Storage
 // ============================================
@@ -14,26 +14,36 @@ const SUPABASE_VIDEO_BUCKET = 'house-videos';
 const SUPABASE_USER_PROFILES_TABLE = 'user_profiles';
 
 // Initialize Supabase client
-let supabase = null;
+let isokoSupabaseClient = null;
+
+function getSupabaseClient() {
+  if (isokoSupabaseClient && typeof isokoSupabaseClient.from === 'function') return isokoSupabaseClient;
+  if (window.supabaseClient && typeof window.supabaseClient.from === 'function') return window.supabaseClient;
+  if (window.supabase && typeof window.supabase.from === 'function' && typeof window.supabase.createClient === 'function') return window.supabase;
+  return null;
+}
 
 try {
   // Supabase CDN exposes window.supabase
-  if (typeof window.supabase === 'undefined') {
-    console.error('Supabase SDK not loaded. Check CDN script tag.');
-    throw new Error('Supabase SDK is not loaded. Make sure the CDN script is included.');
+  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+    console.error('Supabase SDK not loaded or window.supabase is invalid:', window.supabase);
+    throw new Error('Supabase SDK is not loaded or window.supabase is invalid. Check that the CDN script loaded successfully.');
   }
 
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  isokoSupabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  window.supabaseClient = isokoSupabaseClient;
+  window.supabase = isokoSupabaseClient;
   console.log('✓ Supabase initialized successfully');
   
   // Supabase auth listener - keep user session in localStorage
-  if (supabase && supabase.auth) {
-    supabase.auth.onAuthStateChange((event, session) => {
+  if (isokoSupabaseClient && isokoSupabaseClient.auth) {
+    isokoSupabaseClient.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify({
           id: session.user.id,
           email: session.user.email,
-          name: session.user.user_metadata?.full_name || 'User'
+          name: session.user.user_metadata?.full_name || 'User',
+          role: session.user.email === 'yvesniyonkuru2022@gmail.com' ? 'admin' : 'seller'
         }));
       } else {
         localStorage.removeItem('isokoHubCurrentUser');

@@ -941,6 +941,62 @@ body.menu-open .menu-active-overlay {
   color: #854d0e;
 }
 
+.ai-support-card {
+  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 22px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 18px 32px rgba(59, 130, 246, 0.08);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.ai-support-description {
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.ai-response {
+  min-height: 4.5rem;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 16px;
+  padding: 1rem;
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.ai-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.ai-input-row input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.ai-input-row button {
+  white-space: nowrap;
+  padding: 0.95rem 1.15rem;
+  border-radius: 14px;
+}
+
+.ai-hint {
+  color: #475569;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
 /* Utils */
 .text-center { text-align: center; }
 .mt-1 { margin-top: var(--space-sm); }
@@ -2357,22 +2413,142 @@ body.menu-open .menu-active-overlay {
 }
 
 .promoted-card {
-  border: 2px solid #febd69 !important;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(37, 99, 235, 0.14) !important;
+  border-radius: 20px;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 14px 26px rgba(15, 23, 42, 0.07);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.promoted-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.14);
+}
+
+.promoted-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, rgba(37, 99, 235, 0.1), transparent 45%, rgba(249, 115, 22, 0.08));
+  pointer-events: none;
 }
 
 .promoted-card::after {
-  content: 'HIGHLY RECOMMENDED';
+  content: '';
+}
+
+.ad-badge {
   position: absolute;
-  bottom: 0px;
-  left: 0px;
-  width: 100%;
-  background: #febd69;
-  color: #131921;
-  text-align: center;
-  font-size: 0.65rem;
+  top: 0.85rem;
+  left: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  font-size: 0.68rem;
   font-weight: 800;
-  padding: 4px 0;
-  letter-spacing: 1px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.16);
+  z-index: 5;
+}
+
+.promoted-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.2rem 1.35rem;
+  margin-bottom: 1.25rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f8fbff 55%, #fff7ed 100%);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.promoted-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.34rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+}
+
+.promoted-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  color: #0f172a;
+  margin-bottom: 0.25rem;
+  font-size: 1.8rem;
+}
+
+.promoted-section-subtitle {
+  text-align: left;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.promoted-hero-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.05);
+  white-space: nowrap;
+}
+
+.promoted-card .product-card-img {
+  margin: 0.75rem 0.75rem 0;
+  border-radius: 16px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.promoted-card .product-card-content {
+  padding: 0.95rem 1rem 1rem;
+}
+
+.promoted-card .product-card-meta-row {
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.promoted-card .product-title {
+  margin-bottom: 0.35rem;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.promoted-card .product-card-location {
+  margin-bottom: 0.7rem;
+  color: #64748b;
+}
+
+.promoted-card .product-card-actions {
+  align-items: center;
+}
+
+.promoted-card .product-price {
+  font-size: 1.05rem;
+  font-weight: 800;
 }
 
 /* WhatsApp Footer Support Styles */

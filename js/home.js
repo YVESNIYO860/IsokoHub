@@ -225,8 +225,8 @@ async function renderPromotedProducts() {
   container.innerHTML = promoted.map(p => {
     const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
     return `
-      <a href="product.html?id=${p.id}" class="product-card promoted-card" style="border: 2px solid #febd69; transform: scale(1.02); box-shadow: 0 10px 20px rgba(254, 189, 105, 0.2);">
-        <div class="ad-badge" style="position:absolute; top:10px; right:10px; background: #febd69; color:#131921; padding: 0.2rem 0.6rem; border-radius:4px; font-weight:800; font-size:0.7rem; z-index:10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">AD</div>
+      <a href="product.html?id=${p.id}" class="product-card promoted-card">
+        <div class="ad-badge"><i class="fa-solid fa-bullhorn"></i> Sponsored</div>
         <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
         <div class="product-card-content">
           <div class="product-card-meta-row">

@@ -4,52 +4,222 @@
   <meta charset="UTF-8">
   <meta name="google-site-verification" content="f-mFRRxelC5S7HJL2ZQK_nP7OYSFh_qs0IWuT-xudRY" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Houses & Rent - IsokoHub</title>
+  <title>HOUSEHUB - IsokoHub</title>
   <link rel="icon" href="assets/logo.png" type="image/png">
   <link rel="stylesheet" href="css/style.css">
   <!-- Supabase SDK (Auth, User Management) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-config.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
   <!-- Firebase SDK (Firestore for product database) -->
 
   <style>
+    .navbar-bottom {
+      display: none !important;
+    }
+
     .houses-hero {
-      background: linear-gradient(135deg, #0f172a, #2563eb);
-      color: white;
-      padding: 2.25rem;
-      border-radius: 1.5rem;
-      margin: 2rem 0 1.5rem;
-      box-shadow: 0 18px 35px rgba(37, 99, 235, 0.2);
+      padding: 2rem 0;
     }
-    .houses-hero h1 {
-      margin-bottom: 0.75rem;
-      font-size: 2rem;
+
+    .househub-panel {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem;
+      border-radius: 24px;
+      background: #f8fafc;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
     }
-    .houses-hero p {
-      max-width: 680px;
-      color: rgba(255,255,255,0.9);
-    }
-    .houses-highlights {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+
+    .househub-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       gap: 1rem;
-      margin: 1.25rem 0 0;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
-    .houses-highlight-card {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 1rem;
-      padding: 1rem;
-      backdrop-filter: blur(10px);
+
+    .househub-home-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, 0.1);
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-decoration: none;
     }
-    .houses-highlight-card strong {
-      display: block;
-      margin-bottom: 0.2rem;
+
+    .househub-tag {
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      color: #334155;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .househub-copy h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.05;
+      color: #0f172a;
+    }
+
+    .househub-copy p {
+      margin: 1rem 0 0;
+      max-width: 720px;
+      color: #475569;
       font-size: 1rem;
     }
-    .houses-highlight-card span {
-      color: rgba(255,255,255,0.8);
+
+    .househub-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .househub-keyword,
+    .househub-note {
+      padding: 0.75rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #ffffff;
+      color: #475569;
       font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .products-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.5rem;
+      margin-top: 1.75rem;
+      align-items: start;
+    }
+
+    .filters-sidebar {
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 24px;
+      padding: 1.25rem;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+      position: sticky;
+      top: 100px;
+      align-self: start;
+    }
+
+    .filters-sidebar h3 {
+      font-size: 1rem;
+      margin-bottom: 0.9rem;
+      color: #0f172a;
+      letter-spacing: 0.01em;
+    }
+
+    .filter-item {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.8rem 1rem;
+      margin: 0 0.45rem 0.65rem 0;
+      border-radius: 999px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      background: rgba(255, 255, 255, 0.82);
+      color: #0f172a;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9), 0 10px 25px rgba(56, 189, 248, 0.08);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .filter-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 45%);
+      opacity: 0.55;
+      border-radius: 999px;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .filter-item:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,1), 0 14px 32px rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.35);
+    }
+
+    .filter-item.active {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #0369a1;
+    }
+
+    .filter-item.active::before {
+      content: '∨';
+      margin-right: 0.35rem;
+      opacity: 0.85;
+      color: #0369a1;
+      position: relative;
+      top: 0;
+    }
+
+    .range-select {
+      width: 100%;
+      margin-top: 0.5rem;
+      padding: 0.85rem 1rem;
+      border-radius: 999px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f172a;
+      font-size: 0.95rem;
+      outline: none;
+      appearance: none;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .range-select::placeholder {
+      color: rgba(15, 23, 42, 0.45);
+    }
+
+    .products-main {
+      width: 100%;
+    }
+
+    .search-summary {
+      padding: 1rem 1rem;
+      border-radius: 20px;
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      margin-bottom: 1rem;
+    }
+
+    .search-summary h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #0f172a;
+    }
+
+    @media (max-width: 960px) {
+      .products-layout {
+        grid-template-columns: 1fr;
+      }
+      .filters-sidebar {
+        position: static;
+        top: auto;
+      }
     }
   </style>
 </head>
@@ -57,44 +227,77 @@
   <main>
     <div class="container">
       <section class="houses-hero">
-        <h1>Houses & Rent</h1>
-        <p>Explore homes, apartments, and rental listings in Rwanda with clear pricing, trusted sellers, and quick direct contact.</p>
-        <div class="houses-highlights">
-          <div class="houses-highlight-card">
-            <strong>Verified listings</strong>
-            <span>Quality homes and rentals from real sellers</span>
+        <div class="househub-panel">
+          <div class="househub-header">
+            <span class="househub-tag">HOUSEHUB</span>
+            <a href="index.html" class="househub-home-btn">Back to IsokoHub</a>
           </div>
-          <div class="houses-highlight-card">
-            <strong>Flexible search</strong>
-            <span>Filter by home type and property style</span>
-          </div>
-          <div class="houses-highlight-card">
-            <strong>Clear pricing</strong>
-            <span>All prices are displayed in RWF</span>
+          <div class="househub-copy">
+            <h1>Search homes and rentals across Rwanda</h1>
+            <p style="margin-top: 0.9rem; color: #475569; font-size: 0.95rem;">Minimal housing search with district, location, and rent/sale filters.</p>
           </div>
         </div>
       </section>
 
-      <div class="products-layout" style="margin-top: 0;">
+      <div class="products-layout">
         <aside class="filters-sidebar">
-          <h3>Property Type</h3>
-          <div id="housing-filters">
-            <span class="filter-item active" data-housing="all">All Housing</span>
-            <span class="filter-item" data-housing="House">House</span>
-            <span class="filter-item" data-housing="Apartment">Apartment</span>
-            <span class="filter-item" data-housing="Room">Room</span>
-            <span class="filter-item" data-housing="Land">Land</span>
-          </div>
+          <h3>House zones</h3>
+          <select id="housing-category-select" class="range-select">
+            <option value="all">All Houses</option>
+            <option value="ghetto">Ghetoo</option>
+            <option value="chambolette">Chambolette</option>
+            <option value="apartment">Apartment</option>
+            <option value="villa">Villa</option>
+          </select>
 
-          <h3 style="margin-top: 1.25rem;">Location</h3>
-          <div id="housing-location-filters">
-            <span class="filter-item active" data-location="all">All Locations</span>
-            <span class="filter-item" data-location="Kigali">Kigali</span>
-            <span class="filter-item" data-location="Rubavu">Rubavu</span>
-            <span class="filter-item" data-location="Muhanga">Muhanga</span>
-            <span class="filter-item" data-location="Huye">Huye</span>
-            <span class="filter-item" data-location="Rwamagana">Rwamagana</span>
-          </div>
+          <h3 style="margin-top: 1.25rem;">Rent / Sell</h3>
+          <select id="housing-listing-select" class="range-select">
+            <option value="all">All</option>
+            <option value="rent">Rent</option>
+            <option value="sell">Sell</option>
+          </select>
+
+          <h3 style="margin-top: 1.25rem;">Wanted</h3>
+          <select id="housing-wanted-select" class="range-select">
+            <option value="all">All</option>
+            <option value="budget">Budget</option>
+            <option value="comfort">Comfort</option>
+            <option value="safe">Safe</option>
+            <option value="modern">Modern</option>
+          </select>
+
+          <h3 style="margin-top: 1.25rem;">District</h3>
+          <select id="housing-district-select" class="range-select">
+            <option value="all">All districts</option>
+          </select>
+
+          <h3 style="margin-top: 1.25rem;">Optional place</h3>
+          <input id="housing-location-input" class="range-select" type="text" placeholder="Town, street or sector" />
+
+          <h3 style="margin-top: 1.25rem;">Monthly fee</h3>
+          <select id="rent-range-select" class="range-select">
+            <option value="all">All rent fees</option>
+            <option value="10000-15000">10,000 - 15,000</option>
+            <option value="15000-20000">15,000 - 20,000</option>
+            <option value="20000-25000">20,000 - 25,000</option>
+            <option value="25000-30000">25,000 - 30,000</option>
+            <option value="30000-40000">30,000 - 40,000</option>
+            <option value="40000-50000">40,000 - 50,000</option>
+            <option value="50000-75000">50,000 - 75,000</option>
+            <option value="75000-100000">75,000 - 100,000</option>
+          </select>
+
+          <h3 style="margin-top: 1.25rem;">Sale price range</h3>
+          <select id="sale-range-select" class="range-select">
+            <option value="all">All sale prices</option>
+            <option value="100000-200000">100,000 - 200,000</option>
+            <option value="200000-300000">200,000 - 300,000</option>
+            <option value="300000-400000">300,000 - 400,000</option>
+            <option value="400000-500000">400,000 - 500,000</option>
+            <option value="500000-700000">500,000 - 700,000</option>
+            <option value="700000-1000000">700,000 - 1,000,000</option>
+            <option value="1000000-99999999">1,000,000+</option>
+          </select>
         </aside>
 
         <div class="products-main">

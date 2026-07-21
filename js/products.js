@@ -126,11 +126,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             <h3 class="product-title">${p.name}</h3>
             <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem;"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-top:auto; flex-wrap:wrap;">
               <span class="product-price">${formatPrice(p.price)}</span>
-              <button onclick='event.preventDefault(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="btn btn-primary" style="padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; background: #febd69; color: #131921; border:none;">
-                <i class="fa-solid fa-cart-plus"></i>
-              </button>
+              <span style="background:#eef2ff;color:#312e81;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-robot"></i> AI support</span>
             </div>
           </div>
         </a>

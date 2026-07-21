@@ -8,73 +8,153 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     .about-hero {
-      background: linear-gradient(135deg, #0f172a 0%, #14213d 100%);
-      color: white;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #f8fafc;
       padding: 4rem 0 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .about-hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(59,130,246,0.16), transparent 30%);
+      pointer-events: none;
+    }
+
+    .about-hero .container {
+      position: relative;
+      z-index: 1;
     }
 
     .about-hero .eyebrow {
-      color: #febd69;
+      color: #facc15;
       text-transform: uppercase;
       letter-spacing: 0.2em;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
     }
 
     .about-hero h1 {
-      font-size: clamp(2rem, 3.8vw, 2.8rem);
-      margin-bottom: 0.9rem;
+      font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+      line-height: 1.03;
+      max-width: 760px;
+      margin-bottom: 1.25rem;
     }
 
     .about-hero p {
       max-width: 720px;
       color: #cbd5e1;
-      font-size: 1.02rem;
-      line-height: 1.7;
+      font-size: 1.05rem;
+      line-height: 1.8;
+      margin-bottom: 1.8rem;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .hero-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.95rem 1.4rem;
+      border-radius: 999px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hero-actions a.primary {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 18px 40px rgba(59,130,246,0.18);
+    }
+
+    .hero-actions a.secondary {
+      background: rgba(255,255,255,0.12);
+      color: #f8fafc;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .hero-actions a:hover {
+      transform: translateY(-2px);
     }
 
     .about-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1.25rem;
-      padding: 2rem 0 3rem;
+      padding: 2.25rem 0 4rem;
     }
 
     .about-card {
-      background: white;
-      border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.3rem;
-      box-shadow: var(--shadow-sm);
+      background: #ffffff;
+      border: 1px solid rgba(15,23,42,0.1);
+      border-radius: 24px;
+      padding: 1.75rem;
+      box-shadow: 0 18px 45px rgba(15,23,42,0.06);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .about-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(59,130,246,0.18);
     }
 
     .about-card h3 {
       color: #0f172a;
-      margin-bottom: 0.6rem;
-      font-size: 1.05rem;
+      margin-bottom: 0.85rem;
+      font-size: 1.15rem;
     }
 
     .about-card p {
-      color: var(--text-muted);
-      margin-bottom: 0.7rem;
-      line-height: 1.65;
+      color: #475569;
+      margin-bottom: 1.1rem;
+      line-height: 1.75;
     }
 
     .about-card a {
-      color: var(--primary-blue);
-      font-weight: 600;
+      color: #2563eb;
+      font-weight: 700;
       text-decoration: none;
     }
 
     .about-card a:hover {
-      color: #febd69;
+      color: #1d4ed8;
       text-decoration: underline;
     }
 
-    @media (max-width: 768px) {
+    .about-card .contact-list {
+      display: grid;
+      gap: 0.55rem;
+      margin-bottom: 1rem;
+    }
+
+    .about-card .contact-list a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    .about-card .contact-list a:hover {
+      color: #2563eb;
+    }
+
+    @media (max-width: 960px) {
       .about-grid {
         grid-template-columns: 1fr;
+      }
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
       }
     }
   </style>
@@ -86,6 +166,10 @@
         <p class="eyebrow">About IsokoHub</p>
         <h1>Buy, sell, rent, and grow with confidence.</h1>
         <p>IsokoHub is a modern Rwandan marketplace built to help local buyers and sellers connect faster with trusted listings, simple discovery, and a smooth experience on any device.</p>
+        <div class="hero-actions">
+          <a href="products.html" class="primary">Explore marketplace</a>
+          <a href="support.html" class="secondary">Get support</a>
+        </div>
       </div>
     </section>
 
@@ -123,11 +207,11 @@
       <article class="about-card" id="contact">
         <h3>Contact Us</h3>
         <p>Reach us for sales, partnerships, support, or feedback. We are happy to hear from the IsokoHub community.</p>
-        <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.6rem;">
+        <div class="contact-list">
           <a href="https://wa.me/250798269987" target="_blank" rel="noopener">WhatsApp: +250 798 269 987</a>
           <a href="mailto:yvesniyonkuru2022@gmail.com">Email: yvesniyonkuru2022@gmail.com</a>
         </div>
-        <a href="support.html" style="display:inline-block; margin-top:0.8rem;">Get in touch</a>
+        <a href="support.html">Get in touch</a>
       </article>
     </div>
   </main>
