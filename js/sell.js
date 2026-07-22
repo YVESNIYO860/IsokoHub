@@ -3,8 +3,9 @@
  * selectedImages is kept on window._sellImages to avoid any closure/async-scope issues.
  */
 
-// ── Global image store (avoids any async-closure ambiguity) ──
+// ── Global image stores (avoids any async-closure ambiguity) ──
 window._sellImages = [];
+let existingImages = [];
 
 /* ══════════════════════════════════════════
    Image-picker helpers (run immediately so
@@ -20,12 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Update the "X / 6 selected" badge ── */
   function updateCountBadge() {
-    const n = window._sellImages.length;
-    if (n === 0) {
+    const total = existingImages.length + window._sellImages.length;
+    if (total === 0) {
       countBadge.style.display = 'none';
     } else {
       countBadge.style.display = 'inline-flex';
-      countBadge.textContent   = n + ' / 6 selected';
+      countBadge.textContent   = total + ' / 6 selected';
     }
   }
 
@@ -33,40 +34,55 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderImagePreviews() {
     imagePreviewGrid.innerHTML = '';
 
+    const previewItems = [];
+    existingImages.forEach(function(src, index) {
+      previewItems.push({ type: 'existing', src: src, label: 'Existing image ' + (index + 1) });
+    });
     window._sellImages.forEach(function(file, index) {
-      var objectUrl = URL.createObjectURL(file);
+      previewItems.push({ type: 'new', file: file, label: file.name });
+    });
 
+    previewItems.forEach(function(itemData, index) {
       var item       = document.createElement('div');
       item.className = 'image-preview-item';
-      item.title     = file.name;
+      item.title     = itemData.label;
 
-      // Thumbnail
-      var img   = document.createElement('img');
-      img.src   = objectUrl;
-      img.alt   = 'Photo ' + (index + 1);
-      img.addEventListener('click', (function(src, name) {
-        return function() { openLightbox(src, name); };
-      })(objectUrl, file.name));
+      var img = document.createElement('img');
+      if (itemData.type === 'existing') {
+        img.src = itemData.src;
+        img.alt = itemData.label;
+        img.addEventListener('click', function() {
+          openLightbox(itemData.src, itemData.label);
+        });
+      } else {
+        var objectUrl = URL.createObjectURL(itemData.file);
+        img.src = objectUrl;
+        img.alt = itemData.label;
+        img.addEventListener('click', function() {
+          openLightbox(objectUrl, itemData.file.name);
+        });
+      }
 
-      // Number badge
       var numBadge       = document.createElement('span');
       numBadge.className = 'preview-num-badge';
       numBadge.textContent = index + 1;
 
-      // Remove button
       var removeBtn         = document.createElement('button');
       removeBtn.type        = 'button';
       removeBtn.className   = 'preview-remove-btn';
       removeBtn.textContent = '✕';
       removeBtn.title       = 'Remove this photo';
-      removeBtn.addEventListener('click', (function(i) {
-        return function(e) {
-          e.stopPropagation();
-          window._sellImages.splice(i, 1);
-          renderImagePreviews();
-          updateCountBadge();
-        };
-      })(index));
+      removeBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (itemData.type === 'existing') {
+          existingImages.splice(index, 1);
+        } else {
+          const newIndex = index - existingImages.length;
+          window._sellImages.splice(newIndex, 1);
+        }
+        renderImagePreviews();
+        updateCountBadge();
+      });
 
       item.appendChild(img);
       item.appendChild(numBadge);
@@ -92,12 +108,15 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Merge new File objects into the global store ── */
   function mergeFiles(newFiles) {
     var seen = {};
+    existingImages.forEach(function(src, i) {
+      seen['existing-' + i] = true;
+    });
     window._sellImages.forEach(function(f) {
       seen[f.name + '-' + f.size + '-' + f.lastModified] = true;
     });
 
     newFiles.forEach(function(file) {
-      if (window._sellImages.length >= 6) return;
+      if (existingImages.length + window._sellImages.length >= 6) return;
       if (!file.type.startsWith('image/')) return;
       var key = file.name + '-' + file.size + '-' + file.lastModified;
       if (!seen[key]) {
@@ -113,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   imageInput.addEventListener('change', function(e) {
     var files = Array.from(e.target.files || []);
     mergeFiles(files);
-    // Don't reset the value — keep the FileList intact so files aren't GC'd
+    imageInput.value = '';
   });
 
   /* ── Drag-and-drop ── */
@@ -126,6 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
     var files = Array.from(e.dataTransfer.files || []);
     mergeFiles(files);
   });
+
+  window.renderImagePreviews = renderImagePreviews;
+  window.mergeFiles = mergeFiles;
 });
 
 /* ══════════════════════════════════════════
@@ -153,16 +175,22 @@ document.addEventListener('DOMContentLoaded', async function() {
   const uploadOverlay  = document.getElementById('upload-overlay');
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
+  const districtSelect = document.getElementById('prod-district');
+
+  districtSelect.innerHTML =
+    '<option value="">Select your district</option>' +
+    RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
 
   /* ── Edit-mode pre-fill ── */
   const urlParams    = new URLSearchParams(window.location.search);
   const editId       = urlParams.get('editId');
   let isEditing      = false;
-  let existingImages = [];
+  existingImages = [];
 
   if (editId) {
     const product = await fetchProductById(editId);
-    if (product && product.sellerId === user.id) {
+    const productSellerId = product?.sellerId || product?.seller_id;
+    if (product && productSellerId === user.id) {
       isEditing      = true;
       existingImages = Array.isArray(product.image) ? product.image : [product.image];
 
@@ -172,7 +200,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('prod-category').value          = product.category;
       document.getElementById('prod-price').value             = product.price;
       document.getElementById('prod-description').value       = product.description;
-      document.getElementById('prod-phone').value             = product.sellerPhone || '';
+      document.getElementById('prod-email').value             = product.sellerEmail || product.seller_email || user.email || '';
+      document.getElementById('prod-phone').value             = product.sellerPhone || product.seller_phone || '';
       const districtParts = String(product.district || '').split(' • ');
       document.getElementById('prod-district').value          = districtParts[0] || '';
       document.getElementById('prod-location').value          = districtParts.slice(1).join(' • ').trim();
@@ -181,21 +210,21 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (product.condition) {
         document.getElementById('prod-condition').value = product.condition;
       }
+      if (existingImages.length > 0) {
+        renderImagePreviews();
+      }
     } else {
       window.location.href = 'dashboard.html';
     }
   }
 
   const currentUser = getCurrentUser();
+  if (currentUser?.email && document.getElementById('prod-email').value.trim() === '') {
+    document.getElementById('prod-email').value = currentUser.email;
+  }
   if (currentUser?.phone && document.getElementById('prod-phone').value.trim() === '') {
     document.getElementById('prod-phone').value = currentUser.phone;
   }
-
-  /* ── District dropdown ── */
-  const districtSelect = document.getElementById('prod-district');
-  districtSelect.innerHTML =
-    '<option value="">Select your district</option>' +
-    RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
 
   /* ── Housing fields toggle ── */
   function toggleHousingFields() {
@@ -300,13 +329,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     errorEl.textContent = '';
 
     try {
-      // If the global preview store is empty but the input has files,
-      // preserve the selected files from the actual file input.
-      const selectedInputFiles = Array.from(imageInput.files || []);
-      const files = window._sellImages.length > 0
-        ? window._sellImages.slice()
-        : selectedInputFiles.slice();
-
+      const files = window._sellImages.slice();
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
       if (!isEditing && files.length < 3) {
@@ -320,10 +343,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       submitBtn.disabled    = true;
       submitBtn.textContent = isEditing ? 'Updating…' : 'Uploading…';
 
-      // Upload images (or reuse existing ones in edit mode)
-      const imageUrls = files.length > 0
-        ? await uploadProductImages(files)
-        : existingImages;
+      // Upload images or reuse existing ones in edit mode
+      let imageUrls = existingImages.slice();
+      if (window._sellImages.length > 0) {
+        const uploadedUrls = await uploadProductImages(window._sellImages.slice());
+        imageUrls = imageUrls.concat(uploadedUrls);
+      }
 
       if (imageUrls.length < 3) {
         throw new Error('Please provide at least 3 product photos.');
@@ -340,6 +365,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (!district) throw new Error('Please select your district.');
       const locationDetail = document.getElementById('prod-location').value.trim();
       const fullLocation = locationDetail ? `${district} • ${locationDetail}` : district;
+
+      const sellerEmailValue = document.getElementById('prod-email').value.trim();
+      if (!sellerEmailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellerEmailValue)) {
+        throw new Error('Please enter a valid seller email address.');
+      }
 
       // Housing-specific
       const category     = categorySelect.value;
@@ -365,6 +395,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         image:       imageUrls,
         description: document.getElementById('prod-description').value,
         condition,
+        sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
         isAd:        false,

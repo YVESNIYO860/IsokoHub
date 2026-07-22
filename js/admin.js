@@ -37,18 +37,61 @@ document.addEventListener('DOMContentLoaded', async () => {
   const approvedCountSpan = document.getElementById('approved-count');
   const totalCountSpan = document.getElementById('total-count');
   const userCountSpan = document.getElementById('user-count');
+  const categorySelect = document.getElementById('admin-category-filter');
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
   const tabInventory = document.getElementById('tab-inventory');
   const tabUsers = document.getElementById('tab-users');
+  const tabSettings = document.getElementById('tab-settings');
   const menuButtons = Array.from(document.querySelectorAll('.admin-menu button'));
   const refreshBtn = document.getElementById('refresh-admin-btn');
 
   let activeTab = 'pending';
+  let selectedCategory = 'all';
+
+  if (categorySelect) {
+    categorySelect.addEventListener('change', () => {
+      selectedCategory = categorySelect.value || 'all';
+      renderAdmin();
+    });
+  }
+
+  function getUniqueCategories(items = []) {
+    const categories = new Set();
+    items.forEach((item) => {
+      if (item?.category) categories.add(item.category);
+      else if (item?.subcategory) categories.add(item.subcategory);
+    });
+    return Array.from(categories).sort((a, b) => a.localeCompare(b));
+  }
+
+  function updateCategoryFilterOptions(categories) {
+    if (!categorySelect) return;
+    const currentValue = categorySelect.value || 'all';
+    categorySelect.innerHTML = `
+      <option value="all">All categories</option>
+      ${categories.map((category) => `<option value="${category}">${category}</option>`).join('')}
+    `;
+    categorySelect.value = currentValue;
+  }
+
+  function loadAdminSettings() {
+    const raw = localStorage.getItem('isokoHubAdminSettings');
+    try {
+      return raw ? JSON.parse(raw) : {};
+    } catch (err) {
+      console.warn('Invalid saved admin settings', err);
+      return {};
+    }
+  }
+
+  function saveAdminSettings(settings) {
+    localStorage.setItem('isokoHubAdminSettings', JSON.stringify(settings || {}));
+  }
 
   const switchTab = (tab) => {
     activeTab = tab;
-    [tabPending, tabAds, tabInventory, tabUsers].forEach((btn) => {
+    [tabPending, tabAds, tabInventory, tabUsers, tabSettings].forEach((btn) => {
       if (!btn) return;
       btn.classList.toggle('active-tab', btn.id === `tab-${tab}`);
     });
@@ -62,6 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   tabAds.onclick = () => switchTab('ads');
   tabInventory.onclick = () => switchTab('inventory');
   if (tabUsers) tabUsers.onclick = () => switchTab('users');
+  if (tabSettings) tabSettings.onclick = () => switchTab('settings');
 
   menuButtons.forEach((btn) => {
     btn.onclick = () => switchTab(btn.dataset.tab);
@@ -172,6 +216,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchUserCount()
     ]);
 
+    const categories = getUniqueCategories([...pendingProducts, ...adRequests, ...allProducts]);
+    updateCategoryFilterOptions(categories);
+
     countSpan.textContent = pendingCount;
     adCountSpan.textContent = adRequestCount;
     approvedCountSpan.textContent = approvedCount;
@@ -221,6 +268,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 50);
 
     // If Users tab active, render users management and return
+    if (activeTab === 'settings') {
+      const settings = loadAdminSettings();
+      content.innerHTML = `
+        <div style="max-width: 900px; margin: 0 auto; padding: 1rem;">
+          <h2>Admin Settings</h2>
+          <p class="text-muted">Configure marketplace defaults, support contact information, and maintenance mode.</p>
+          <div style="margin-top:1.5rem; display:grid; gap:1rem;">
+            <label style="display:flex; flex-direction:column; gap:0.5rem;">
+              Default support email
+              <input id="admin-default-email" class="form-control" type="email" value="${settings.supportEmail || ''}" placeholder="admin@isokohub.com">
+            </label>
+            <label style="display:flex; flex-direction:column; gap:0.5rem;">
+              Default support phone
+              <input id="admin-default-phone" class="form-control" type="tel" value="${settings.supportPhone || ''}" placeholder="+250 788 123 456">
+            </label>
+            <label style="display:flex; align-items:center; gap:0.75rem; font-weight:600;">
+              <input id="admin-maintenance-mode" type="checkbox" ${settings.maintenanceMode ? 'checked' : ''}>
+              Enable maintenance mode (for temporary marketplace shutdown)
+            </label>
+            <label style="display:flex; flex-direction:column; gap:0.5rem;">
+              Admin announcement
+              <textarea id="admin-announcement" class="form-control" rows="3" placeholder="Display a short notice to site admins and sellers.">${settings.announcement || ''}</textarea>
+            </label>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
+              <button id="admin-save-settings" class="btn btn-primary">Save settings</button>
+              <button id="admin-reset-settings" class="btn btn-secondary">Reset to defaults</button>
+            </div>
+            <div id="admin-settings-status" style="color:#0b6c4a; font-size:0.95rem; display:none; margin-top:0.75rem;"></div>
+          </div>
+        </div>
+      `;
+
+      const saveButton = document.getElementById('admin-save-settings');
+      const resetButton = document.getElementById('admin-reset-settings');
+      const statusEl = document.getElementById('admin-settings-status');
+
+      function showStatus(message, success = true) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = success ? '#0b6c4a' : '#b91c1c';
+        statusEl.textContent = message;
+      }
+
+      if (saveButton) {
+        saveButton.onclick = () => {
+          const newSettings = {
+            supportEmail: document.getElementById('admin-default-email').value.trim(),
+            supportPhone: document.getElementById('admin-default-phone').value.trim(),
+            maintenanceMode: document.getElementById('admin-maintenance-mode').checked,
+            announcement: document.getElementById('admin-announcement').value.trim()
+          };
+          saveAdminSettings(newSettings);
+          showStatus('Settings saved locally. Refresh to apply new values.');
+        };
+      }
+
+      if (resetButton) {
+        resetButton.onclick = () => {
+          saveAdminSettings({});
+          renderAdmin();
+        };
+      }
+
+      return;
+    }
+
     if (activeTab === 'users') {
       const users = await fetchUserProfiles();
       if (!users || users.length === 0) {
@@ -302,12 +414,62 @@ document.addEventListener('DOMContentLoaded', async () => {
       emptyMessage = 'No inventory items found.';
     }
 
+    if (selectedCategory !== 'all') {
+      const normalizedSelected = selectedCategory.toLowerCase();
+      items = items.filter((p) => {
+        const normalizedCategory = (p.category || p.subcategory || '').toString().toLowerCase();
+        return normalizedCategory === normalizedSelected;
+      });
+      if (activeTab === 'pending' || activeTab === 'ads' || activeTab === 'inventory') {
+        emptyMessage = `No ${activeTab === 'inventory' ? 'inventory' : activeTab === 'ads' ? 'ad requests' : 'pending listings'} found for "${selectedCategory}".`;
+      }
+    }
+
     if (items.length === 0) {
       content.innerHTML = `
         <div style="text-align:center; padding: 4rem 0;">
           <i class="fa-solid fa-circle-check fa-4x" style="color: #dcfce7; margin-bottom: 1rem;"></i>
           <h3>Queue Clear!</h3>
           <p class="text-muted">${emptyMessage}</p>
+        </div>
+      `;
+      return;
+    }
+
+    if (activeTab === 'inventory') {
+      content.innerHTML = `
+        <div class="admin-item-grid">
+          ${items.map(p => {
+            const displayImg = Array.isArray(p.image) ? p.image[0] : p.image || 'https://via.placeholder.com/120';
+            const isSold = p.sold === true;
+            const statusBadge = isSold ? '<span class="admin-item-badge sold">Sold</span>' : '<span class="admin-item-badge active">Available</span>';
+            return `
+              <article class="admin-item-card">
+                <div class="admin-item-card-header">
+                  <img src="${displayImg}" class="admin-item-thumb" onerror="this.src='https://via.placeholder.com/120'" alt="${p.name || 'Product image'}">
+                  <div class="admin-item-meta">
+                    <div class="admin-item-title">${p.name || 'Untitled item'}</div>
+                    <div class="admin-item-subtitle">${p.category || p.subcategory || 'Uncategorized'}</div>
+                    <div>${statusBadge}</div>
+                  </div>
+                  <strong class="admin-item-price">${formatPrice(p.price)}</strong>
+                </div>
+                <div class="admin-item-body">
+                  <div><strong>Seller:</strong> ${p.seller_name || p.seller_email || 'Unknown'}</div>
+                  <div><strong>Email:</strong> ${p.seller_email || p.sellerEmail || 'N/A'}</div>
+                  <div><strong>Phone:</strong> ${p.seller_phone || 'N/A'}</div>
+                </div>
+                <div class="admin-item-actions">
+                  <button onclick="handleMarkSold('${p.id}')" class="btn btn-primary">Mark Sold</button>
+                  <button onclick="handleMarkAvailable('${p.id}')" class="btn btn-secondary">Available</button>
+                  <button onclick="handleRemoveBoost('${p.id}')" class="btn btn-secondary">Remove Boost</button>
+                  <button onclick="handleCopyPhone('${p.seller_phone || ''}')" class="btn btn-secondary">Copy Phone</button>
+                  <button onclick="handleOpenListing('${p.id}')" class="btn btn-secondary">View</button>
+                  <button onclick="handleReject('${p.id}')" class="btn btn-danger">Delete</button>
+                </div>
+              </article>
+            `;
+          }).join('')}
         </div>
       `;
       return;

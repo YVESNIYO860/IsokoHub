@@ -41,6 +41,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const reviews = getStoredReviews(reviewKey);
   const averageRating = reviews.length ? (reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviews.length).toFixed(1) : '0.0';
 
+  const sellerPhone = product.seller_phone ? String(product.seller_phone).trim() : '';
+  const sellerEmail = product.seller_email ? String(product.seller_email).trim() : (product.sellerEmail ? String(product.sellerEmail).trim() : '');
+
   wrapper.innerHTML = `
     <div class="product-detail-shell">
       <div class="product-gallery-card">
@@ -85,17 +88,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
 
         <div class="pd-description">
+          <strong>Contact Seller:</strong><br>
+          ${sellerPhone ? `<div><i class="fa-solid fa-phone"></i> ${sellerPhone}</div>` : ''}
+          ${sellerEmail ? `<div><i class="fa-solid fa-envelope"></i> ${sellerEmail}</div>` : '<div class="text-muted">Seller contact details will be added soon.</div>'}
+        </div>
+
+        <div class="pd-description">
           <strong>About this item:</strong><br>
           ${escapeHtml(product.description || '').replace(/\n/g, '<br>')}
         </div>
 
         <div class="product-actions" style="display:flex; flex-direction:column; gap:0.75rem;">
           <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-            <a href="https://wa.me/250798269987?text=${encodeURIComponent(`Hello, I am interested in your listing: ${product.name}`)}" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #16a34a; color: white; border: 1px solid #16a34a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem;">
+            <a href="${sellerPhone ? `https://wa.me/${sellerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${product.name}`)}` : '#'}" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #16a34a; color: white; border: 1px solid #16a34a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem; ${sellerPhone ? '' : 'opacity:0.6; pointer-events:none;'}">
               <i class="fa-brands fa-whatsapp" style="font-size: 1.1rem;"></i>
               <span style="font-size:0.82rem; font-weight:700;">WhatsApp</span>
             </a>
-            <a href="mailto:yvesniyonkuru2022@gmail.com?subject=${encodeURIComponent(`Question about ${product.name}`)}" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #2563eb; color: white; border: 1px solid #2563eb; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem;">
+            <a href="${sellerEmail ? `mailto:${sellerEmail}?subject=${encodeURIComponent(`Question about ${product.name}`)}` : '#'}" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #2563eb; color: white; border: 1px solid #2563eb; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem; ${sellerEmail ? '' : 'opacity:0.6; pointer-events:none;'}">
               <i class="fa-solid fa-envelope" style="font-size: 1.1rem;"></i>
               <span style="font-size:0.82rem; font-weight:700;">Email</span>
             </a>

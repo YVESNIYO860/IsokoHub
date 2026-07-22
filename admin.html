@@ -14,6 +14,7 @@
 
   <style>
     .admin-container {
+      width: min(100%, 1200px);
       max-width: 1200px;
       margin: 2rem auto;
       padding: 0 1rem;
@@ -55,6 +56,76 @@
       .admin-dashboard-grid {
         grid-template-columns: 1fr;
       }
+
+      .admin-page-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .admin-page-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .admin-menu button {
+        width: 100%;
+      }
+
+      .admin-tabs {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .admin-tabs .btn {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .admin-item-card {
+        padding: 1rem;
+      }
+
+      .admin-item-card-header {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-item-price {
+        justify-self: start;
+      }
+
+      .admin-item-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .admin-container {
+        margin: 1rem auto;
+        padding: 0 0.75rem;
+      }
+
+      .admin-page-header {
+        gap: 1rem;
+      }
+
+      .admin-sidebar,
+      .dashboard-card,
+      .admin-stat-card {
+        padding: 1rem;
+      }
+
+      .admin-sidebar {
+        gap: 1rem;
+      }
+
+      .admin-stat-cards {
+        gap: 0.85rem;
+      }
+
+      .admin-hero-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
     }
 
     .admin-sidebar,
@@ -71,6 +142,28 @@
       display: flex;
       flex-direction: column;
       gap: 1.25rem;
+    }
+
+    .admin-sidebar-section {
+      padding: 1rem 0;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .admin-sidebar-section h3 {
+      margin: 0 0 0.75rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      color: #334155;
+    }
+
+    .admin-sidebar-section select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 0.75rem;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 0.95rem;
     }
 
     .admin-sidebar h2 {
@@ -129,6 +222,108 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+    }
+
+    .admin-item-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .admin-item-card {
+      background: white;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 20px;
+      padding: 1.25rem;
+      box-shadow: 0 18px 35px rgba(15, 23, 42, 0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 220px;
+    }
+
+    .admin-item-card-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: start;
+      gap: 1rem;
+    }
+
+    .admin-item-thumb {
+      width: 96px;
+      height: 96px;
+      border-radius: 16px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+
+    .admin-item-meta {
+      min-width: 0;
+      flex: 1;
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .admin-item-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      overflow-wrap: anywhere;
+    }
+
+    .admin-item-subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+    }
+
+    .admin-item-price {
+      color: #111827;
+      font-size: 1.15rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .admin-item-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.35rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .admin-item-badge.active {
+      background: #e0f2fe;
+      color: #0c4a6e;
+    }
+
+    .admin-item-badge.sold {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .admin-item-body {
+      display: grid;
+      gap: 0.65rem;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .admin-item-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.65rem;
+    }
+
+    .admin-item-actions .btn {
+      width: 100%;
+      min-width: 0;
+      padding: 0.75rem 0.85rem;
+      font-size: 0.92rem;
     }
 
     .admin-stat-card .stat-label {
@@ -223,6 +418,14 @@
           <button type="button" data-tab="ads">Ad Requests</button>
           <button type="button" data-tab="inventory">Inventory</button>
           <button type="button" data-tab="users">Users</button>
+          <button type="button" data-tab="settings">Settings</button>
+        </div>
+
+        <div class="admin-sidebar-section">
+          <h3>Filter by category</h3>
+          <select id="admin-category-filter">
+            <option value="all">All categories</option>
+          </select>
         </div>
 
         <div class="admin-quick-actions">
@@ -276,6 +479,7 @@
           <button class="btn btn-secondary" id="tab-ads">Ad Requests</button>
           <button class="btn btn-secondary" id="tab-inventory">Inventory</button>
           <button class="btn btn-secondary" id="tab-users">Users</button>
+          <button class="btn btn-secondary" id="tab-settings">Settings</button>
         </div>
 
         <div class="dashboard-card">

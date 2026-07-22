@@ -427,6 +427,10 @@ function renderNavbar() {
         </form>
 
         <div class="navbar-actions">
+          <a href="sell.html" class="nav-action-item sell-header-btn" style="display:none;">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <strong>Sell</strong>
+          </a>
           <a href="${user ? 'dashboard.html' : 'login.html'}" class="nav-action-item">
             <span>Hello, ${user ? user.name : 'Sign in'}</span>
             <strong>Account</strong>

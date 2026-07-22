@@ -17,4 +17,9 @@
     "firebase-tools": "^15.22.4",
     "live-server": "^1.2.2"
   }
+  ,
+  "dependencies": {
+    "nodemailer": "^6.9.1",
+    "@supabase/supabase-js": "^2.0.0"
+  }
 }

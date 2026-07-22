@@ -183,9 +183,13 @@ async function renderFeaturedProducts() {
   container.innerHTML = featured.map(p => {
     const categoryObj = { icon: 'fa-solid fa-box' }; // Simplified for now
     const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
-    const phone = p.seller_phone ? String(p.seller_phone).trim() : '250798269987';
-    const whatsappUrl = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}`;
-    const emailUrl = `mailto:yvesniyonkuru2022@gmail.com?subject=${encodeURIComponent(`Question about ${p.name}`)}`;
+    const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
+    const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
+    const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}` : '';
+    const emailUrl = email ? `mailto:${email}?subject=${encodeURIComponent(`Question about ${p.name}`)}` : '';
+    const contactUrl = whatsappUrl || emailUrl || `product.html?id=${p.id}`;
+    const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : (emailUrl ? 'fa-solid fa-envelope' : 'fa-solid fa-eye');
+    const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'View listing';
 
     return `
       <a href="product.html?id=${p.id}" class="product-card">
@@ -200,8 +204,8 @@ async function renderFeaturedProducts() {
           <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
           <div class="product-card-foot">
             <span class="product-price">${formatPrice(p.price)}</span>
-            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Contact seller">
-              <i class="fa-solid fa-phone"></i>
+            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
+              <i class="${contactIcon}"></i>
             </button>
           </div>
         </div>

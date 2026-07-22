@@ -44,6 +44,88 @@
       color: white;
       margin-bottom: -6rem;
     }
+    .dashboard-hero .hero-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .dashboard-hero .hero-header > div {
+      min-width: 0;
+    }
+    .dashboard-hero h1 {
+      font-size: clamp(2rem, 4vw, 2.7rem);
+      margin-bottom: 0.5rem;
+    }
+    .dashboard-hero p {
+      max-width: 36rem;
+      line-height: 1.5;
+      opacity: 0.85;
+    }
+    .dashboard-hero .btn-primary {
+      min-width: 220px;
+    }
+    .dashboard-main-card {
+      background: white;
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      border: 1px solid var(--border-color);
+    }
+    .listing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 880px) {
+      .dashboard-hero {
+        padding: 3rem 0 5rem 0;
+        margin-bottom: -4rem;
+      }
+      .dashboard-hero .hero-header {
+        align-items: flex-start;
+      }
+      .dashboard-hero .btn-primary {
+        width: 100%;
+        min-width: 0;
+      }
+      .dashboard-main-card {
+        padding: 1.8rem;
+      }
+      .listing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .dashboard-hero {
+        padding: 2.5rem 0 4rem 0;
+        margin-bottom: -3rem;
+      }
+      .dashboard-hero .hero-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .dashboard-hero h1 {
+        font-size: 2rem;
+      }
+      .dashboard-hero p {
+        font-size: 0.95rem;
+      }
+      #user-avatar {
+        width: 64px;
+        height: 64px;
+      }
+      .stats-row {
+        gap: 1rem;
+      }
+      .dashboard-main-card {
+        margin-top: 1rem;
+      }
+    }
     .stats-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -164,8 +246,8 @@
 <body>
   <div class="dashboard-hero">
     <div class="container">
-      <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-        <div style="display:flex; align-items:center; gap:2rem;">
+      <div class="hero-header">
+        <div style="display:flex; align-items:center; gap:2rem; min-width:0;">
           <img id="user-avatar" src="" alt="User Avatar" style="width:80px; height:80px; border-radius:50%; border:3px solid white; object-fit:cover; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
           <div>
             <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Seller Hub</h1>
