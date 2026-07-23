@@ -1,74 +1,22 @@
 // Claude API helper for product summary generation
-const CLAUDE_PROXY_URL = 'http://127.0.0.1:3001/claude';
-const CLAUDE_PROXY_HEALTH_URL = 'http://127.0.0.1:3001/health';
-const CLAUDE_MODEL = 'claude-3.5-mini';
-
-async function checkClaudeProxyHealth() {
-  const response = await fetch(CLAUDE_PROXY_HEALTH_URL, { method: 'GET' });
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Claude proxy health check failed (${response.status}): ${text}`);
-  }
-
-  const result = await response.json();
-  if (!result?.ok) {
-    throw new Error('Claude proxy health check returned invalid response.');
-  }
-
+// AI support temporarily disabled: return safe fallbacks and avoid network calls.
+function checkClaudeProxyHealth() {
   return true;
 }
 
-async function sendClaudeRequest(body) {
-  try {
-    await checkClaudeProxyHealth();
-  } catch (err) {
-    throw new Error(`Claude proxy unreachable at ${CLAUDE_PROXY_HEALTH_URL}. Start the local proxy with npm run claude-proxy and ensure it is running. ${err.message}`);
-  }
-
-  const response = await fetch(CLAUDE_PROXY_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Claude request failed (${response.status}): ${errorText}`);
-  }
-
-  const result = await response.json();
-  return result?.completion?.trim() || result?.completion || '';
+function sendClaudeRequest() {
+  throw new Error('AI support is disabled locally.');
 }
 
 async function summarizeTextWithClaude(text) {
-  const prompt = `Summarize the following product details into one short review sentence suitable for admin verification. Keep the summary clear, concise, and focused on condition, main features, and availability. Do not mention the word "Claude".`;
-  const finalText = `${prompt}\n\n${text.trim()}`;
-
-  return sendClaudeRequest({
-    model: CLAUDE_MODEL,
-    prompt: finalText,
-    max_tokens_to_sample: 140,
-    temperature: 0.25,
-    top_p: 1.0,
-    stop_sequences: ['\n\n']
-  });
+  return Promise.resolve(generateFallbackSummary(text));
 }
 
 async function askQuestionWithClaude(prompt) {
   if (!prompt || !prompt.trim()) {
-    return 'Please enter a valid question for the product assistant.';
+    return 'Please enter a valid question.';
   }
-
-  return sendClaudeRequest({
-    model: CLAUDE_MODEL,
-    prompt,
-    max_tokens_to_sample: 180,
-    temperature: 0.35,
-    top_p: 1.0,
-    stop_sequences: ['\n\n']
-  });
+  return Promise.resolve('AI support is currently disabled. Please enable it when needed.');
 }
 
 function buildProductSummaryInput(product) {

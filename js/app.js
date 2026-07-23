@@ -324,10 +324,11 @@ function setupLoaderLogic() {
   const isReload = navEntry && navEntry.type === "reload";
   const hasSeenLoader = sessionStorage.getItem('loaderSeen');
 
+  // Keep the normal app shell responsive on first load, but do not show a
+  // splash-style intro animation before the site becomes usable.
   if (!hasSeenLoader || isReload) {
     sessionStorage.setItem('loaderSeen', 'true');
-    renderStartupLoader();
-    setTimeout(() => hideStartupLoader(), 2600);
+    hideStartupLoader();
   }
 }
 
@@ -646,6 +647,8 @@ function getQueryParam(name) {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get(name);
 }
+
+// (Hero video injection removed — hero video is embedded directly in `index.html`)
 
 // ---- Shopping Cart Logic ----
 const CART_KEY = 'isokoHubCart';

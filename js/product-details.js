@@ -157,18 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div id="product-summary" class="pd-summary-card">Generating summary for verification...</div>
     </div>
 
-    <div class="pd-details-section" id="ai-assistant-section">
-      <h3 class="pd-section-title">AI Product Assistant</h3>
-      <div class="ai-support-card">
-        <div class="ai-support-description">Ask a question about this product, get buying advice, or learn about compatibility and condition.</div>
-        <div id="ai-response" class="ai-response">Type a question and click <strong>Ask AI</strong> to get support.</div>
-        <div class="ai-input-row">
-          <input id="ai-question-input" type="text" placeholder="Ask about product quality, usage, or purchase readiness..." aria-label="AI question input">
-          <button id="ai-question-btn" class="btn btn-primary">Ask AI</button>
-        </div>
-        <div class="ai-hint">Example: "Is this item a good choice for daily use?"</div>
-      </div>
-    </div>
+    <!-- AI assistant temporarily disabled -->
 
     <div class="pd-details-section">
       <h3 class="pd-section-title">Key Features</h3>
@@ -222,43 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
   }
 
-  async function askProductQuestion(question) {
-    if (!question || !question.trim()) {
-      aiResponseEl.textContent = 'Please enter a question for the AI assistant.';
-      return;
-    }
-
-    aiQuestionBtn.disabled = true;
-    aiQuestionBtn.textContent = 'Thinking...';
-    aiResponseEl.textContent = 'Generating AI support answer...';
-
-    try {
-      const prompt = buildProductQuestionPrompt(product, question);
-      const answer = await askQuestionWithClaude(prompt);
-      aiResponseEl.textContent = answer;
-    } catch (err) {
-      console.error('AI assistant error:', err);
-      if (err.message && err.message.includes('Claude proxy unreachable')) {
-        aiResponseEl.textContent = 'AI support is unavailable because the local Claude proxy is not running. Start it with "npm run claude-proxy" and reload this page.';
-      } else {
-        aiResponseEl.textContent = 'AI support is unavailable at the moment. Please try again later.';
-      }
-    } finally {
-      aiQuestionBtn.disabled = false;
-      aiQuestionBtn.textContent = 'Ask AI';
-    }
-  }
-
-  aiQuestionBtn?.addEventListener('click', () => {
-    askProductQuestion(aiQuestionInput?.value || '');
-  });
-
-  aiQuestionInput?.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      askProductQuestion(aiQuestionInput.value);
-    }
-  });
+  // AI assistant functionality removed/disabled for now.
 
   function updateActiveImage(index) {
     activeImageIndex = index;
