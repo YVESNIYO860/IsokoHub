@@ -76,20 +76,57 @@ function md5(str) {
 }
 
 /**
- * Save or update user profile in user_profiles table
+ * Save or update user profile in the Supabase user_profiles table.
+ * Falls back to local storage when the table is unavailable.
  */
 async function saveUserProfile(userId, userData) {
-  const localProfile = {
+  const profile = {
     id: userId,
     ...userData,
+    is_verified: userData.is_verified ?? false,
+    verified_at: userData.verified_at || null,
+    verified_by: userData.verified_by || null,
     updated_at: new Date().toISOString()
   };
 
   if (typeof upsertStoredUserProfile === 'function') {
-    upsertStoredUserProfile(localProfile);
+    upsertStoredUserProfile(profile);
   }
 
-  return Promise.resolve({ data: [localProfile], error: null });
+  const profileTable = (typeof SUPABASE_USER_PROFILES_TABLE !== 'undefined' && SUPABASE_USER_PROFILES_TABLE)
+    ? SUPABASE_USER_PROFILES_TABLE
+    : 'user_profiles';
+
+  const supabaseClient = (typeof window !== 'undefined' && window.supabaseClient && typeof window.supabaseClient.from === 'function')
+    ? window.supabaseClient
+    : (typeof supabase !== 'undefined' ? supabase : null);
+
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from(profileTable)
+        .upsert(profile, { onConflict: 'id' })
+        .select();
+
+      if (!error) {
+        return { data: data || [profile], error: null };
+      }
+
+      const isMissingTable = error?.status === 404
+        || (error?.message && /not found|does not exist|relation .* does not exist/i.test(error.message))
+        || error?.code === '42P01';
+
+      if (isMissingTable) {
+        console.warn('Supabase profile table is not ready yet; using local storage fallback.', error);
+      } else {
+        console.warn('Supabase profile upsert failed; using local storage fallback.', error);
+      }
+    } catch (err) {
+      console.warn('Supabase profile upsert failed:', err);
+    }
+  }
+
+  return Promise.resolve({ data: [profile], error: null });
 }
 
 /**

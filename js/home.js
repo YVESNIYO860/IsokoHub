@@ -7,31 +7,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   startSellerShowcase();
 });
 
+function formatStatValue(value, target = null) {
+  const effectiveTarget = Number.isFinite(target) && target > 0 ? target : value;
+  const displayValue = Math.min(value, effectiveTarget);
+  return displayValue > 1000 ? (displayValue / 1000).toFixed(1).replace('.0', '') + 'K+' : displayValue + '+';
+}
+
+function animateStatValue(element, targetValue, duration = 1400, target = null) {
+  if (!element) return;
+  const finalValue = Number.isFinite(targetValue) ? targetValue : 0;
+  const effectiveTarget = Number.isFinite(target) && target > 0 ? target : finalValue;
+  const startTime = performance.now();
+
+  const step = (now) => {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const currentValue = Math.round(finalValue * eased);
+    element.textContent = formatStatValue(currentValue, effectiveTarget);
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    } else {
+      element.textContent = formatStatValue(finalValue, effectiveTarget);
+    }
+  };
+
+  element.textContent = '0+';
+  requestAnimationFrame(step);
+}
+
 async function updateInlineStats() {
   try {
     if (typeof fetchHeroStats === 'function') {
       const stats = await fetchHeroStats();
       const listingEl = document.getElementById('stat-active-listings');
       if (listingEl && stats.productCount > 0) {
-        let count = stats.productCount;
-        let displayCount = count > 1000 ? (count/1000).toFixed(1).replace('.0','') + 'K+' : count + '+';
-        listingEl.textContent = displayCount;
+        animateStatValue(listingEl, stats.productCount, 1200);
       }
     }
   } catch(e) { console.error(e); }
 
   try {
-    if (window.supabase) {
-      const { count } = await window.supabase
-        .from('user_profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'seller');
-      
-      const sellerEl = document.getElementById('stat-verified-sellers');
-      if (sellerEl && count !== null) {
-        let displayCount = count > 1000 ? (count/1000).toFixed(1).replace('.0','') + 'K+' : count + '+';
-        sellerEl.textContent = displayCount;
-      }
+    const sellerCount = await fetchVerifiedSellerCount();
+    const sellerEl = document.getElementById('stat-verified-sellers');
+    if (sellerEl) {
+      const targetValue = Number(localStorage.getItem('isokoSellerTarget')) || sellerCount;
+      animateStatValue(sellerEl, sellerCount, 1600, targetValue);
     }
   } catch(e) { console.error(e); }
 }

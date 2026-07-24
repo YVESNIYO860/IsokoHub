@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${images.length > 1 ? `<button class="gallery-nav gallery-prev" type="button" id="gallery-prev" aria-label="Previous image"><i class="fa-solid fa-chevron-left"></i></button>` : ''}
           <img src="${mainImage}" id="main-product-image" alt="${product.name}" class="product-main-img" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
           ${images.length > 1 ? `<button class="gallery-nav gallery-next" type="button" id="gallery-next" aria-label="Next image"><i class="fa-solid fa-chevron-right"></i></button>` : ''}
-          <button class="gallery-zoom-btn" type="button" id="gallery-zoom-btn"><i class="fa-solid fa-maximize"></i> Zoom</button>
+          <button class="gallery-zoom-btn" type="button" id="gallery-zoom-btn"><i class="fa-solid fa-maximize"></i> Full screen</button>
         </div>
 
         ${images.length > 1 ? `
@@ -132,6 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <label class="form-label" for="review-comment">Your comment</label>
             <textarea id="review-comment" class="form-control review-textarea" rows="4" placeholder="Tell others what you liked or disliked..." required></textarea>
 
+            <div id="review-submit-feedback" class="review-submit-feedback" role="status" aria-live="polite"></div>
             <button type="submit" class="btn btn-primary btn-block">Submit review</button>
           </form>
 
@@ -188,12 +189,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   let activeImageIndex = 0;
   let selectedRating = 0;
   let zoomLevel = 1;
+  let panX = 0;
+  let panY = 0;
+  let isPanning = false;
+  let panStartX = 0;
+  let panStartY = 0;
+  let panOriginX = 0;
+  let panOriginY = 0;
   const mainImageEl = document.getElementById('main-product-image');
   const modal = document.getElementById('gallery-modal');
   const modalImage = document.getElementById('gallery-modal-image');
   const reviewForm = document.getElementById('review-form');
   const reviewList = document.getElementById('review-list');
   const ratingPicker = document.getElementById('rating-picker');
+  const reviewFeedbackEl = document.getElementById('review-submit-feedback');
   const productSummaryEl = document.getElementById('product-summary');
 
   const aiQuestionInput = document.getElementById('ai-question-input');
@@ -232,11 +241,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden';
       updateZoom(1);
+      if (modal.requestFullscreen && !document.fullscreenElement) {
+        modal.requestFullscreen().catch(() => {});
+      }
     }
   }
 
   function closeGalleryModal() {
     if (modal) {
+      if (document.fullscreenElement === modal) {
+        document.exitFullscreen?.().catch(() => {});
+      }
       modal.hidden = true;
       modal.setAttribute('aria-hidden', 'true');
       modal.style.display = 'none';
@@ -249,10 +264,53 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  function updateImageTransform() {
+    if (!modalImage) return;
+    modalImage.style.setProperty('--zoom-level', zoomLevel.toFixed(1));
+    modalImage.style.setProperty('--pan-x', `${panX}px`);
+    modalImage.style.setProperty('--pan-y', `${panY}px`);
+    modalImage.classList.toggle('is-pannable', zoomLevel > 1);
+    modalImage.style.cursor = zoomLevel > 1 ? 'grab' : 'zoom-in';
+  }
+
+  function resetPan() {
+    panX = 0;
+    panY = 0;
+    updateImageTransform();
+  }
+
   function updateZoom(level) {
     zoomLevel = Math.max(1, Math.min(3, level));
+    if (zoomLevel === 1) {
+      resetPan();
+    } else {
+      updateImageTransform();
+    }
+  }
+
+  function startPan(event) {
+    if (zoomLevel <= 1 || !modalImage) return;
+    isPanning = true;
+    panStartX = event.clientX;
+    panStartY = event.clientY;
+    panOriginX = panX;
+    panOriginY = panY;
+    modalImage.style.cursor = 'grabbing';
+    event.preventDefault();
+  }
+
+  function movePan(event) {
+    if (!isPanning || zoomLevel <= 1 || !modalImage) return;
+    panX = panOriginX + (event.clientX - panStartX);
+    panY = panOriginY + (event.clientY - panStartY);
+    updateImageTransform();
+  }
+
+  function endPan() {
+    if (!isPanning) return;
+    isPanning = false;
     if (modalImage) {
-      modalImage.style.setProperty('--zoom-level', zoomLevel.toFixed(1));
+      modalImage.style.cursor = zoomLevel > 1 ? 'grab' : 'zoom-in';
     }
   }
 
@@ -295,6 +353,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('gallery-zoom-btn')?.addEventListener('click', () => openGalleryModal(activeImageIndex));
   mainImageEl?.addEventListener('click', () => openGalleryModal(activeImageIndex));
+  modalImage?.addEventListener('pointerdown', startPan);
+  window.addEventListener('pointermove', movePan);
+  window.addEventListener('pointerup', endPan);
+  window.addEventListener('pointercancel', endPan);
   document.getElementById('gallery-modal-prev')?.addEventListener('click', () => updateActiveImage(activeImageIndex - 1));
   document.getElementById('gallery-modal-next')?.addEventListener('click', () => updateActiveImage(activeImageIndex + 1));
   document.getElementById('gallery-zoom-in')?.addEventListener('click', () => updateZoom(zoomLevel + 0.25));
@@ -330,7 +392,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const comment = commentInput?.value.trim() || '';
 
     if (!email || !comment || selectedRating === 0) {
-      alert('Please add your email, choose a rating, and leave a comment.');
+      reviewFeedbackEl.classList.remove('show');
+      reviewFeedbackEl.textContent = 'Please add your email, choose a rating, and leave a comment.';
+      reviewFeedbackEl.classList.add('show');
       return;
     }
 
@@ -347,6 +411,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     reviewForm.reset();
     setSelectedRating(0);
     renderReviews(updatedReviews);
+    reviewFeedbackEl.textContent = 'Thanks! Your review has been saved on this device.';
+    reviewFeedbackEl.classList.add('show');
   });
 
   document.getElementById('add-to-cart-btn')?.addEventListener('click', () => {

@@ -437,6 +437,11 @@ function renderNavbar() {
             <strong>Account</strong>
           </a>
 
+          <a href="houses-rent.html" target="_blank" rel="noopener" class="nav-action-item mobile-househub-link">
+            <i class="fa-solid fa-house"></i>
+            <strong>Househub</strong>
+          </a>
+
           ${showInstallAction ? `
           <button type="button" class="nav-action-item install-nav-btn" onclick="showInstallPrompt()">
             <i class="fa-solid fa-download"></i>

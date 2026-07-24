@@ -97,11 +97,55 @@ async function fetchUserCount() {
       throw error;
     }
 
-    return count || 0;
+    if (typeof count === 'number' && count > 0) {
+      return count;
+    }
+
+    const stored = getStoredUserProfiles();
+    return stored.length;
   } catch (err) {
     console.error('Error fetching user count:', err?.message || err);
     const stored = getStoredUserProfiles();
     return stored.length;
+  }
+}
+
+async function fetchVerifiedSellerCount() {
+  if (!supabase || supabaseUserProfilesTableMissing) {
+    const stored = getStoredUserProfiles();
+    return stored.filter(profile => profile.role === 'seller').length;
+  }
+
+  try {
+    const { count, error } = await supabase
+      .from(SUPABASE_USER_PROFILES_TABLE)
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'seller');
+
+    if (error) {
+      const isMissingTable = error?.status === 404
+        || (error?.message && /not found|does not exist|relation .* does not exist/i.test(error.message))
+        || error?.code === '42P01';
+
+      if (isMissingTable) {
+        console.warn('Supabase user profile table missing, falling back to local storage:', error);
+        supabaseUserProfilesTableMissing = true;
+        const stored = getStoredUserProfiles();
+        return stored.filter(profile => profile.role === 'seller').length;
+      }
+      throw error;
+    }
+
+    if (typeof count === 'number' && count > 0) {
+      return count;
+    }
+
+    const stored = getStoredUserProfiles();
+    return stored.filter(profile => profile.role === 'seller').length;
+  } catch (err) {
+    console.error('Error fetching verified seller count:', err?.message || err);
+    const stored = getStoredUserProfiles();
+    return stored.filter(profile => profile.role === 'seller').length;
   }
 }
 
