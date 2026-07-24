@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.title = `${product.name} - IsokoHub`;
 
   const images = Array.isArray(product.image) ? product.image.filter(Boolean) : [product.image].filter(Boolean);
-  const mainImage = images[0] || 'https://via.placeholder.com/600x600?text=No+Image';
+  const mainImage = images[0] || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><rect width="600" height="600" fill="%23f8fbff"/><rect x="40" y="40" width="520" height="520" rx="28" fill="%23ffffff" stroke="%23dbeafe" stroke-width="2"/><circle cx="300" cy="250" r="92" fill="%23e0f2fe"/><path d="M220 410c28-72 134-72 162 0" fill="%23bfdbfe"/><text x="300" y="525" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="%231d4ed8">No image available</text></svg>';
   const reviewKey = `isoko-product-reviews-${productId}`;
   const reviews = getStoredReviews(reviewKey);
   const averageRating = reviews.length ? (reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviews.length).toFixed(1) : '0.0';
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="product-gallery-card">
         <div class="gallery-main">
           ${images.length > 1 ? `<button class="gallery-nav gallery-prev" type="button" id="gallery-prev" aria-label="Previous image"><i class="fa-solid fa-chevron-left"></i></button>` : ''}
-          <img src="${mainImage}" id="main-product-image" alt="${product.name}" class="product-main-img" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
+          <img src="${mainImage}" id="main-product-image" alt="${product.name}" class="product-main-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"600\" viewBox=\"0 0 600 600\"><rect width=\"600\" height=\"600\" fill=\"%23f8fbff\"/><rect x=\"40\" y=\"40\" width=\"520\" height=\"520\" rx=\"28\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"300\" cy=\"250\" r=\"92\" fill=\"%23e0f2fe\"/><path d=\"M220 410c28-72 134-72 162 0\" fill=\"%23bfdbfe\"/><text x=\"300\" y=\"525\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"26\" fill=\"%231d4ed8\">No image available</text></svg>'">
           ${images.length > 1 ? `<button class="gallery-nav gallery-next" type="button" id="gallery-next" aria-label="Next image"><i class="fa-solid fa-chevron-right"></i></button>` : ''}
           <button class="gallery-zoom-btn" type="button" id="gallery-zoom-btn"><i class="fa-solid fa-maximize"></i> Full screen</button>
         </div>
@@ -158,8 +158,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div id="product-summary" class="pd-summary-card">Generating summary for verification...</div>
     </div>
 
-    <!-- AI assistant temporarily disabled -->
-
     <div class="pd-details-section">
       <h3 class="pd-section-title">Key Features</h3>
       <ul class="feature-list">
@@ -175,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="gallery-modal-body">
         <button class="gallery-modal-close" type="button" id="gallery-modal-close" aria-label="Close zoom view"><i class="fa-solid fa-xmark"></i></button>
         ${images.length > 1 ? `<button class="gallery-modal-nav gallery-modal-prev" type="button" id="gallery-modal-prev" aria-label="Previous image"><i class="fa-solid fa-chevron-left"></i></button>` : ''}
-        <img src="${mainImage}" id="gallery-modal-image" alt="${product.name}" class="gallery-modal-image" onerror="this.src='https://via.placeholder.com/600x600?text=No+Image'">
+        <img src="${mainImage}" id="gallery-modal-image" alt="${product.name}" class="gallery-modal-image" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"600\" height=\"600\" viewBox=\"0 0 600 600\"><rect width=\"600\" height=\"600\" fill=\"%23f8fbff\"/><rect x=\"40\" y=\"40\" width=\"520\" height=\"520\" rx=\"28\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"300\" cy=\"250\" r=\"92\" fill=\"%23e0f2fe\"/><path d=\"M220 410c28-72 134-72 162 0\" fill=\"%23bfdbfe\"/><text x=\"300\" y=\"525\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"26\" fill=\"%231d4ed8\">No image available</text></svg>'">
         ${images.length > 1 ? `<button class="gallery-modal-nav gallery-modal-next" type="button" id="gallery-modal-next" aria-label="Next image"><i class="fa-solid fa-chevron-right"></i></button>` : ''}
         <div class="gallery-controls">
           <button type="button" id="gallery-zoom-out" aria-label="Zoom out"><i class="fa-solid fa-minus"></i></button>
