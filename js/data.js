@@ -111,41 +111,55 @@ async function fetchUserCount() {
 }
 
 async function fetchVerifiedSellerCount() {
+  const isVerifiedSeller = (profile) => {
+    return profile?.role === 'seller' && profile?.is_verified === true;
+  };
+
   if (!supabase || supabaseUserProfilesTableMissing) {
     const stored = getStoredUserProfiles();
-    return stored.filter(profile => profile.role === 'seller').length;
+    return stored.filter(isVerifiedSeller).length;
   }
 
   try {
     const { count, error } = await supabase
       .from(SUPABASE_USER_PROFILES_TABLE)
       .select('id', { count: 'exact', head: true })
-      .eq('role', 'seller');
+      .eq('role', 'seller')
+      .eq('is_verified', true);
 
     if (error) {
       const isMissingTable = error?.status === 404
         || (error?.message && /not found|does not exist|relation .* does not exist/i.test(error.message))
         || error?.code === '42P01';
+      const isMissingColumn = error?.code === '42703'
+        || (error?.message && /column .* does not exist/i.test(error.message));
 
       if (isMissingTable) {
         console.warn('Supabase user profile table missing, falling back to local storage:', error);
         supabaseUserProfilesTableMissing = true;
         const stored = getStoredUserProfiles();
-        return stored.filter(profile => profile.role === 'seller').length;
+        return stored.filter(isVerifiedSeller).length;
       }
+
+      if (isMissingColumn) {
+        console.warn('Supabase is_verified column is not available yet; using local verified-seller fallback:', error);
+        const stored = getStoredUserProfiles();
+        return stored.filter(isVerifiedSeller).length;
+      }
+
       throw error;
     }
 
-    if (typeof count === 'number' && count > 0) {
+    if (typeof count === 'number') {
       return count;
     }
 
     const stored = getStoredUserProfiles();
-    return stored.filter(profile => profile.role === 'seller').length;
+    return stored.filter(isVerifiedSeller).length;
   } catch (err) {
     console.error('Error fetching verified seller count:', err?.message || err);
     const stored = getStoredUserProfiles();
-    return stored.filter(profile => profile.role === 'seller').length;
+    return stored.filter(isVerifiedSeller).length;
   }
 }
 

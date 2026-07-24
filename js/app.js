@@ -754,7 +754,7 @@ function renderCartContent() {
   
   container.innerHTML = cart.map(item => `
     <div class="cart-item">
-      <img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/80?text=No+Image'">
+      <img src="${item.image}" alt="${item.name}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"80\" viewBox=\"0 0 80 80\"><rect width=\"80\" height=\"80\" fill=\"%23f8fbff\"/><rect x=\"8\" y=\"8\" width=\"64\" height=\"64\" rx=\"12\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"40\" cy=\"34\" r=\"14\" fill=\"%23e0f2fe\"/><path d=\"M24 60c8-14 16-14 32 0\" fill=\"%23bfdbfe\"/></svg>'">
       <div class="cart-item-details">
         <div class="cart-item-title">${item.name}</div>
         <div class="cart-item-price">${formatPrice(item.price)}</div>

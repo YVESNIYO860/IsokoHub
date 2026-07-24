@@ -5,7 +5,7 @@
   --primary-blue: #3b82f6; /* Vibrant Blue */
   --primary-blue-hover: #2563eb;
   --bg-color: hwb(215 52% 24%);
-  --surface-color: #a18282;
+  --surface-color: #f1ebeb;
   --text-dark: #0f172a;
   --text-muted: #475569;
   --border-color: #6f7b86;
@@ -194,14 +194,14 @@ h3 { font-size: 1.5rem; }
   top: 0.75rem;
   left: 0.75rem;
   z-index: 2;
-  background: rgba(254, 189, 105, 0.95);
-  color: #111827;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
   padding: 0.32rem 0.58rem;
   border-radius: 999px;
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 }
 
 .product-card-img {
@@ -407,8 +407,8 @@ h3 { font-size: 1.5rem; }
 
 .rating-star:hover,
 .rating-star.active {
-  color: #f59e0b;
-  border-color: #f59e0b;
+  color: #2563eb;
+  border-color: #2563eb;
   background: #fff7e6;
   transform: translateY(-1px);
 }
@@ -553,7 +553,7 @@ h3 { font-size: 1.5rem; }
 
 
 .crypto-item {
-  color: #febd69;
+  color: #60a5fa;
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -655,7 +655,7 @@ body.menu-open .menu-active-overlay {
 }
 
 .search-btn {
-  background-color: #febd69; /* Amazon orange */
+  background-color: #60a5fa;
   border: none;
   width: 50px;
   display: flex;
@@ -669,7 +669,7 @@ body.menu-open .menu-active-overlay {
 }
 
 .search-btn:hover {
-  background-color: #f3a847;
+  background-color: #3b82f6;
 }
 
 .navbar-actions {
@@ -708,7 +708,7 @@ body.menu-open .menu-active-overlay {
 
 .install-nav-btn i {
   font-size: 0.9rem;
-  color: #febd69;
+  color: #60a5fa;
 }
 
 .mobile-househub-link {
@@ -725,7 +725,7 @@ body.menu-open .menu-active-overlay {
 }
 
 .mobile-househub-link i {
-  color: #fdba74;
+  color: #93c5fd;
   font-size: 0.95rem;
 }
 
@@ -756,14 +756,14 @@ body.menu-open .menu-active-overlay {
   position: absolute;
   top: -10px;
   right: -10px;
-  background-color: #febd69;
-  color: #131921;
+  background-color: #60a5fa;
+  color: white;
   font-size: 0.75rem;
   padding: 0 5px;
   border-radius: 10px;
   min-width: 20px;
   text-align: center;
-  border: 1px solid #131921;
+  border: 1px solid #3b82f6;
 }
 
 /* Navbar Bottom Menu */
@@ -788,6 +788,15 @@ body.menu-open .menu-active-overlay {
   gap: 0.4rem;
   transition: background 0.2s, color 0.2s;
   white-space: nowrap;
+}
+
+.menu-trigger {
+  color: #fff !important;
+}
+
+.menu-trigger i,
+.menu-trigger span {
+  color: #fff !important;
 }
 
 .navbar-bottom {
@@ -839,7 +848,7 @@ body.menu-open .menu-active-overlay {
   padding: 2.5rem 1.5rem;
   grid-template-columns: repeat(4, 1fr);
   gap: 2rem;
-  border-top: 2px solid #febd69;
+  border-top: 2px solid #60a5fa;
   z-index: 1001;
 }
 
@@ -975,7 +984,7 @@ body.menu-open .menu-active-overlay {
   margin-bottom: 0.3rem;
 }
 
-.footer-logo span { color: #febd69; }
+.footer-logo span { color: #60a5fa; }
 
 .footer-bottom p {
   font-size: 0.72rem;
@@ -994,7 +1003,7 @@ body.menu-open .menu-active-overlay {
 }
 
 .back-to-home-link a {
-  color: #febd69;
+  color: #93c5fd;
   text-decoration: none;
   font-weight: 700;
   display: inline-flex;
@@ -1042,12 +1051,12 @@ body.menu-open .menu-active-overlay {
 
 /* Header Rate Badge */
 .header-rate-badge {
-  background: rgba(254, 189, 105, 0.15);
-  color: #febd69;
+  background: rgba(96, 165, 250, 0.15);
+  color: #93c5fd;
   padding: 0.2rem 0.8rem;
   border-radius: 4px;
   font-size: 0.75rem;
-  border: 1px solid rgba(254, 189, 105, 0.3);
+  border: 1px solid rgba(96, 165, 250, 0.3);
   margin-left: auto;
 }
 
@@ -1321,8 +1330,8 @@ body.menu-open .menu-active-overlay {
 }
 
 .install-app-primary {
-  background: #febd69;
-  color: #0f172a;
+  background: #60a5fa;
+  color: white;
 }
 
 .install-app-close {
@@ -1361,7 +1370,7 @@ body.menu-open .menu-active-overlay {
   height: 48px;
   border-radius: 14px;
   background: #0f172a;
-  color: #febd69;
+  color: #93c5fd;
   display: grid;
   place-items: center;
   margin-bottom: 0.7rem;
@@ -1481,7 +1490,7 @@ body.menu-open .menu-active-overlay {
   inset: 0;
   border-radius: 50%;
   border: 4px solid rgba(255,255,255,0.16);
-  border-top-color: #f59e0b;
+  border-top-color: #2563eb;
   border-right-color: #38bdf8;
   animation: loaderSpin 0.9s linear infinite;
   box-shadow: 0 0 0 8px rgba(255,255,255,0.04);
@@ -1521,7 +1530,7 @@ body.menu-open .menu-active-overlay {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
+  background: linear-gradient(90deg, #93c5fd, #2563eb);
   animation: loaderBounce 1.05s ease-in-out infinite;
 }
 
@@ -1770,8 +1779,8 @@ body.menu-open .menu-active-overlay {
 }
 
 .hero-panel-badge-alt {
-  background: rgba(245, 158, 11, 0.25);
-  color: #fef3c7;
+  background: rgba(37, 99, 235, 0.12);
+  color: #dbeafe;
 }
 
 .hero-feature-image {
@@ -2092,8 +2101,8 @@ body.menu-open .menu-active-overlay {
 .dot.active {
   width: 28px;
   border-radius: 999px;
-  background-color: #febd69;
-  box-shadow: 0 0 0 3px rgba(254, 189, 105, 0.25);
+  background-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
 }
 
 .slide-eyebrow {
@@ -2109,7 +2118,7 @@ body.menu-open .menu-active-overlay {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #febd69;
+  color: #93c5fd;
 }
 
 .slide-btn {
@@ -2118,8 +2127,8 @@ body.menu-open .menu-active-overlay {
   justify-content: center;
   padding: 0.85rem 1.5rem;
   border-radius: 999px;
-  background: #febd69;
-  color: #131921;
+  background: #60a5fa;
+  color: white;
   font-weight: 700;
   text-decoration: none;
   border: none;
@@ -2134,8 +2143,8 @@ body.menu-open .menu-active-overlay {
 }
 
 .slide-btn:hover {
-  background: #f3a847;
-  color: #131921;
+  background: #3b82f6;
+  color: white;
   text-decoration: none;
 }
 
@@ -2296,7 +2305,7 @@ body.menu-open .menu-active-overlay {
 .category-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 12px 24px rgba(0,0,0,0.12);
-  border-color: #febd69;
+  border-color: #60a5fa;
   background: #fffdf9;
 }
 
@@ -2308,7 +2317,7 @@ body.menu-open .menu-active-overlay {
 
 .category-card:hover .category-icon {
   transform: scale(1.1);
-  color: #febd69;
+  color: #60a5fa;
 }
 
 .category-name {
@@ -2318,13 +2327,13 @@ body.menu-open .menu-active-overlay {
 }
 
 .category-card-special {
-  border: 2px solid #f59e0b;
-  background: linear-gradient(135deg, #fff7ed 0%, #fff 100%);
-  box-shadow: 0 12px 24px rgba(245, 158, 11, 0.15);
+  border: 2px solid #60a5fa;
+  background: linear-gradient(135deg, #eff6ff 0%, #fff 100%);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.12);
 }
 
 .category-card-special .category-name {
-  color: #b45309;
+  color: #1d4ed8;
 }
 
 .category-badge {
@@ -2333,7 +2342,7 @@ body.menu-open .menu-active-overlay {
   justify-content: center;
   padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  background: #f59e0b;
+  background: #60a5fa;
   color: white;
   font-size: 0.75rem;
   font-weight: 700;
@@ -2400,8 +2409,8 @@ body.menu-open .menu-active-overlay {
 
 .side-drawer-header .fa-circle-user {
   font-size: 2.2rem;
-  color: #febd69;
-  filter: drop-shadow(0 0 5px rgba(254, 189, 105, 0.3));
+  color: #93c5fd;
+  filter: drop-shadow(0 0 5px rgba(96, 165, 250, 0.3));
 }
 
 .close-drawer {
@@ -2426,16 +2435,22 @@ body.menu-open .menu-active-overlay {
 }
 
 .side-drawer-content {
-  padding: 0.5rem 0;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
 }
 
 .drawer-section {
-  padding: 1.5rem 1.5rem;
-  border-bottom: 6px solid #f1f5f9; /* Modern segment separator */
+  padding: 1rem 1rem 1.1rem;
+  margin-bottom: 0.7rem;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
 .drawer-section:last-child {
   border-bottom: none;
+  margin-bottom: 0;
 }
 
 .drawer-section h3 {
@@ -2471,7 +2486,7 @@ body.menu-open .menu-active-overlay {
 }
 
 .drawer-section ul li a:hover {
-  background-color: #f7fafc;
+  background-color: #f8fbff;
   color: var(--primary-blue);
   padding-left: 1rem;
 }
@@ -2521,6 +2536,9 @@ body.menu-open .menu-active-overlay {
   padding: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.5px;
+  background: #60a5fa;
+  color: white;
+  border: none;
 }
 
 /* Shopping Cart Drawer Styles */
@@ -2859,19 +2877,19 @@ body.menu-open .menu-active-overlay {
 
 /* Test Mode Banner */
 .test-mode-banner {
-  background: #fff7ed;
-  color: #9a3412;
+  background: #f8fbff;
+  color: #1d4ed8;
   padding: 0.6rem;
   text-align: center;
   font-size: 0.85rem;
-  border-bottom: 1px solid #ffedd1;
+  border-bottom: 1px solid #dbeafe;
   position: sticky;
   top: 0;
   z-index: 2500;
 }
 
 .test-mode-banner button {
-  background: #9a3412;
+  background: #2563eb;
   color: white;
   border: none;
   padding: 0.2rem 0.6rem;

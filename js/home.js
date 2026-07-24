@@ -139,7 +139,7 @@ async function renderFeaturedProducts() {
     return `
       <a href="product.html?id=${p.id}" class="product-card">
         <div class="product-card-badge">Featured</div>
-        <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+        <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"300\" viewBox=\"0 0 400 300\"><rect width=\"400\" height=\"300\" fill=\"%23f8fbff\"/><rect x=\"24\" y=\"24\" width=\"352\" height=\"252\" rx=\"20\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"200\" cy=\"120\" r=\"56\" fill=\"%23e0f2fe\"/><path d=\"M140 220c20-42 100-42 120 0\" fill=\"%23bfdbfe\"/><text x=\"200\" y=\"268\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"18\" fill=\"%231d4ed8\">No image</text></svg>'">
         <div class="product-card-content">
           <div class="product-card-meta-row">
             <span class="product-category">${p.category}</span>
