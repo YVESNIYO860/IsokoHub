@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem;"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
             <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-top:auto; flex-wrap:wrap;">
               <span class="product-price">${formatPrice(p.price)}</span>
-              <span style="background:#eef2ff;color:#312e81;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-robot"></i> AI support</span>
+              <span style="background:#ecfeff;color:#0f766e;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-phone"></i> Contact</span>
             </div>
           </div>
         </a>

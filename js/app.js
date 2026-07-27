@@ -406,6 +406,21 @@ function renderDataLoader(message = 'Loading IsokoHub...') {
 function renderNavbar() {
   const user = getCurrentUser();
   const showInstallAction = !isInStandaloneMode();
+  const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Sign In';
+  const accountHref = user ? 'dashboard.html' : 'login.html';
+  const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='login.html';";
+  const avatarUrl = [
+    user?.avatarUrl,
+    user?.avatar_url,
+    user?.photoURL,
+    user?.profileImage,
+    user?.profile_image,
+    user?.photo_url,
+    user?.picture,
+    user?.user_metadata?.avatar_url,
+    user?.user_metadata?.picture,
+    user?.user_metadata?.profile_image
+  ].find(Boolean) || (user?.email && typeof getGravatarUrl === 'function' ? getGravatarUrl(user.email) : null);
   const navbarHTML = `
     <nav class="navbar">
       <!-- Top Tier: Branding, Search, Actions -->
@@ -432,7 +447,7 @@ function renderNavbar() {
             <i class="fa-solid fa-bag-shopping"></i>
             <strong>Sell</strong>
           </a>
-          <a href="${user ? 'dashboard.html' : 'login.html'}" class="nav-action-item">
+          <a href="${accountHref}" class="nav-action-item" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}>
             <span>Hello, ${user ? user.name : 'Sign in'}</span>
             <strong>Account</strong>
           </a>
@@ -471,8 +486,16 @@ function renderNavbar() {
     <div class="side-drawer-overlay" id="side-drawer-overlay"></div>
     <div class="side-drawer" id="side-drawer">
       <div class="side-drawer-header">
-        <i class="fa-solid fa-circle-user"></i>
-        <span>Hello, ${user ? user.name : 'Sign In'}</span>
+        <a href="${accountHref}" class="side-drawer-profile-link" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}>
+          <div class="drawer-user-avatar">
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="${displayName}" onerror="this.style.display='none'; this.parentElement.querySelector('.drawer-avatar-fallback').style.display='grid';">` : ''}
+            <span class="drawer-avatar-fallback" style="${avatarUrl ? 'display:none;' : ''}"><i class="fa-solid fa-user"></i></span>
+          </div>
+          <div class="drawer-user-info">
+            <span class="drawer-user-greeting">Hello,</span>
+            <span class="drawer-user-name">${displayName}</span>
+          </div>
+        </a>
         <button class="close-drawer" id="close-drawer">&times;</button>
       </div>
       <div class="side-drawer-content">
