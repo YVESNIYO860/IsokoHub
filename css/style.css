@@ -1778,10 +1778,10 @@ body.menu-open .menu-active-overlay {
 .hero-shell {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
-  gap: 2rem;
+  gap: 1.25rem;
   align-items: center;
-  padding: 2.5rem;
-  min-height: 520px;
+  padding: 1.5rem;
+  min-height: 420px;
   border-radius: 2rem;
   background: linear-gradient(125deg, #0d1724 0%, #1a2d3f 45%, #2b3d4f 100%);
   color: white;
@@ -1851,25 +1851,25 @@ body.menu-open .menu-active-overlay {
 }
 
 .hero-copy h1 {
-  font-size: clamp(2.1rem, 4.4vw, 3.4rem);
-  margin-bottom: 1rem;
-  line-height: 1.08;
+  font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+  margin-bottom: 0.7rem;
+  line-height: 1.06;
   letter-spacing: -0.02em;
   max-width: 720px;
 }
 
 .hero-copy p {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: rgba(255,255,255,0.9);
   max-width: 650px;
-  margin-bottom: 1.3rem;
+  margin-bottom: 0.9rem;
 }
 
 .hero-chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
-  margin-bottom: 1.2rem;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
 }
 
 .hero-chip {
@@ -1891,8 +1891,8 @@ body.menu-open .menu-active-overlay {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
 }
 
 .hero-btn {
@@ -1918,9 +1918,9 @@ body.menu-open .menu-active-overlay {
 }
 
 .hero-stat-card {
-  min-width: 120px;
-  padding: 0.8rem 0.95rem;
-  border-radius: 1rem;
+  min-width: 112px;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.9rem;
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.07);
   backdrop-filter: blur(10px);
