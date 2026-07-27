@@ -57,24 +57,21 @@ function animateStatValue(element, targetValue, duration = 1400, target = null) 
 }
 
 async function updateInlineStats() {
+  const listingEl = document.getElementById('stat-active-listings');
+  if (!listingEl) return;
+
   try {
     if (typeof fetchHeroStats === 'function') {
       const stats = await fetchHeroStats();
-      const listingEl = document.getElementById('stat-active-listings');
-      if (listingEl && stats.productCount > 0) {
-        animateStatValue(listingEl, stats.productCount, 1200);
-      }
+      const productCount = Number(stats?.productCount || 0);
+      animateStatValue(listingEl, productCount, 1200);
+    } else {
+      listingEl.textContent = '0+';
     }
-  } catch(e) { console.error(e); }
-
-  try {
-    const sellerCount = await fetchVerifiedSellerCount();
-    const sellerEl = document.getElementById('stat-verified-sellers');
-    if (sellerEl) {
-      const targetValue = Number(localStorage.getItem('isokoSellerTarget')) || sellerCount;
-      animateStatValue(sellerEl, sellerCount, 1600, targetValue);
-    }
-  } catch(e) { console.error(e); }
+  } catch (e) {
+    console.error(e);
+    listingEl.textContent = '0+';
+  }
 }
 
 function startSellerShowcase() {

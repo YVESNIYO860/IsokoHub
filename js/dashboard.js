@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const user = getCurrentUser();
+  let user = getCurrentUser();
   if (!user) {
     window.location.href = 'login.html';
     return;
@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const successMessage = urlParams.get('message');
+  const initialView = urlParams.get('view') === 'settings' ? 'settings' : 'catalog';
   if (successMessage) {
     const header = document.querySelector('.dashboard-main-card');
     if (header) {
@@ -26,6 +27,89 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   
+  function updateStoredUserProfile(changes = {}) {
+    const currentUser = getCurrentUser() || user;
+    const updatedUser = {
+      ...currentUser,
+      ...changes,
+      name: changes.name || changes.full_name || currentUser?.name || currentUser?.full_name || currentUser?.email?.split('@')[0] || 'User',
+      full_name: changes.full_name || changes.name || currentUser?.full_name || currentUser?.name || currentUser?.email?.split('@')[0] || 'User'
+    };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
+    user = updatedUser;
+    return updatedUser;
+  }
+
+  window.openUserSettings = function() {
+    window.location.href = 'dashboard.html?view=settings';
+  };
+
+  window.saveUserSettings = async function(event) {
+    if (event) event.preventDefault();
+    const statusEl = document.getElementById('user-settings-status');
+    const nameInput = document.getElementById('user-settings-name');
+    const phoneInput = document.getElementById('user-settings-phone');
+    const notifyInput = document.getElementById('user-settings-notify');
+    const saveButton = document.getElementById('user-settings-save');
+    const themeSelect = document.getElementById('user-settings-theme');
+    const compactToggle = document.getElementById('user-settings-compact');
+    const reducedMotionToggle = document.getElementById('user-settings-reduced-motion');
+    const highContrastToggle = document.getElementById('user-settings-high-contrast');
+
+    const fullName = nameInput.value.trim();
+    const phone = phoneInput.value.trim();
+    const notificationsEnabled = notifyInput.checked;
+
+    if (!fullName) {
+      statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please enter your name.';
+      statusEl.style.display = 'block';
+      return;
+    }
+
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const updatedUser = updateStoredUserProfile({
+        name: fullName,
+        full_name: fullName,
+        phone,
+        notificationsEnabled,
+        email: user.email
+      });
+
+      await saveUserProfile(user.id, {
+        name: fullName,
+        full_name: fullName,
+        phone,
+        notifications_enabled: notificationsEnabled,
+        email: user.email
+      });
+
+      const appearanceSettings = {
+        theme: themeSelect ? themeSelect.value : 'system',
+        compactMode: compactToggle ? compactToggle.checked : false,
+        reducedMotion: reducedMotionToggle ? reducedMotionToggle.checked : false,
+        highContrast: highContrastToggle ? highContrastToggle.checked : false
+      };
+      saveDrawerUiSettings(appearanceSettings);
+
+      document.getElementById('user-greeting').textContent = `Manage your inventory and promotions, ${fullName.split(' ')[0]}`;
+      statusEl.innerHTML = '<i class="fa-solid fa-circle-check"></i> Settings and appearance updated successfully.';
+      statusEl.style.display = 'block';
+      nameInput.value = updatedUser.name || fullName;
+      phoneInput.value = updatedUser.phone || '';
+      notifyInput.checked = Boolean(updatedUser.notificationsEnabled);
+    } catch (err) {
+      console.error('Failed to save user settings:', err);
+      statusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Unable to save settings right now.';
+      statusEl.style.display = 'block';
+    } finally {
+      saveButton.disabled = false;
+      saveButton.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save changes';
+    }
+  };
+
   window.deleteItem = async function(id) {
     if(confirm('Are you sure you want to delete this listing? This will remove all associated data.')) {
       await deleteProduct(id);
@@ -70,11 +154,90 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  async function renderDashboard() {
+  async function renderDashboard(viewMode = 'catalog') {
     const content = document.getElementById('dashboard-content');
     content.innerHTML = `
       <div style="text-align:center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
     `;
+
+    if (viewMode === 'settings') {
+      const currentAppearance = getDrawerUiSettings();
+      content.innerHTML = `
+        <div style="border: 1px solid #e2e8f0; border-radius: 20px; padding: 1.5rem; background: #f8fafc;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom: 1.25rem;">
+            <div>
+              <h3 style="margin-bottom: 0.25rem;">Account Settings</h3>
+              <p class="text-muted" style="margin: 0;">Update your profile details and notification preferences.</p>
+            </div>
+            <a href="dashboard.html" class="btn btn-secondary" style="border-radius: 999px;">Back to listings</a>
+          </div>
+
+          <form id="user-settings-form" onsubmit="event.preventDefault(); window.saveUserSettings(event);">
+            <div style="display:grid; gap:1rem;">
+              <div>
+                <label class="form-label" for="user-settings-name">Full name</label>
+                <input id="user-settings-name" class="form-control" type="text" value="${escapeHtml(user?.name || user?.full_name || '')}" placeholder="Enter your full name">
+              </div>
+              <div>
+                <label class="form-label" for="user-settings-phone">Phone number</label>
+                <input id="user-settings-phone" class="form-control" type="tel" value="${escapeHtml(user?.phone || '')}" placeholder="e.g. +250 788 123 456">
+              </div>
+              <div>
+                <label class="form-label" for="user-settings-email">Email</label>
+                <input id="user-settings-email" class="form-control" type="email" value="${escapeHtml(user?.email || '')}" disabled>
+              </div>
+              <div>
+                <label class="form-label" for="user-settings-theme">Theme</label>
+                <select id="user-settings-theme" class="form-control">
+                  <option value="system" ${currentAppearance.theme === 'system' ? 'selected' : ''}>System</option>
+                  <option value="light" ${currentAppearance.theme === 'light' ? 'selected' : ''}>Light</option>
+                  <option value="dark" ${currentAppearance.theme === 'dark' ? 'selected' : ''}>Dark</option>
+                </select>
+              </div>
+              <div style="display:grid; gap:0.7rem;">
+                <label style="display:flex; align-items:center; gap:0.6rem; padding:0.8rem 0.9rem; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin:0; cursor:pointer;">
+                  <input id="user-settings-compact" type="checkbox" ${currentAppearance.compactMode ? 'checked' : ''}>
+                  <span>Compact mode</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.6rem; padding:0.8rem 0.9rem; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin:0; cursor:pointer;">
+                  <input id="user-settings-reduced-motion" type="checkbox" ${currentAppearance.reducedMotion ? 'checked' : ''}>
+                  <span>Reduced motion</span>
+                </label>
+                <label style="display:flex; align-items:center; gap:0.6rem; padding:0.8rem 0.9rem; border:1px solid #e2e8f0; border-radius:12px; background:#fff; margin:0; cursor:pointer;">
+                  <input id="user-settings-high-contrast" type="checkbox" ${currentAppearance.highContrast ? 'checked' : ''}>
+                  <span>High contrast</span>
+                </label>
+              </div>
+              <div style="display:flex; align-items:center; gap:0.6rem; padding:0.85rem 1rem; border:1px solid #e2e8f0; border-radius: 12px; background:#fff;">
+                <input id="user-settings-notify" type="checkbox" ${Boolean(user?.notificationsEnabled) ? 'checked' : ''}>
+                <label for="user-settings-notify" style="margin:0; cursor:pointer;">Receive notification emails about account activity</label>
+              </div>
+              <div id="user-settings-status" style="display:none; padding:0.75rem 0.9rem; border-radius:10px; background:#ecfeff; color:#0f766e; font-weight:600;"></div>
+              <button id="user-settings-save" type="submit" class="btn btn-primary" style="border-radius:999px; width: fit-content;">
+                <i class="fa-solid fa-floppy-disk"></i> Save changes
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      const themeSelect = document.getElementById('user-settings-theme');
+      const compactToggle = document.getElementById('user-settings-compact');
+      const reducedMotionToggle = document.getElementById('user-settings-reduced-motion');
+      const highContrastToggle = document.getElementById('user-settings-high-contrast');
+      const applyAppearance = () => {
+        saveDrawerUiSettings({
+          theme: themeSelect ? themeSelect.value : 'system',
+          compactMode: compactToggle ? compactToggle.checked : false,
+          reducedMotion: reducedMotionToggle ? reducedMotionToggle.checked : false,
+          highContrast: highContrastToggle ? highContrastToggle.checked : false
+        });
+      };
+      [themeSelect, compactToggle, reducedMotionToggle, highContrastToggle].forEach((control) => {
+        if (control) control.addEventListener('change', applyAppearance);
+      });
+      return;
+    }
 
     try {
       // Prefer the Supabase session user id, fallback to localStorage user id
@@ -138,7 +301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
             ${isAd ? '<div class="status-badge" style="top:45px; background: #fff7ed; color: #9a3412; border: 1px solid #ffedd1;">✨ Promoted</div>' : ''}
             
-            <img src="${displayImg}" class="seller-card-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"300\" viewBox=\"0 0 400 300\"><rect width=\"400\" height=\"300\" fill=\"%23f8fbff\"/><rect x=\"24\" y=\"24\" width=\"352\" height=\"252\" rx=\"20\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"200\" cy=\"120\" r=\"56\" fill=\"%23e0f2fe\"/><path d=\"M140 220c20-42 100-42 120 0\" fill=\"%23bfdbfe\"/><text x=\"200\" y=\"268\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"18\" fill=\"%231d4ed8\">No image</text></svg>'">
+            <img src="${displayImg}" class="seller-card-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"300\" viewBox=\"0 0 400 300\"><rect width=\"400\" height=\"300\" fill=\"%23f8fbff\"/><rect x=\"24\" y=\"24\" width=\"352\" height=\"252\" rx=\"20\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"200\" cy=\"120\" r=\"56\" fill=\"%23e0f2fe\"/><path d=\"M140 220c20-42 100-42 120 0\" fill=\"%23bfdbfe\"/></svg>'">
             
             <div class="seller-card-body">
               <h4 style="margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</h4>
@@ -191,6 +354,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  await renderDashboard();
+  await renderDashboard(initialView);
 });
 

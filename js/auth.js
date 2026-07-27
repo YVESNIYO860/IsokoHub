@@ -63,6 +63,7 @@ async function getUserAvatar(userId) {
   if (googleAvatar) return googleAvatar;
 
   const currentUser = getCurrentUser();
+  if (currentUser?.email) return getGravatarUrl(currentUser.email);
   return createInitialsAvatarUrl(currentUser?.name || currentUser?.full_name || '', currentUser?.email || '');
 }
 

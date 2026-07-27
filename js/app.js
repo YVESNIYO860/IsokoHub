@@ -1,9 +1,48 @@
+const DRAWER_SETTINGS_KEY = 'isokoHubDrawerSettings';
+
+function getDrawerUiSettings() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DRAWER_SETTINGS_KEY) || '{}');
+    return {
+      theme: ['system', 'light', 'dark'].includes(stored.theme) ? stored.theme : 'system',
+      compactMode: Boolean(stored.compactMode),
+      reducedMotion: Boolean(stored.reducedMotion),
+      highContrast: Boolean(stored.highContrast)
+    };
+  } catch (err) {
+    return { theme: 'system', compactMode: false, reducedMotion: false, highContrast: false };
+  }
+}
+
+function applyDrawerUiSettings(settings = getDrawerUiSettings()) {
+  const resolvedTheme = settings.theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : settings.theme;
+
+  document.body.dataset.theme = resolvedTheme;
+  document.documentElement.dataset.theme = resolvedTheme;
+  document.body.classList.toggle('compact-mode', Boolean(settings.compactMode));
+  document.body.classList.toggle('reduced-motion', Boolean(settings.reducedMotion));
+  document.body.classList.toggle('high-contrast', Boolean(settings.highContrast));
+
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) {
+    themeMeta.content = resolvedTheme === 'dark' ? '#020617' : '#0f172a';
+  }
+}
+
+function saveDrawerUiSettings(settings) {
+  localStorage.setItem(DRAWER_SETTINGS_KEY, JSON.stringify(settings));
+  applyDrawerUiSettings(settings);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   addDependencies();
   setupLoaderLogic();
   ensurePwaMetaTags();
   registerServiceWorker();
   setupInstallPrompt();
+  applyDrawerUiSettings(getDrawerUiSettings());
   renderNavbar();
   renderFooter();
   setupStickyHeader();
@@ -409,18 +448,6 @@ function renderNavbar() {
   const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Sign In';
   const accountHref = user ? 'dashboard.html' : 'login.html';
   const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='login.html';";
-  const avatarUrl = [
-    user?.avatarUrl,
-    user?.avatar_url,
-    user?.photoURL,
-    user?.profileImage,
-    user?.profile_image,
-    user?.photo_url,
-    user?.picture,
-    user?.user_metadata?.avatar_url,
-    user?.user_metadata?.picture,
-    user?.user_metadata?.profile_image
-  ].find(Boolean) || (user?.email && typeof getGravatarUrl === 'function' ? getGravatarUrl(user.email) : null);
   const navbarHTML = `
     <nav class="navbar">
       <!-- Top Tier: Branding, Search, Actions -->
@@ -487,13 +514,13 @@ function renderNavbar() {
     <div class="side-drawer" id="side-drawer">
       <div class="side-drawer-header">
         <a href="${accountHref}" class="side-drawer-profile-link" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}>
-          <div class="drawer-user-avatar">
-            ${avatarUrl ? `<img src="${avatarUrl}" alt="${displayName}" onerror="this.style.display='none'; this.parentElement.querySelector('.drawer-avatar-fallback').style.display='grid';">` : ''}
-            <span class="drawer-avatar-fallback" style="${avatarUrl ? 'display:none;' : ''}"><i class="fa-solid fa-user"></i></span>
-          </div>
-          <div class="drawer-user-info">
-            <span class="drawer-user-greeting">Hello,</span>
-            <span class="drawer-user-name">${displayName}</span>
+          <div class="drawer-profile-card">
+            <div class="drawer-profile-badge"><i class="fa-solid ${user ? 'fa-user-check' : 'fa-right-to-bracket'}"></i></div>
+            <div class="drawer-user-info">
+              <span class="drawer-user-greeting">${user ? 'Welcome back' : 'New here'}</span>
+              <span class="drawer-user-name">${displayName}</span>
+              <span class="drawer-user-status">${user ? 'Ready to shop and sell' : 'Sign in to continue'}</span>
+            </div>
           </div>
         </a>
         <button class="close-drawer" id="close-drawer">&times;</button>
@@ -529,9 +556,37 @@ function renderNavbar() {
           <h3 style="display:flex; align-items:center; gap:0.6rem;"><i class="fa-solid fa-gear" style="color:#64748b"></i> Help & Settings</h3>
           <ul>
             <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+            <li><a href="${user ? 'dashboard.html?view=settings' : 'login.html'}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
             ${(user?.role === 'admin' || user?.email?.toLowerCase() === 'yvesniyonkuru2022@gmail.com') ? '<li><a href="admin.html" style="color: #febd69; font-weight: bold;"><i class="fa-solid fa-user-shield"></i> Admin Panel <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>' : ''}
             ${user ? `<li><a href="#" onclick="handleLogout(event)" style="color:var(--danger)"><i class="fa-solid fa-right-from-bracket" style="margin-right:0.5rem; opacity:0.7;"></i> Sign Out</a></li>` : ''}
           </ul>
+        </div>
+
+        <div class="drawer-section drawer-form-section">
+          <h3><i class="fa-solid fa-sliders" style="color:#8b5cf6"></i> Preferences</h3>
+          <div class="drawer-settings-grid">
+            <label class="drawer-setting">
+              <span>Theme</span>
+              <select id="drawer-theme-select">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            <label class="drawer-setting switch-row">
+              <span>Compact mode</span>
+              <input type="checkbox" id="drawer-compact-toggle">
+            </label>
+            <label class="drawer-setting switch-row">
+              <span>Reduced motion</span>
+              <input type="checkbox" id="drawer-reduced-motion-toggle">
+            </label>
+            <label class="drawer-setting switch-row">
+              <span>High contrast</span>
+              <input type="checkbox" id="drawer-high-contrast-toggle">
+            </label>
+          </div>
+          <div class="drawer-settings-hint">Settings are saved automatically and apply instantly.</div>
         </div>
 
         <div class="drawer-section drawer-form-section">
@@ -548,6 +603,30 @@ function renderNavbar() {
   const sideDrawer = document.getElementById('side-drawer');
   const drawerOverlay = document.getElementById('side-drawer-overlay');
   const closeBtn = document.getElementById('close-drawer');
+  const settings = getDrawerUiSettings();
+  const themeSelect = document.getElementById('drawer-theme-select');
+  const compactToggle = document.getElementById('drawer-compact-toggle');
+  const reducedMotionToggle = document.getElementById('drawer-reduced-motion-toggle');
+  const highContrastToggle = document.getElementById('drawer-high-contrast-toggle');
+
+  if (themeSelect) themeSelect.value = settings.theme;
+  if (compactToggle) compactToggle.checked = Boolean(settings.compactMode);
+  if (reducedMotionToggle) reducedMotionToggle.checked = Boolean(settings.reducedMotion);
+  if (highContrastToggle) highContrastToggle.checked = Boolean(settings.highContrast);
+
+  const handleDrawerSettingsChange = () => {
+    const nextSettings = {
+      theme: themeSelect ? themeSelect.value : settings.theme,
+      compactMode: compactToggle ? compactToggle.checked : settings.compactMode,
+      reducedMotion: reducedMotionToggle ? reducedMotionToggle.checked : settings.reducedMotion,
+      highContrast: highContrastToggle ? highContrastToggle.checked : settings.highContrast
+    };
+    saveDrawerUiSettings(nextSettings);
+  };
+
+  [themeSelect, compactToggle, reducedMotionToggle, highContrastToggle].forEach((control) => {
+    if (control) control.addEventListener('change', handleDrawerSettingsChange);
+  });
 
   if (sideTrigger && sideDrawer && drawerOverlay) {
     sideTrigger.addEventListener('click', () => {
