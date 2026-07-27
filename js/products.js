@@ -1,3 +1,23 @@
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeProductImage(value) {
+  if (value == null) return '';
+  const text = String(value).trim();
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  if (lower.includes('no image') || lower.includes('placeholder') || /[<>"]/.test(text)) {
+    return '';
+  }
+  return text;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const CATEGORIES = ['Electronics', 'Fashion', 'Shoes', 'Phones', 'Cars', 'Houses & Rents', 'Others'];
   const categorySelect = document.getElementById('category-filter-select');
@@ -115,10 +135,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     productsContainer.innerHTML = allProducts.map(p => {
-      const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
+      const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
+      const imageMarkup = displayImg
+        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
+        : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
       return `
         <a href="product.html?id=${p.id}" class="product-card">
-          <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.removeAttribute('src'); this.style.display='block'; this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">
+          ${imageMarkup}
           <div class="product-card-content">
             <div style="display:flex; align-items:center; gap: 0.5rem;">
               <span class="product-category">${p.category}</span>

@@ -1,3 +1,23 @@
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function normalizeProductImage(value) {
+  if (value == null) return '';
+  const text = String(value).trim();
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  if (lower.includes('no image') || lower.includes('placeholder') || /[<>"]/.test(text)) {
+    return '';
+  }
+  return text;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // The homepage uses the static hero markup from index.html.
   // No slideshow or intro video is rendered on app open.
@@ -127,7 +147,10 @@ async function renderFeaturedProducts() {
 
   container.innerHTML = featured.map(p => {
     const categoryObj = { icon: 'fa-solid fa-box' }; // Simplified for now
-    const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
+    const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
+    const imageMarkup = displayImg
+      ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';" style="object-fit: cover;">`
+      : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
     const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
     const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
     const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}` : '';
@@ -137,9 +160,9 @@ async function renderFeaturedProducts() {
     const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'View listing';
 
     return `
-      <a href="product.html?id=${p.id}" class="product-card">
+      <div class="product-card" role="button" tabindex="0" onclick="window.location.href='product.html?id=${p.id}'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='product.html?id=${p.id}'; }">
         <div class="product-card-badge">Featured</div>
-        <img src="${displayImg}" alt="${p.name}" class="product-card-img" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"400\" height=\"300\" viewBox=\"0 0 400 300\"><rect width=\"400\" height=\"300\" fill=\"%23f8fbff\"/><rect x=\"24\" y=\"24\" width=\"352\" height=\"252\" rx=\"20\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"200\" cy=\"120\" r=\"56\" fill=\"%23e0f2fe\"/><path d=\"M140 220c20-42 100-42 120 0\" fill=\"%23bfdbfe\"/><text x=\"200\" y=\"268\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"18\" fill=\"%231d4ed8\">No image</text></svg>'">
+        ${imageMarkup}
         <div class="product-card-content">
           <div class="product-card-meta-row">
             <span class="product-category">${p.category}</span>
@@ -154,7 +177,7 @@ async function renderFeaturedProducts() {
             </button>
           </div>
         </div>
-      </a>
+      </div>
     `;
   }).join('');
 }
