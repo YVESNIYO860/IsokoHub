@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const appearanceSettings = {
-        theme: themeSelect ? themeSelect.value : 'system',
+        theme: themeSelect ? themeSelect.value : 'light',
         compactMode: compactToggle ? compactToggle.checked : false,
         reducedMotion: reducedMotionToggle ? reducedMotionToggle.checked : false,
         highContrast: highContrastToggle ? highContrastToggle.checked : false
@@ -189,7 +189,6 @@ document.addEventListener('DOMContentLoaded', async () => {
               <div>
                 <label class="form-label" for="user-settings-theme">Theme</label>
                 <select id="user-settings-theme" class="form-control">
-                  <option value="system" ${currentAppearance.theme === 'system' ? 'selected' : ''}>System</option>
                   <option value="light" ${currentAppearance.theme === 'light' ? 'selected' : ''}>Light</option>
                   <option value="dark" ${currentAppearance.theme === 'dark' ? 'selected' : ''}>Dark</option>
                 </select>
@@ -227,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const highContrastToggle = document.getElementById('user-settings-high-contrast');
       const applyAppearance = () => {
         saveDrawerUiSettings({
-          theme: themeSelect ? themeSelect.value : 'system',
+          theme: themeSelect ? themeSelect.value : 'light',
           compactMode: compactToggle ? compactToggle.checked : false,
           reducedMotion: reducedMotionToggle ? reducedMotionToggle.checked : false,
           highContrast: highContrastToggle ? highContrastToggle.checked : false

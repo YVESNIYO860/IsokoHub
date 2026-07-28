@@ -4,20 +4,18 @@ function getDrawerUiSettings() {
   try {
     const stored = JSON.parse(localStorage.getItem(DRAWER_SETTINGS_KEY) || '{}');
     return {
-      theme: ['system', 'light', 'dark'].includes(stored.theme) ? stored.theme : 'system',
+      theme: ['light', 'dark'].includes(stored.theme) ? stored.theme : 'light',
       compactMode: Boolean(stored.compactMode),
       reducedMotion: Boolean(stored.reducedMotion),
       highContrast: Boolean(stored.highContrast)
     };
   } catch (err) {
-    return { theme: 'system', compactMode: false, reducedMotion: false, highContrast: false };
+    return { theme: 'light', compactMode: false, reducedMotion: false, highContrast: false };
   }
 }
 
 function applyDrawerUiSettings(settings = getDrawerUiSettings()) {
-  const resolvedTheme = settings.theme === 'system'
-    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-    : settings.theme;
+  const resolvedTheme = ['light', 'dark'].includes(settings.theme) ? settings.theme : 'light';
 
   document.body.dataset.theme = resolvedTheme;
   document.documentElement.dataset.theme = resolvedTheme;
@@ -568,7 +566,6 @@ function renderNavbar() {
             <label class="drawer-setting">
               <span>Theme</span>
               <select id="drawer-theme-select">
-                <option value="system">System</option>
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
               </select>
