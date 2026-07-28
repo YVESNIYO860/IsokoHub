@@ -524,66 +524,46 @@ function renderNavbar() {
         <button class="close-drawer" id="close-drawer">&times;</button>
       </div>
       <div class="side-drawer-content">
-        <div class="drawer-section">
-          <h3 style="display:flex; align-items:center; gap:0.6rem;"><i class="fa-solid fa-fire" style="color:#f97316"></i> Trending</h3>
-          <ul>
-            <li><a href="products.html">Best Sellers <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            <li><a href="products.html">New Releases <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            <li><a href="products.html">Movers & Shakers <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-          </ul>
-        </div>
-        
-        <div class="drawer-section">
-          <h3 style="display:flex; align-items:center; gap:0.6rem;"><i class="fa-solid fa-microchip" style="color:#3b82f6"></i> High-Tech & Auto</h3>
-          <ul>
-            <li><a href="products.html?category=Electronics">Computers & Audio <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            <li><a href="products.html?category=Phones">Smartphones <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            <li><a href="products.html?category=Cars">Cars & Vehicles <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-          </ul>
-        </div>
-        
-        <div class="drawer-section">
-          <h3 style="display:flex; align-items:center; gap:0.6rem;"><i class="fa-solid fa-house-chimney" style="color:#10b981"></i> Real Estate</h3>
-          <ul>
-            <li><a href="products.html?category=Houses%20%26%20Rents">Houses for Sale <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            <li><a href="products.html?category=Houses%20%26%20Rents">Apartments & Rents <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-          </ul>
-        </div>
-        
-        <div class="drawer-section">
-          <h3 style="display:flex; align-items:center; gap:0.6rem;"><i class="fa-solid fa-gear" style="color:#64748b"></i> Help & Settings</h3>
-          <ul>
-            <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            <li><a href="${user ? 'dashboard.html?view=settings' : 'login.html'}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            ${(user?.role === 'admin' || user?.email?.toLowerCase() === 'yvesniyonkuru2022@gmail.com') ? '<li><a href="admin.html" style="color: #febd69; font-weight: bold;"><i class="fa-solid fa-user-shield"></i> Admin Panel <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>' : ''}
-            ${user ? `<li><a href="#" onclick="handleLogout(event)" style="color:var(--danger)"><i class="fa-solid fa-right-from-bracket" style="margin-right:0.5rem; opacity:0.7;"></i> Sign Out</a></li>` : ''}
-          </ul>
-        </div>
-
-        <div class="drawer-section drawer-form-section">
-          <h3><i class="fa-solid fa-sliders" style="color:#8b5cf6"></i> Preferences</h3>
-          <div class="drawer-settings-grid">
-            <label class="drawer-setting">
-              <span>Theme</span>
-              <select id="drawer-theme-select">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-            </label>
-            <label class="drawer-setting switch-row">
-              <span>Compact mode</span>
-              <input type="checkbox" id="drawer-compact-toggle">
-            </label>
-            <label class="drawer-setting switch-row">
-              <span>Reduced motion</span>
-              <input type="checkbox" id="drawer-reduced-motion-toggle">
-            </label>
-            <label class="drawer-setting switch-row">
-              <span>High contrast</span>
-              <input type="checkbox" id="drawer-high-contrast-toggle">
-            </label>
+        <div class="drawer-section drawer-dropdown">
+          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-fire" style="color:#f97316"></i> Trending</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
+          <div class="drawer-hidden">
+            <ul>
+              <li><a href="products.html">Best Sellers <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html">New Releases <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html">Movers & Shakers <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+            </ul>
           </div>
-          <div class="drawer-settings-hint">Settings are saved automatically and apply instantly.</div>
+        </div>
+        
+        <div class="drawer-section drawer-dropdown">
+          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-microchip" style="color:#3b82f6"></i> High-Tech & Auto</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
+          <div class="drawer-hidden">
+            <ul>
+              <li><a href="products.html?category=Electronics">Computers & Audio <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Phones">Smartphones <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Cars">Cars & Vehicles <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="drawer-section drawer-dropdown">
+          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-house-chimney" style="color:#10b981"></i> Real Estate</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
+          <div class="drawer-hidden">
+            <ul>
+              <li><a href="products.html?category=Houses%20%26%20Rents">Houses for Sale <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Houses%20%26%20Rents">Apartments & Rents <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="drawer-section drawer-dropdown">
+          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-gear" style="color:#64748b"></i> Help and Settings</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
+          <div class="drawer-hidden">
+            <ul>
+              <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="${user ? 'dashboard.html?view=settings' : 'login.html'}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+            </ul>
+          </div>
         </div>
 
         <div class="drawer-section drawer-form-section">
@@ -640,6 +620,26 @@ function renderNavbar() {
 
     [drawerOverlay, closeBtn].forEach(el => el.addEventListener('click', closeMenu));
   }
+
+  const dropdownHeaders = document.querySelectorAll('.drawer-dropdown > h3');
+  dropdownHeaders.forEach((header) => {
+    const section = header.closest('.drawer-dropdown');
+    const hiddenPanel = section ? section.querySelector('.drawer-hidden') : null;
+
+    const toggleDropdown = () => {
+      if (!section || !hiddenPanel) return;
+      const expanded = section.classList.toggle('drawer-expanded');
+      header.setAttribute('aria-expanded', expanded.toString());
+    };
+
+    header.addEventListener('click', toggleDropdown);
+    header.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleDropdown();
+      }
+    });
+  });
 }
 
 function renderFooter() {
