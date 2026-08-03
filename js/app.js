@@ -343,7 +343,7 @@ function openSupportMail(subject = 'IsokoHub Support', body = '', email = SUPPOR
 function openSupportPage() {
   const isSupportPage = window.location.pathname.includes('support.html');
   if (isSupportPage) return;
-  window.location.href = 'support.html';
+  window.open('support.html', '_blank', 'noopener,noreferrer');
 }
 
 function setupStickyHeader() {
@@ -364,8 +364,8 @@ function setupStickyHeader() {
 
     const isSmall = window.innerWidth <= 480;
     const isTablet = window.innerWidth <= 768;
-    const baseOffset = isSmall ? 72 : isTablet ? 78 : 84;
-    const scrolledOffset = isSmall ? 54 : isTablet ? 60 : 64;
+    const baseOffset = isSmall ? 92 : isTablet ? 96 : 100;
+    const scrolledOffset = isSmall ? 72 : isTablet ? 76 : 80;
     const nextOffset = shouldScroll ? scrolledOffset : baseOffset;
 
     document.documentElement.style.setProperty('--header-offset', `${nextOffset}px`);
@@ -536,9 +536,6 @@ function renderNavbar() {
 
       <!-- Bottom Tier: Categories -->
       <div class="navbar-bottom">
-        <a href="products.html?category=Electronics">Electronics</a>
-        <a href="products.html?category=Fashion">Fashion</a>
-        <a href="products.html?category=Cars">Cars</a>
         <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">HOUSEHUB</a>
         <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on IsokoHub</a>
       </div>
@@ -605,9 +602,9 @@ function renderNavbar() {
         </div>
 
         <div class="drawer-section drawer-form-section">
-          <h3><i class="fa-solid fa-headset" style="color:#ef4444"></i> Customer Support</h3>
-          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Need help with a listing, account, or order? Visit our dedicated support page.</p>
-          <a href="support.html" class="btn btn-primary btn-block" style="padding: 0.8rem; border-radius: 8px;">Open support page</a>
+          <h3><i class="fa-brands fa-whatsapp" style="color:#25d366"></i> WhatsApp Support</h3>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Need help with a listing, account, or order? Message us directly on WhatsApp.</p>
+          <a href="https://wa.me/250798269987" target="_blank" rel="noopener" class="btn btn-primary btn-block" style="padding: 0.8rem; border-radius: 8px;">Open WhatsApp</a>
         </div>
       </div>
     </div>
@@ -1000,9 +997,9 @@ function renderGlobalSupportButton() {
   if (isSupportPage) return;
 
   const btnHTML = `
-    <button class="support-fab" onclick="openSupportPage()" title="Contact Support">
-      <i class="fa-solid fa-headset"></i>
-      <span>Contact Support</span>
+    <button class="support-fab" onclick="openSupportPage()" title="WhatsApp Support">
+      <i class="fa-brands fa-whatsapp"></i>
+      <span>WhatsApp Support</span>
     </button>
   `;
   document.body.insertAdjacentHTML('beforeend', btnHTML);
