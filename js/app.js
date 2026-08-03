@@ -1,4 +1,10 @@
 const DRAWER_SETTINGS_KEY = 'isokoHubDrawerSettings';
+const ADMIN_EMAIL = 'yvesniyonkuru2022@gmail.com';
+
+function isAdminUser(user = getCurrentUser()) {
+  const email = user?.email || '';
+  return Boolean(user?.role === 'admin' || email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+}
 
 function getDrawerUiSettings() {
   try {
@@ -41,6 +47,12 @@ document.addEventListener('DOMContentLoaded', () => {
   registerServiceWorker();
   setupInstallPrompt();
   applyDrawerUiSettings(getDrawerUiSettings());
+
+  const siteHeaderRoot = document.getElementById('site-header-root');
+  if (siteHeaderRoot) {
+    siteHeaderRoot.innerHTML = '';
+  }
+
   renderNavbar();
   renderFooter();
   setupStickyHeader();
@@ -339,14 +351,37 @@ function setupStickyHeader() {
   if (!navbar) return;
 
   let ticking = false;
+  let lastScrollY = window.scrollY;
 
   const updateHeaderState = () => {
-    const shouldScroll = window.scrollY > 8;
+    const currentScrollY = window.scrollY;
+    const shouldScroll = currentScrollY > 8;
+    const shouldHide = currentScrollY > 70 && currentScrollY > lastScrollY + 4;
+    const shouldShow = currentScrollY < lastScrollY - 4 || currentScrollY <= 20;
+
     navbar.classList.toggle('scrolled', shouldScroll);
+    navbar.classList.toggle('is-hidden', shouldHide && !shouldShow);
+
+    const isSmall = window.innerWidth <= 480;
+    const isTablet = window.innerWidth <= 768;
+    const baseOffset = isSmall ? 72 : isTablet ? 78 : 84;
+    const scrolledOffset = isSmall ? 54 : isTablet ? 60 : 64;
+    const nextOffset = shouldScroll ? scrolledOffset : baseOffset;
+
+    document.documentElement.style.setProperty('--header-offset', `${nextOffset}px`);
+    document.documentElement.style.setProperty('--header-offset-scrolled', `${scrolledOffset}px`);
+    lastScrollY = currentScrollY;
     ticking = false;
   };
 
   window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(updateHeaderState);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
     if (!ticking) {
       window.requestAnimationFrame(updateHeaderState);
       ticking = true;
@@ -443,6 +478,8 @@ function renderDataLoader(message = 'Loading IsokoHub...') {
 function renderNavbar() {
   const user = getCurrentUser();
   const showInstallAction = !isInStandaloneMode();
+  const isAdmin = isAdminUser(user);
+  const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'login.html';
   const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Sign In';
   const accountHref = user ? 'dashboard.html' : 'login.html';
   const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='login.html';";
@@ -561,7 +598,8 @@ function renderNavbar() {
           <div class="drawer-hidden">
             <ul>
               <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-              <li><a href="${user ? 'dashboard.html?view=settings' : 'login.html'}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="${settingsHref}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              ${isAdmin ? `<li><a href="admin.html"><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem; opacity:0.7;"></i> Admin Dashboard <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>` : ''}
             </ul>
           </div>
         </div>
@@ -574,7 +612,8 @@ function renderNavbar() {
       </div>
     </div>
   `;
-  document.body.insertAdjacentHTML('afterbegin', navbarHTML);
+  const headerTarget = document.getElementById('site-header-root') || document.body;
+  headerTarget.insertAdjacentHTML('beforeend', navbarHTML);
 
   const sideTrigger = document.getElementById('side-menu-trigger');
   const sideDrawer = document.getElementById('side-drawer');
