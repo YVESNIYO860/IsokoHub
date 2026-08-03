@@ -711,9 +711,6 @@ function renderFooter() {
             <li><a href="dashboard.html">Your Account</a></li>
             <li><a href="products.html">Your Orders</a></li>
             <li><a href="about.html#help">Help Center</a></li>
-            <li><a href="https://wa.me/250798269987" target="_blank" class="whatsapp-support">
-              <i class="fa-brands fa-whatsapp whatsapp-icon-anim"></i> WhatsApp Support
-            </a></li>
             <li><a href="mailto:yvesniyonkuru2022@gmail.com">
               <i class="fa-solid fa-envelope"></i> Email Support
             </a></li>

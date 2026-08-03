@@ -152,10 +152,6 @@ async function renderShops() {
     const productCount = Array.isArray(shop.products) ? shop.products.length : 0;
     const locationText = shop.location || 'Location not set';
     const descriptionText = shop.profile?.bio || shop.description || 'Discover this shop on IsokoHub.';
-    const badge = productCount ? `${productCount} item${productCount === 1 ? '' : 's'}` : 'New shop';
-    const logoMarkup = shop.profile?.logoData
-      ? `<img src="${escapeHtml(shop.profile.logoData)}" alt="${escapeHtml(shop.name || 'Shop logo')}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px;">`
-      : `<div class="shop-card-icon"><i class="${icon}"></i></div>`;
     const iconMap = {
       HouseHub: 'fa-solid fa-house',
       'Fashion Hub': 'fa-solid fa-shirt',
@@ -169,6 +165,10 @@ async function renderShops() {
       Others: 'fa-solid fa-box-open'
     };
     const icon = iconMap[shop.name] || 'fa-solid fa-store';
+    const badge = productCount ? `${productCount} item${productCount === 1 ? '' : 's'}` : 'New shop';
+    const logoMarkup = shop.profile?.logoData
+      ? `<img src="${escapeHtml(shop.profile.logoData)}" alt="${escapeHtml(shop.name || 'Shop logo')}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px;">`
+      : `<div class="shop-card-icon"><i class="${icon}"></i></div>`;
     return `
       <a href="shop.html?id=${encodeURIComponent(shop.id)}" class="shop-card">
         <div class="shop-card-header">
