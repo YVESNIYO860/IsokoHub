@@ -82,12 +82,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const imageUrl = getCurrentShareImageUrl();
     const headerTag = 'SHARE';
     const adminNote = 'Shared by IsokoHub Admin for direct contact.';
-    const whatsappText = `${headerTag}: ${shareText} - ${productPageUrl}\nImage: ${imageUrl}\n\n${adminNote}`;
-    const shareQuote = `${headerTag}: ${shareText} - ${productPageUrl}\nImage: ${imageUrl}`;
+    const bodyText = `${headerTag}: ${shareText} - ${productPageUrl}\nImage: ${imageUrl}\n\n${adminNote}`;
     return {
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(whatsappText)}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${targetUrl}&quote=${encodeURIComponent(shareQuote)}`,
-      twitter: `https://twitter.com/intent/tweet?url=${targetUrl}&text=${encodeURIComponent(shareQuote)}`
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(bodyText)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${targetUrl}&quote=${encodeURIComponent(bodyText)}`,
+      twitter: `https://twitter.com/intent/tweet?url=${targetUrl}&text=${encodeURIComponent(bodyText)}`
     };
   };
 
@@ -173,7 +172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
             <a id="whatsapp-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #25d366; color: white; border: 1px solid #25d366; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
               <i class="fa-brands fa-whatsapp" style="font-size: 1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">Share</span>
+              <span style="font-size:0.82rem; font-weight:700;">WhatsApp</span>
             </a>
             <a id="facebook-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #1877f2; color: white; border: 1px solid #1877f2; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
               <i class="fa-brands fa-facebook-f" style="font-size: 1rem;"></i>
@@ -506,7 +505,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     reviewFeedbackEl.classList.add('show');
   });
 
-const updateShareLinks = () => {
+  const updateShareLinks = () => {
     const urls = buildShareUrls();
     const whatsappBtn = document.getElementById('whatsapp-share-btn');
     const facebookBtn = document.getElementById('facebook-share-btn');
