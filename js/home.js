@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // No slideshow or intro video is rendered on app open.
   updateInlineStats();
   renderCategories();
-  renderShops();
+  await renderShops();
   renderFeaturedProducts();
   startSellerShowcase();
 });
@@ -104,33 +104,6 @@ const CATEGORIES = [
   { name: 'Others', icon: 'fa-solid fa-box-open' }
 ];
 
-const DEFAULT_SHOPS = [
-  {
-    id: 'default-househub',
-    name: 'HouseHub',
-    description: 'Modern furniture and home essentials for every space.',
-    profile: { bio: 'Modern furniture and home essentials for every space.' },
-    location: 'Gasabo',
-    products: []
-  },
-  {
-    id: 'default-fashion-hub',
-    name: 'Fashion Hub',
-    description: 'Trendy outfits and accessories for everyday style.',
-    profile: { bio: 'Trendy outfits and accessories for everyday style.' },
-    location: 'Kicukiro',
-    products: []
-  },
-  {
-    id: 'default-electronics-hub',
-    name: 'Electronics Hub',
-    description: 'Latest gadgets, phones, and smart accessories.',
-    profile: { bio: 'Latest gadgets, phones, and smart accessories.' },
-    location: 'Nyarugenge',
-    products: []
-  }
-];
-
 function renderCategories() {
   const container = document.getElementById('categories-container');
   container.innerHTML = CATEGORIES.map(cat => {
@@ -157,18 +130,32 @@ async function renderHeroSection() {
   return;
 }
 
-function renderShops() {
+async function renderShops() {
   const container = document.getElementById('shops-container');
   if (!container) return;
 
-  const storedShops = readStoredShops().filter(Boolean);
-  const visibleShops = storedShops.length ? storedShops : DEFAULT_SHOPS;
+  const section = container.closest('.shops-section');
+  if (section) {
+    section.hidden = true;
+  }
+
+  container.innerHTML = '';
+
+  const storedShops = (await readStoredShops()).filter(Boolean);
+  const visibleShops = storedShops;
+
+  if (section) {
+    section.hidden = visibleShops.length === 0;
+  }
 
   container.innerHTML = visibleShops.map((shop) => {
     const productCount = Array.isArray(shop.products) ? shop.products.length : 0;
     const locationText = shop.location || 'Location not set';
     const descriptionText = shop.profile?.bio || shop.description || 'Discover this shop on IsokoHub.';
     const badge = productCount ? `${productCount} item${productCount === 1 ? '' : 's'}` : 'New shop';
+    const logoMarkup = shop.profile?.logoData
+      ? `<img src="${escapeHtml(shop.profile.logoData)}" alt="${escapeHtml(shop.name || 'Shop logo')}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 12px;">`
+      : `<div class="shop-card-icon"><i class="${icon}"></i></div>`;
     const iconMap = {
       HouseHub: 'fa-solid fa-house',
       'Fashion Hub': 'fa-solid fa-shirt',
@@ -185,7 +172,7 @@ function renderShops() {
     return `
       <a href="shop.html?id=${encodeURIComponent(shop.id)}" class="shop-card">
         <div class="shop-card-header">
-          <div class="shop-card-icon"><i class="${icon}"></i></div>
+          ${logoMarkup}
           <div class="shop-card-title">${escapeHtml(shop.name || 'Untitled shop')}</div>
         </div>
         <div class="shop-card-subtitle">${escapeHtml(descriptionText)}</div>

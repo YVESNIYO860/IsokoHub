@@ -7,26 +7,70 @@ const RWANDA_DISTRICTS = [
   'Nyaruguru', 'Rubavu', 'Ruhango', 'Rulindo', 'Rusizi', 'Rutsiro', 'Rwamagana'
 ];
 
-function readStoredShops() {
+function createShopId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `shop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeShopRecord(record = {}) {
+  const profile = record?.profile && typeof record.profile === 'object' ? record.profile : {};
+  return {
+    id: record?.id || createShopId(),
+    name: record?.name || 'Untitled shop',
+    description: record?.description || '',
+    location: record?.location || '',
+    contact: record?.contact || '',
+    status: record?.status || 'active',
+    profile: {
+      slogan: profile?.slogan || '',
+      logoUrl: profile?.logoUrl || '',
+      bio: profile?.bio || record?.bio || ''
+    },
+    products: Array.isArray(record?.products) ? record.products : []
+  };
+}
+
+async function fetchShops() {
+  if (!supabase) return [];
   try {
-    const raw = localStorage.getItem('isokoHubAdminShops');
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const { data, error } = await supabase.from('shops').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.warn('Unable to fetch shops from Supabase:', error);
+      return [];
+    }
+    return (Array.isArray(data) ? data : []).map(normalizeShopRecord);
   } catch (err) {
-    console.warn('Unable to load shops from storage:', err);
+    console.warn('Unable to load shops from Supabase:', err);
     return [];
   }
 }
 
-function getShopById(shopId) {
+async function readStoredShops() {
+  try {
+    const localShops = localStorage.getItem('isokoHubAdminShops');
+    if (localShops) {
+      const parsed = JSON.parse(localShops);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed.map(normalizeShopRecord);
+      }
+    }
+  } catch (err) {
+    console.warn('Unable to load shops from storage:', err);
+  }
+
+  return await fetchShops();
+}
+
+async function getShopById(shopId) {
   if (!shopId) return null;
-  const shops = readStoredShops();
+  const shops = await readStoredShops();
   return shops.find((shop) => shop && shop.id === shopId) || null;
 }
 
-function enrichProductsWithShopData(products = []) {
-  const shops = readStoredShops();
+async function enrichProductsWithShopData(products = []) {
+  const shops = await readStoredShops();
   return (Array.isArray(products) ? products : []).map((product) => {
     const matchedShop = shops.find((shop) => Array.isArray(shop?.products) && shop.products.includes(product?.id)) || null;
     return {

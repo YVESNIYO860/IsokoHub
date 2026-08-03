@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     productsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p class="mt-1">Loading products...</p></div>';
     
     // fetch only approved products for the public view
-    let allProducts = enrichProductsWithShopData(await fetchProducts(true));
+    let allProducts = await enrichProductsWithShopData(await fetchProducts(true));
     
     if (currentCategory !== 'all') {
       allProducts = allProducts.filter(p => p.category === currentCategory);

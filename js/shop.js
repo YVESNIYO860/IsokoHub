@@ -28,13 +28,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const shop = getShopById(shopId);
+  const shop = await getShopById(shopId);
   if (!shop) {
     wrapper.innerHTML = '<div class="text-center" style="padding:3rem 0;"><h2 class="text-danger">Shop not found</h2><a href="products.html" class="btn btn-primary mt-2">Back to marketplace</a></div>';
     return;
   }
 
-  const products = enrichProductsWithShopData(await fetchProducts(true))
+  const products = (await enrichProductsWithShopData(await fetchProducts(true)))
     .filter((product) => product.shop?.id === shopId);
 
   wrapper.innerHTML = `
@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
       <div class="shop-hero-grid">
         <div>
+          ${shop.profile?.logoData ? `<div style="margin-bottom: 1rem; width: 88px; height: 88px; border-radius: 18px; overflow: hidden; border: 1px solid #e2e8f0; background: #f8fafc;"><img src="${escapeHtml(shop.profile.logoData)}" alt="${escapeHtml(shop.name || 'Shop logo')}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : ''}
           <h1 style="font-size: 2rem; margin: 0 0 0.6rem; color: #111827;">${escapeHtml(shop.name || 'Shop storefront')}</h1>
           <p style="margin: 0; color: var(--text-muted); line-height: 1.7;">${escapeHtml(shop.profile?.bio || shop.description || 'This shop is now live on IsokoHub.')}</p>
         </div>

@@ -94,23 +94,47 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/'/g, '&#39;');
   }
 
-  function loadShopSettings() {
+  function readShopLogoFile(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        resolve('');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve(typeof reader.result === 'string' ? reader.result : '');
+      };
+      reader.onerror = () => reject(new Error('Unable to read logo file.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadShopSettings() {
+    return await readStoredShops();
+  }
+
+  async function saveShopSettings(shops = []) {
+    if (!supabase) return;
     try {
-      const raw = localStorage.getItem('isokoHubAdminShops');
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
+      const rows = shops.map((shop) => ({
+        id: shop.id || createShopId(),
+        name: shop.name || 'Untitled shop',
+        description: shop.description || '',
+        location: shop.location || '',
+        contact: shop.contact || '',
+        status: shop.status || 'active',
+        profile: shop.profile || {},
+        products: Array.isArray(shop.products) ? shop.products : []
+      }));
+
+      const { error } = await supabase.from('shops').upsert(rows, { onConflict: 'id' });
+      if (error) throw error;
+      localStorage.setItem('isokoHubAdminShops', JSON.stringify(rows));
     } catch (err) {
-      console.warn('Invalid shop settings', err);
-      return [];
+      console.warn('Unable to persist shops to Supabase:', err);
+      localStorage.setItem('isokoHubAdminShops', JSON.stringify(shops));
     }
-  }
-
-  function saveShopSettings(shops = []) {
-    localStorage.setItem('isokoHubAdminShops', JSON.stringify(shops));
-  }
-
-  function createShopId() {
-    return `shop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
   if (categorySelect) {
@@ -250,26 +274,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAdmin();
   };
 
-  window.saveShop = function() {
+  window.saveShop = async function() {
     const name = document.getElementById('shop-name')?.value?.trim() || '';
     const description = document.getElementById('shop-description')?.value?.trim() || '';
     const slogan = document.getElementById('shop-slogan')?.value?.trim() || '';
-    const logoUrl = document.getElementById('shop-logo-url')?.value?.trim() || '';
     const bio = document.getElementById('shop-bio')?.value?.trim() || '';
     const location = document.getElementById('shop-location')?.value?.trim() || '';
     const contact = document.getElementById('shop-contact')?.value?.trim() || '';
     const status = document.getElementById('shop-status')?.value || 'active';
+    const logoFile = document.getElementById('shop-logo-file')?.files?.[0] || null;
 
     if (!name) {
       alert('Shop name is required.');
       return;
     }
 
-    const shops = loadShopSettings();
+    const shops = await loadShopSettings();
+    let logoData = editingShopId ? (shops.find((shop) => shop.id === editingShopId)?.profile?.logoData || '') : '';
+
+    if (logoFile) {
+      try {
+        logoData = await readShopLogoFile(logoFile);
+      } catch (err) {
+        alert(err.message || 'Unable to read logo file.');
+        return;
+      }
+    }
+
     const profile = {
       slogan,
-      logoUrl,
-      bio
+      logoData,
+      bio,
+      logoFileName: logoFile?.name || ''
     };
 
     if (editingShopId) {
@@ -281,41 +317,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       shops.unshift({ id: createShopId(), name, description, location, contact, status, profile, products: [] });
     }
 
-    saveShopSettings(shops);
+    await saveShopSettings(shops);
     editingShopId = null;
     renderAdmin();
   };
 
-  window.deleteShop = function(id) {
+  window.deleteShop = async function(id) {
     if (!confirm('Delete this shop and its assignments?')) return;
-    const shops = loadShopSettings().filter((shop) => shop.id !== id);
-    saveShopSettings(shops);
+    const shops = (await loadShopSettings()).filter((shop) => shop.id !== id);
+    await saveShopSettings(shops);
     if (editingShopId === id) editingShopId = null;
     renderAdmin();
   };
 
-  window.addProductToShop = function(shopId) {
+  window.addProductToShop = async function(shopId) {
     const select = document.getElementById(`shop-product-select-${shopId}`);
     const productId = select?.value;
     if (!productId) return;
 
-    const shops = loadShopSettings();
+    const shops = await loadShopSettings();
     const shop = shops.find((entry) => entry.id === shopId);
     if (!shop) return;
 
     if (!shop.products.includes(productId)) {
       shop.products = [...(shop.products || []), productId];
-      saveShopSettings(shops);
+      await saveShopSettings(shops);
     }
     renderAdmin();
   };
 
-  window.removeProductFromShop = function(shopId, productId) {
-    const shops = loadShopSettings();
+  window.removeProductFromShop = async function(shopId, productId) {
+    const shops = await loadShopSettings();
     const shop = shops.find((entry) => entry.id === shopId);
     if (!shop) return;
     shop.products = (shop.products || []).filter((entryId) => entryId !== productId);
-    saveShopSettings(shops);
+    await saveShopSettings(shops);
     renderAdmin();
   };
 
@@ -525,7 +561,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (activeTab === 'shops') {
-      const shops = loadShopSettings();
+      const shops = await loadShopSettings();
       const editingShop = shops.find((shop) => shop.id === editingShopId) || null;
       const productOptions = allProducts.map((item) => `<option value="${item.id}">${escapeHtml(item.name || 'Untitled product')}</option>`).join('');
 
@@ -547,8 +583,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <input id="shop-slogan" class="form-control" type="text" value="${escapeHtml(editingShop?.profile?.slogan || '')}" placeholder="e.g. Quality goods, fair prices">
               </label>
               <label style="display:flex; flex-direction:column; gap:0.35rem;">
-                Logo URL
-                <input id="shop-logo-url" class="form-control" type="url" value="${escapeHtml(editingShop?.profile?.logoUrl || '')}" placeholder="https://example.com/logo.png">
+                Upload logo
+                <input id="shop-logo-file" class="form-control" type="file" accept="image/*">
+                ${editingShop?.profile?.logoData ? `<div style="margin-top:0.45rem; display:inline-flex; align-items:center; justify-content:center; width:100px; height:100px; border:1px solid #e2e8f0; border-radius:14px; overflow:hidden; background:#f8fafc;"><img src="${escapeHtml(editingShop.profile.logoData)}" alt="Current shop logo" style="width:100%; height:100%; object-fit:cover;"></div>` : ''}
               </label>
               <label style="display:flex; flex-direction:column; gap:0.35rem;">
                 Shop bio

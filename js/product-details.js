@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let product = await fetchProductById(productId);
 
   if (product) {
-    product = enrichProductsWithShopData([product])[0] || product;
+    product = (await enrichProductsWithShopData([product]))[0] || product;
   }
 
   if (!product || (product.status !== 'approved' && getCurrentUser()?.email !== 'yvesniyonkuru2022@gmail.com')) {
