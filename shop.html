@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Storefront - IsokoHub</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
+  <style>
+    .shop-page-shell {
+      padding: 2rem 0 4rem;
+    }
+
+    .shop-hero-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 24px;
+      padding: 1.5rem;
+      box-shadow: 0 18px 35px rgba(15, 23, 42, 0.06);
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .shop-hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .shop-hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 999px;
+      background: #ecfeff;
+      color: #0f766e;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .shop-hero-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 1rem;
+    }
+
+    .shop-info-list {
+      display: grid;
+      gap: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .shop-product-section {
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .shop-hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .shop-page-shell {
+        padding: 1rem 0 3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="site-header-root"></div>
+  <main>
+    <div class="container shop-page-shell">
+      <div id="shop-wrapper"></div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/shop.js"></script>
+</body>
+</html>

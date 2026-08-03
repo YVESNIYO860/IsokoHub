@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // No slideshow or intro video is rendered on app open.
   updateInlineStats();
   renderCategories();
+  renderShops();
   renderFeaturedProducts();
   startSellerShowcase();
 });
@@ -103,6 +104,33 @@ const CATEGORIES = [
   { name: 'Others', icon: 'fa-solid fa-box-open' }
 ];
 
+const DEFAULT_SHOPS = [
+  {
+    id: 'default-househub',
+    name: 'HouseHub',
+    description: 'Modern furniture and home essentials for every space.',
+    profile: { bio: 'Modern furniture and home essentials for every space.' },
+    location: 'Gasabo',
+    products: []
+  },
+  {
+    id: 'default-fashion-hub',
+    name: 'Fashion Hub',
+    description: 'Trendy outfits and accessories for everyday style.',
+    profile: { bio: 'Trendy outfits and accessories for everyday style.' },
+    location: 'Kicukiro',
+    products: []
+  },
+  {
+    id: 'default-electronics-hub',
+    name: 'Electronics Hub',
+    description: 'Latest gadgets, phones, and smart accessories.',
+    profile: { bio: 'Latest gadgets, phones, and smart accessories.' },
+    location: 'Nyarugenge',
+    products: []
+  }
+];
+
 function renderCategories() {
   const container = document.getElementById('categories-container');
   container.innerHTML = CATEGORIES.map(cat => {
@@ -129,12 +157,53 @@ async function renderHeroSection() {
   return;
 }
 
+function renderShops() {
+  const container = document.getElementById('shops-container');
+  if (!container) return;
+
+  const storedShops = readStoredShops().filter(Boolean);
+  const visibleShops = storedShops.length ? storedShops : DEFAULT_SHOPS;
+
+  container.innerHTML = visibleShops.map((shop) => {
+    const productCount = Array.isArray(shop.products) ? shop.products.length : 0;
+    const locationText = shop.location || 'Location not set';
+    const descriptionText = shop.profile?.bio || shop.description || 'Discover this shop on IsokoHub.';
+    const badge = productCount ? `${productCount} item${productCount === 1 ? '' : 's'}` : 'New shop';
+    const iconMap = {
+      HouseHub: 'fa-solid fa-house',
+      'Fashion Hub': 'fa-solid fa-shirt',
+      'Electronics Hub': 'fa-solid fa-laptop',
+      Electronics: 'fa-solid fa-laptop',
+      Fashion: 'fa-solid fa-shirt',
+      Shoes: 'fa-solid fa-shoe-prints',
+      Phones: 'fa-solid fa-mobile-screen-button',
+      Cars: 'fa-solid fa-car',
+      'Houses & Rents': 'fa-solid fa-house',
+      Others: 'fa-solid fa-box-open'
+    };
+    const icon = iconMap[shop.name] || 'fa-solid fa-store';
+    return `
+      <a href="shop.html?id=${encodeURIComponent(shop.id)}" class="shop-card">
+        <div class="shop-card-header">
+          <div class="shop-card-icon"><i class="${icon}"></i></div>
+          <div class="shop-card-title">${escapeHtml(shop.name || 'Untitled shop')}</div>
+        </div>
+        <div class="shop-card-subtitle">${escapeHtml(descriptionText)}</div>
+        <div class="shop-card-meta">
+          <span class="shop-card-pill"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(locationText)}</span>
+          <span class="shop-card-pill"><i class="fa-solid fa-store"></i> ${escapeHtml(badge)}</span>
+        </div>
+      </a>
+    `;
+  }).join('');
+}
+
 async function renderFeaturedProducts() {
   const container = document.getElementById('featured-products');
   if (!container) return;
   
   // Only show approved products on homepage
-  const products = await fetchProducts(true);
+  const products = enrichProductsWithShopData(await fetchProducts(true));
   const featured = products.slice(0, 4); 
   
   if (featured.length === 0) {
@@ -150,11 +219,15 @@ async function renderFeaturedProducts() {
       : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
     const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
     const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
+    const shopBadge = p.shop?.name ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>` : '';
     const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}` : '';
     const emailUrl = email ? `mailto:${email}?subject=${encodeURIComponent(`Question about ${p.name}`)}` : '';
-    const contactUrl = whatsappUrl || emailUrl || `product.html?id=${p.id}`;
-    const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : (emailUrl ? 'fa-solid fa-envelope' : 'fa-solid fa-eye');
-    const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'View listing';
+    const productShareUrl = `${window.location.origin}/product.html?id=${p.id}`;
+    const shareText = encodeURIComponent(`Check out this listing on IsokoHub: ${p.name} - ${formatPrice(p.price)}`);
+    const shareUrl = `https://wa.me/?text=${shareText}%0A${encodeURIComponent(productShareUrl)}`;
+    const contactUrl = whatsappUrl || emailUrl || productShareUrl;
+    const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : (emailUrl ? 'fa-solid fa-envelope' : 'fa-solid fa-share-nodes');
+    const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'Share listing';
 
     return `
       <div class="product-card" role="button" tabindex="0" onclick="window.location.href='product.html?id=${p.id}'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='product.html?id=${p.id}'; }">
@@ -166,10 +239,11 @@ async function renderFeaturedProducts() {
             <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
           </div>
           <h3 class="product-title">${p.name}</h3>
+          ${shopBadge}
           <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
           <div class="product-card-foot">
             <span class="product-price">${formatPrice(p.price)}</span>
-            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
+            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl ? shareUrl : contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
               <i class="${contactIcon}"></i>
             </button>
           </div>

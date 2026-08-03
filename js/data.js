@@ -7,6 +7,40 @@ const RWANDA_DISTRICTS = [
   'Nyaruguru', 'Rubavu', 'Ruhango', 'Rulindo', 'Rusizi', 'Rutsiro', 'Rwamagana'
 ];
 
+function readStoredShops() {
+  try {
+    const raw = localStorage.getItem('isokoHubAdminShops');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('Unable to load shops from storage:', err);
+    return [];
+  }
+}
+
+function getShopById(shopId) {
+  if (!shopId) return null;
+  const shops = readStoredShops();
+  return shops.find((shop) => shop && shop.id === shopId) || null;
+}
+
+function enrichProductsWithShopData(products = []) {
+  const shops = readStoredShops();
+  return (Array.isArray(products) ? products : []).map((product) => {
+    const matchedShop = shops.find((shop) => Array.isArray(shop?.products) && shop.products.includes(product?.id)) || null;
+    return {
+      ...product,
+      shop: matchedShop
+        ? {
+            ...matchedShop,
+            profile: matchedShop.profile || {}
+          }
+        : null
+    };
+  });
+}
+
 function formatHeroProductCount(value) {
   if (!Number.isFinite(value) || value < 0) return '0+';
   if (value >= 1000) {

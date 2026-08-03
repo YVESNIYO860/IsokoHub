@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     productsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p class="mt-1">Loading products...</p></div>';
     
     // fetch only approved products for the public view
-    let allProducts = await fetchProducts(true);
+    let allProducts = enrichProductsWithShopData(await fetchProducts(true));
     
     if (currentCategory !== 'all') {
       allProducts = allProducts.filter(p => p.category === currentCategory);
@@ -139,22 +139,36 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imageMarkup = displayImg
         ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
         : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+      const shopBadge = p.shop?.name
+        ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>`
+        : '';
+      const productShareUrl = `${window.location.origin}/product.html?id=${p.id}`;
+      const shareText = encodeURIComponent(`Check out this listing on IsokoHub: ${p.name} - ${formatPrice(p.price)}`);
+      const shareUrl = `https://wa.me/?text=${shareText}%0A${encodeURIComponent(productShareUrl)}`;
       return `
-        <a href="product.html?id=${p.id}" class="product-card">
-          ${imageMarkup}
-          <div class="product-card-content">
-            <div style="display:flex; align-items:center; gap: 0.5rem;">
-              <span class="product-category">${p.category}</span>
-              <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
+        <div class="product-card">
+          <a href="product.html?id=${p.id}" style="display:block; color:inherit;">
+            ${imageMarkup}
+            <div class="product-card-content">
+              <div style="display:flex; align-items:center; gap: 0.5rem;">
+                <span class="product-category">${p.category}</span>
+                <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
+              </div>
+              <h3 class="product-title">${p.name}</h3>
+              ${shopBadge}
+              <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem;"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-top:auto; flex-wrap:wrap;">
+                <span class="product-price">${formatPrice(p.price)}</span>
+                <span style="background:#ecfeff;color:#0f766e;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-phone"></i> Contact</span>
+              </div>
             </div>
-            <h3 class="product-title">${p.name}</h3>
-            <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem;"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
-            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-top:auto; flex-wrap:wrap;">
-              <span class="product-price">${formatPrice(p.price)}</span>
-              <span style="background:#ecfeff;color:#0f766e;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-phone"></i> Contact</span>
-            </div>
+          </a>
+          <div style="padding: 0 1rem 1rem;">
+            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(shareUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Share listing">
+              <i class="fa-solid fa-share-nodes"></i>
+            </button>
           </div>
-        </a>
+        </div>
       `;
     }).join('');
   }

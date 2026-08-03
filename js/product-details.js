@@ -20,7 +20,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>
   `;
 
-  const product = await fetchProductById(productId);
+  let product = await fetchProductById(productId);
+
+  if (product) {
+    product = enrichProductsWithShopData([product])[0] || product;
+  }
 
   if (!product || (product.status !== 'approved' && getCurrentUser()?.email !== 'yvesniyonkuru2022@gmail.com')) {
     wrapper.innerHTML = `
@@ -112,6 +116,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           <strong>Location:</strong><br>
           <i class="fa-solid fa-location-dot"></i> ${product.district || 'District not set'}
         </div>
+
+        ${product.shop?.id ? `
+          <div class="pd-description">
+            <strong>Storefront:</strong><br>
+            <a href="shop.html?id=${encodeURIComponent(product.shop.id)}" class="shop-link-button">
+              <i class="fa-solid fa-store"></i> ${escapeHtml(product.shop.name || 'View storefront')}
+            </a>
+            ${product.shop.location ? `<div class="text-muted" style="margin-top:0.35rem;">${escapeHtml(product.shop.location)}</div>` : ''}
+          </div>
+        ` : ''}
 
         <div class="pd-description">
           <strong>Contact Seller:</strong><br>

@@ -42,12 +42,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabAds = document.getElementById('tab-ads');
   const tabInventory = document.getElementById('tab-inventory');
   const tabUsers = document.getElementById('tab-users');
+  const tabShops = document.getElementById('tab-shops');
   const tabSettings = document.getElementById('tab-settings');
   const menuButtons = Array.from(document.querySelectorAll('.admin-menu button'));
   const refreshBtn = document.getElementById('refresh-admin-btn');
+  const urlParams = new URLSearchParams(window.location.search);
 
-  let activeTab = 'pending';
+  let activeTab = ['pending', 'ads', 'inventory', 'users', 'shops', 'settings'].includes(urlParams.get('tab') || urlParams.get('view')) ? (urlParams.get('tab') || urlParams.get('view')) : 'pending';
   let selectedCategory = 'all';
+  let editingShopId = null;
+  const rwandaDistricts = [
+    'Kigali',
+    'Bugesera',
+    'Burera',
+    'Gakenke',
+    'Gatsibo',
+    'Gasabo',
+    'Gicumbi',
+    'Gisagara',
+    'Huye',
+    'Kamonyi',
+    'Karongi',
+    'Kayonza',
+    'Kicukiro',
+    'Kirehe',
+    'Muhanga',
+    'Musanze',
+    'Ngoma',
+    'Ngororero',
+    'Nyabihu',
+    'Nyagatare',
+    'Nyamagabe',
+    'Nyamasheke',
+    'Nyanza',
+    'Nyarugenge',
+    'Nyaruguru',
+    'Rubavu',
+    'Ruhango',
+    'Rulindo',
+    'Rusizi',
+    'Rutsiro',
+    'Rwamagana'
+  ];
+
+  function escapeHtml(value = '') {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function loadShopSettings() {
+    try {
+      const raw = localStorage.getItem('isokoHubAdminShops');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (err) {
+      console.warn('Invalid shop settings', err);
+      return [];
+    }
+  }
+
+  function saveShopSettings(shops = []) {
+    localStorage.setItem('isokoHubAdminShops', JSON.stringify(shops));
+  }
+
+  function createShopId() {
+    return `shop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
 
   if (categorySelect) {
     categorySelect.addEventListener('change', () => {
@@ -91,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const switchTab = (tab) => {
     activeTab = tab;
-    [tabPending, tabAds, tabInventory, tabUsers, tabSettings].forEach((btn) => {
+    [tabPending, tabAds, tabInventory, tabUsers, tabShops, tabSettings].forEach((btn) => {
       if (!btn) return;
       btn.classList.toggle('active-tab', btn.id === `tab-${tab}`);
     });
@@ -105,6 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   tabAds.onclick = () => switchTab('ads');
   tabInventory.onclick = () => switchTab('inventory');
   if (tabUsers) tabUsers.onclick = () => switchTab('users');
+  if (tabShops) tabShops.onclick = () => switchTab('shops');
   if (tabSettings) tabSettings.onclick = () => switchTab('settings');
 
   menuButtons.forEach((btn) => {
@@ -114,10 +179,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (refreshBtn) {
     refreshBtn.onclick = () => renderAdmin();
   }
-
-  setInterval(() => {
-    renderAdmin();
-  }, 30000);
 
   window.handleApprove = async function(id) {
     if (confirm('Approve this product for public listing?')) {
@@ -177,6 +238,85 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.handleOpenListing = function(id) {
     window.open(`product.html?id=${id}`, '_blank', 'noopener,noreferrer');
+  };
+
+  window.editShop = function(id) {
+    editingShopId = id;
+    renderAdmin();
+  };
+
+  window.cancelShopEdit = function() {
+    editingShopId = null;
+    renderAdmin();
+  };
+
+  window.saveShop = function() {
+    const name = document.getElementById('shop-name')?.value?.trim() || '';
+    const description = document.getElementById('shop-description')?.value?.trim() || '';
+    const slogan = document.getElementById('shop-slogan')?.value?.trim() || '';
+    const logoUrl = document.getElementById('shop-logo-url')?.value?.trim() || '';
+    const bio = document.getElementById('shop-bio')?.value?.trim() || '';
+    const location = document.getElementById('shop-location')?.value?.trim() || '';
+    const contact = document.getElementById('shop-contact')?.value?.trim() || '';
+    const status = document.getElementById('shop-status')?.value || 'active';
+
+    if (!name) {
+      alert('Shop name is required.');
+      return;
+    }
+
+    const shops = loadShopSettings();
+    const profile = {
+      slogan,
+      logoUrl,
+      bio
+    };
+
+    if (editingShopId) {
+      const index = shops.findIndex((shop) => shop.id === editingShopId);
+      if (index >= 0) {
+        shops[index] = { ...shops[index], name, description, location, contact, status, profile };
+      }
+    } else {
+      shops.unshift({ id: createShopId(), name, description, location, contact, status, profile, products: [] });
+    }
+
+    saveShopSettings(shops);
+    editingShopId = null;
+    renderAdmin();
+  };
+
+  window.deleteShop = function(id) {
+    if (!confirm('Delete this shop and its assignments?')) return;
+    const shops = loadShopSettings().filter((shop) => shop.id !== id);
+    saveShopSettings(shops);
+    if (editingShopId === id) editingShopId = null;
+    renderAdmin();
+  };
+
+  window.addProductToShop = function(shopId) {
+    const select = document.getElementById(`shop-product-select-${shopId}`);
+    const productId = select?.value;
+    if (!productId) return;
+
+    const shops = loadShopSettings();
+    const shop = shops.find((entry) => entry.id === shopId);
+    if (!shop) return;
+
+    if (!shop.products.includes(productId)) {
+      shop.products = [...(shop.products || []), productId];
+      saveShopSettings(shops);
+    }
+    renderAdmin();
+  };
+
+  window.removeProductFromShop = function(shopId, productId) {
+    const shops = loadShopSettings();
+    const shop = shops.find((entry) => entry.id === shopId);
+    if (!shop) return;
+    shop.products = (shop.products || []).filter((entryId) => entryId !== productId);
+    saveShopSettings(shops);
+    renderAdmin();
   };
 
   window.handleCopyPhone = async function(phone) {
@@ -271,32 +411,74 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (activeTab === 'settings') {
       const settings = loadAdminSettings();
       content.innerHTML = `
-        <div style="max-width: 900px; margin: 0 auto; padding: 1rem;">
-          <h2>Admin Settings</h2>
-          <p class="text-muted">Configure marketplace defaults, support contact information, and maintenance mode.</p>
-          <div style="margin-top:1.5rem; display:grid; gap:1rem;">
-            <label style="display:flex; flex-direction:column; gap:0.5rem;">
-              Default support email
-              <input id="admin-default-email" class="form-control" type="email" value="${settings.supportEmail || ''}" placeholder="admin@isokohub.com">
-            </label>
-            <label style="display:flex; flex-direction:column; gap:0.5rem;">
-              Default support phone
-              <input id="admin-default-phone" class="form-control" type="tel" value="${settings.supportPhone || ''}" placeholder="+250 788 123 456">
-            </label>
-            <label style="display:flex; align-items:center; gap:0.75rem; font-weight:600;">
-              <input id="admin-maintenance-mode" type="checkbox" ${settings.maintenanceMode ? 'checked' : ''}>
-              Enable maintenance mode (for temporary marketplace shutdown)
-            </label>
-            <label style="display:flex; flex-direction:column; gap:0.5rem;">
-              Admin announcement
-              <textarea id="admin-announcement" class="form-control" rows="3" placeholder="Display a short notice to site admins and sellers.">${settings.announcement || ''}</textarea>
-            </label>
-            <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
-              <button id="admin-save-settings" class="btn btn-primary">Save settings</button>
-              <button id="admin-reset-settings" class="btn btn-secondary">Reset to defaults</button>
-            </div>
-            <div id="admin-settings-status" style="color:#0b6c4a; font-size:0.95rem; display:none; margin-top:0.75rem;"></div>
+        <div style="max-width: 1000px; margin: 0 auto; padding: 1rem; display:grid; gap:1.25rem;">
+          <div>
+            <h2>Admin Settings</h2>
+            <p class="text-muted">Manage marketplace defaults, support contact details, announcements, and moderation preferences.</p>
           </div>
+
+          <div style="display:grid; gap:1rem;">
+            <div style="border:1px solid #e2e8f0; border-radius:16px; padding:1rem; background:#f8fafc;">
+              <h3 style="margin-bottom:0.75rem;">Support & communication</h3>
+              <div style="display:grid; gap:0.9rem;">
+                <label style="display:flex; flex-direction:column; gap:0.4rem;">
+                  Default support email
+                  <input id="admin-default-email" class="form-control" type="email" value="${settings.supportEmail || ''}" placeholder="admin@isokohub.com">
+                </label>
+                <label style="display:flex; flex-direction:column; gap:0.4rem;">
+                  Default support phone
+                  <input id="admin-default-phone" class="form-control" type="tel" value="${settings.supportPhone || ''}" placeholder="+250 788 123 456">
+                </label>
+                <label style="display:flex; flex-direction:column; gap:0.4rem;">
+                  Admin announcement
+                  <textarea id="admin-announcement" class="form-control" rows="3" placeholder="Display a short notice to site admins and sellers.">${settings.announcement || ''}</textarea>
+                </label>
+              </div>
+            </div>
+
+            <div style="border:1px solid #e2e8f0; border-radius:16px; padding:1rem; background:#f8fafc;">
+              <h3 style="margin-bottom:0.75rem;">Marketplace controls</h3>
+              <div style="display:grid; gap:0.8rem;">
+                <label style="display:flex; align-items:center; gap:0.75rem; font-weight:600;">
+                  <input id="admin-maintenance-mode" type="checkbox" ${settings.maintenanceMode ? 'checked' : ''}>
+                  Enable maintenance mode (temporary marketplace shutdown)
+                </label>
+                <label style="display:flex; align-items:center; gap:0.75rem; font-weight:600;">
+                  <input id="admin-auto-approve" type="checkbox" ${settings.autoApprove ? 'checked' : ''}>
+                  Auto-approve listings with complete seller details
+                </label>
+                <label style="display:flex; align-items:center; gap:0.75rem; font-weight:600;">
+                  <input id="admin-show-promoted" type="checkbox" ${settings.showPromoted ? 'checked' : ''}>
+                  Show promoted listings on the homepage
+                </label>
+              </div>
+            </div>
+
+            <div style="border:1px solid #e2e8f0; border-radius:16px; padding:1rem; background:#f8fafc;">
+              <h3 style="margin-bottom:0.75rem;">Display preferences</h3>
+              <div style="display:grid; gap:0.9rem;">
+                <label style="display:flex; flex-direction:column; gap:0.4rem;">
+                  Default dashboard view
+                  <select id="admin-dashboard-view" class="form-control">
+                    <option value="pending" ${settings.dashboardView === 'pending' ? 'selected' : ''}>Pending Review</option>
+                    <option value="ads" ${settings.dashboardView === 'ads' ? 'selected' : ''}>Ad Requests</option>
+                    <option value="inventory" ${settings.dashboardView === 'inventory' ? 'selected' : ''}>Inventory</option>
+                    <option value="users" ${settings.dashboardView === 'users' ? 'selected' : ''}>Users</option>
+                  </select>
+                </label>
+                <label style="display:flex; flex-direction:column; gap:0.4rem;">
+                  Refresh interval (seconds)
+                  <input id="admin-refresh-interval" class="form-control" type="number" min="10" max="300" value="${settings.refreshInterval || 30}">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
+            <button id="admin-save-settings" class="btn btn-primary">Save settings</button>
+            <button id="admin-reset-settings" class="btn btn-secondary">Reset to defaults</button>
+          </div>
+          <div id="admin-settings-status" style="color:#0b6c4a; font-size:0.95rem; display:none; margin-top:0.25rem;"></div>
         </div>
       `;
 
@@ -312,24 +494,161 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (saveButton) {
         saveButton.onclick = () => {
+          const refreshInterval = Number(document.getElementById('admin-refresh-interval').value || 30);
           const newSettings = {
             supportEmail: document.getElementById('admin-default-email').value.trim(),
             supportPhone: document.getElementById('admin-default-phone').value.trim(),
             maintenanceMode: document.getElementById('admin-maintenance-mode').checked,
+            autoApprove: document.getElementById('admin-auto-approve').checked,
+            showPromoted: document.getElementById('admin-show-promoted').checked,
+            dashboardView: document.getElementById('admin-dashboard-view').value,
+            refreshInterval: Number.isFinite(refreshInterval) ? Math.min(300, Math.max(10, refreshInterval)) : 30,
             announcement: document.getElementById('admin-announcement').value.trim()
           };
           saveAdminSettings(newSettings);
-          showStatus('Settings saved locally. Refresh to apply new values.');
+          showStatus('Settings saved locally.');
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('isokoHubAdminSettings', JSON.stringify(newSettings));
+          }
         };
       }
 
       if (resetButton) {
         resetButton.onclick = () => {
           saveAdminSettings({});
-          renderAdmin();
+          showStatus('Defaults restored.');
+          setTimeout(() => renderAdmin(), 120);
         };
       }
 
+      return;
+    }
+
+    if (activeTab === 'shops') {
+      const shops = loadShopSettings();
+      const editingShop = shops.find((shop) => shop.id === editingShopId) || null;
+      const productOptions = allProducts.map((item) => `<option value="${item.id}">${escapeHtml(item.name || 'Untitled product')}</option>`).join('');
+
+      content.innerHTML = `
+        <div style="display:grid; gap:1.25rem;">
+          <div style="border:1px solid #e2e8f0; border-radius:16px; padding:1rem; background:#f8fafc;">
+            <h3 style="margin-bottom:0.75rem;">${editingShop ? 'Edit shop' : 'Create a new shop'}</h3>
+            <div style="display:grid; gap:0.8rem;">
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Shop name
+                <input id="shop-name" class="form-control" type="text" value="${escapeHtml(editingShop?.name || '')}" placeholder="e.g. Fashion Hub">
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Description
+                <textarea id="shop-description" class="form-control" rows="2" placeholder="What does this shop specialize in?">${escapeHtml(editingShop?.description || '')}</textarea>
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Slogan
+                <input id="shop-slogan" class="form-control" type="text" value="${escapeHtml(editingShop?.profile?.slogan || '')}" placeholder="e.g. Quality goods, fair prices">
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Logo URL
+                <input id="shop-logo-url" class="form-control" type="url" value="${escapeHtml(editingShop?.profile?.logoUrl || '')}" placeholder="https://example.com/logo.png">
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Shop bio
+                <textarea id="shop-bio" class="form-control" rows="2" placeholder="Tell shoppers about your shop">${escapeHtml(editingShop?.profile?.bio || '')}</textarea>
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Location
+                <select id="shop-location" class="form-control">
+                  <option value="">Select district</option>
+                  ${rwandaDistricts.map((district) => `<option value="${escapeHtml(district)}" ${editingShop?.location === district ? 'selected' : ''}>${escapeHtml(district)}</option>`).join('')}
+                </select>
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Contact
+                <input id="shop-contact" class="form-control" type="text" value="${escapeHtml(editingShop?.contact || '')}" placeholder="Phone or email">
+              </label>
+              <label style="display:flex; flex-direction:column; gap:0.35rem;">
+                Status
+                <select id="shop-status" class="form-control">
+                  <option value="active" ${editingShop?.status === 'active' || !editingShop ? 'selected' : ''}>Active</option>
+                  <option value="paused" ${editingShop?.status === 'paused' ? 'selected' : ''}>Paused</option>
+                  <option value="maintenance" ${editingShop?.status === 'maintenance' ? 'selected' : ''}>Maintenance</option>
+                </select>
+              </label>
+              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                <button type="button" onclick="window.saveShop()" class="btn btn-primary">${editingShop ? 'Save changes' : 'Create shop'}</button>
+                ${editingShop ? '<button type="button" onclick="window.cancelShopEdit()" class="btn btn-secondary">Cancel</button>' : ''}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:grid; gap:1rem;">
+            ${shops.length === 0 ? '<div class="text-muted">No shops yet. Create the first shop to start grouping products.</div>' : ''}
+            ${shops.length > 0 ? `
+              <div style="overflow-x:auto; border:1px solid #e2e8f0; border-radius:16px; background:#fff;">
+                <table style="width:100%; border-collapse:collapse; min-width:780px;">
+                  <thead>
+                    <tr style="background:#f8fafc; text-align:left; border-bottom:1px solid #e2e8f0;">
+                      <th style="padding:0.9rem 0.8rem; font-size:0.9rem;">Shop</th>
+                      <th style="padding:0.9rem 0.8rem; font-size:0.9rem;">Details</th>
+                      <th style="padding:0.9rem 0.8rem; font-size:0.9rem;">Status</th>
+                      <th style="padding:0.9rem 0.8rem; font-size:0.9rem;">Products</th>
+                      <th style="padding:0.9rem 0.8rem; font-size:0.9rem;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${shops.map((shop) => {
+                      const assignedProducts = (shop.products || []).map((productId) => allProducts.find((entry) => entry.id === productId)).filter(Boolean);
+                      return `
+                        <tr style="border-bottom:1px solid #f1f5f9; vertical-align:top;">
+                          <td style="padding:0.85rem 0.8rem;">
+                            <div style="display:grid; gap:0.3rem;">
+                              <strong>${escapeHtml(shop.name || 'Unnamed shop')}</strong>
+                              <span class="text-muted" style="font-size:0.9rem;">${escapeHtml(shop.description || 'No description yet')}</span>
+                            </div>
+                          </td>
+                          <td style="padding:0.85rem 0.8rem;">
+                            <div style="display:grid; gap:0.25rem; color:#475569; font-size:0.92rem;">
+                              <div><strong>Location:</strong> ${escapeHtml(shop.location || 'Not set')}</div>
+                              <div><strong>Contact:</strong> ${escapeHtml(shop.contact || 'Not set')}</div>
+                            </div>
+                          </td>
+                          <td style="padding:0.85rem 0.8rem;">
+                            <span style="padding:0.35rem 0.7rem; border-radius:999px; background:#ecfeff; color:#0f766e; font-size:0.8rem; font-weight:700;">${escapeHtml(shop.status || 'active')}</span>
+                          </td>
+                          <td style="padding:0.85rem 0.8rem;">
+                            <div style="display:grid; gap:0.35rem; min-width:220px;">
+                              ${assignedProducts.length === 0 ? '<div class="text-muted">No products assigned yet.</div>' : assignedProducts.map((product) => `
+                                <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; padding:0.45rem 0.55rem; border:1px solid #e2e8f0; border-radius:10px; background:#f8fafc;">
+                                  <span style="font-size:0.9rem;">${escapeHtml(product.name || 'Untitled product')}</span>
+                                  <button type="button" onclick="window.removeProductFromShop('${shop.id}', '${product.id}')" class="btn btn-secondary" style="padding:0.24rem 0.6rem; font-size:0.78rem;">Remove</button>
+                                </div>
+                              `).join('')}
+                            </div>
+                          </td>
+                          <td style="padding:0.85rem 0.8rem;">
+                            <div style="display:grid; gap:0.55rem; min-width:220px;">
+                              <div style="display:flex; gap:0.45rem; flex-wrap:wrap;">
+                                <button type="button" onclick="window.editShop('${shop.id}')" class="btn btn-secondary">Edit</button>
+                                <button type="button" onclick="window.deleteShop('${shop.id}')" class="btn btn-danger">Delete</button>
+                              </div>
+                              <div style="display:flex; gap:0.45rem; align-items:center; flex-wrap:wrap;">
+                                <select id="shop-product-select-${shop.id}" class="form-control" style="max-width:180px; min-width:150px;">
+                                  <option value="">Select a product</option>
+                                  ${productOptions}
+                                </select>
+                                <button type="button" onclick="window.addProductToShop('${shop.id}')" class="btn btn-primary">Add</button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
       return;
     }
 
