@@ -73,6 +73,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const sellerPhone = product.seller_phone ? String(product.seller_phone).trim() : '';
   const sellerEmail = product.seller_email ? String(product.seller_email).trim() : (product.sellerEmail ? String(product.sellerEmail).trim() : '');
+  const productPageUrl = `${window.location.origin}/product.html?id=${encodeURIComponent(product.id)}`;
+  const shareText = `Check out this IsokoHub listing: ${product.name}`;
+
+  const getCurrentShareImageUrl = () => images[activeImageIndex] || productPageUrl;
+  const buildShareUrls = () => {
+    const targetUrl = encodeURIComponent(productPageUrl);
+    const imageUrl = encodeURIComponent(getCurrentShareImageUrl());
+    const headerTag = 'SHARE';
+    const adminNote = 'Shared by IsokoHub Admin for direct contact.';
+    const fullQuote = `${headerTag}: ${shareText} - ${productPageUrl}`;
+    const whatsappText = `${fullQuote}%0A${imageUrl}%0A%0A${encodeURIComponent(adminNote)}`;
+    return {
+      whatsapp: `https://wa.me/?text=${whatsappText}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${targetUrl}&quote=${encodeURIComponent(fullQuote)}`,
+      twitter: `https://twitter.com/intent/tweet?url=${targetUrl}&text=${encodeURIComponent(`${fullQuote} ${getCurrentShareImageUrl()}`)}`
+    };
+  };
 
   wrapper.innerHTML = `
     <div class="product-detail-shell">
@@ -149,7 +166,32 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span style="font-size:0.82rem; font-weight:700;">Email</span>
             </a>
           </div>
-          <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-top:1rem;">
+          <div style="font-size:0.82rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#374151;">Share</div>
+          <div style="font-size:0.8rem; color:#6b7280;">Share this listing, not seller chat.</div>
+        </div>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
+            <a id="whatsapp-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #25d366; color: white; border: 1px solid #25d366; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
+              <i class="fa-brands fa-whatsapp" style="font-size: 1rem;"></i>
+              <span style="font-size:0.82rem; font-weight:700;">Share</span>
+            </a>
+            <a id="facebook-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #1877f2; color: white; border: 1px solid #1877f2; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
+              <i class="fa-brands fa-facebook-f" style="font-size: 1rem;"></i>
+              <span style="font-size:0.82rem; font-weight:700;">Facebook</span>
+            </a>
+            <a id="twitter-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #1da1f2; color: white; border: 1px solid #1da1f2; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
+              <i class="fa-brands fa-twitter" style="font-size: 1rem;"></i>
+              <span style="font-size:0.82rem; font-weight:700;">Twitter</span>
+            </a>
+            <button id="copy-link-btn" type="button" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #0f172a; color: white; border: 1px solid #0f172a; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
+              <i class="fa-solid fa-link" style="font-size: 1rem;"></i>
+              <span style="font-size:0.82rem; font-weight:700;">Copy Link</span>
+            </button>
+          </div>
+          <div style="margin-top:0.35rem; color:#475569; font-size:0.9rem;">
+            Shares the currently selected product image and link.
+          </div>
+          <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px; margin-top:0.5rem;">
             <i class="fa-solid fa-cart-plus"></i> Add to Cart
           </button>
         </div>
@@ -463,6 +505,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     reviewFeedbackEl.textContent = 'Thanks! Your review has been saved on this device.';
     reviewFeedbackEl.classList.add('show');
   });
+
+const updateShareLinks = () => {
+    const urls = buildShareUrls();
+    const whatsappBtn = document.getElementById('whatsapp-share-btn');
+    const facebookBtn = document.getElementById('facebook-share-btn');
+    const twitterBtn = document.getElementById('twitter-share-btn');
+
+    if (whatsappBtn) whatsappBtn.href = urls.whatsapp;
+    if (facebookBtn) facebookBtn.href = urls.facebook;
+    if (twitterBtn) twitterBtn.href = urls.twitter;
+  };
+
+  document.getElementById('whatsapp-share-btn')?.addEventListener('click', updateShareLinks);
+  document.getElementById('facebook-share-btn')?.addEventListener('click', updateShareLinks);
+  document.getElementById('twitter-share-btn')?.addEventListener('click', updateShareLinks);
+
+  document.getElementById('copy-link-btn')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(productPageUrl);
+      alert('Product link copied to clipboard');
+    } catch (err) {
+      console.error('Unable to copy link:', err);
+      prompt('Copy this link to share:', productPageUrl);
+    }
+  });
+
+  const onImageUpdate = (index) => {
+    updateActiveImage(index);
+    updateShareLinks();
+  };
+
+  document.querySelectorAll('.gallery-thumb').forEach((thumb) => {
+    thumb.addEventListener('click', () => onImageUpdate(Number(thumb.dataset.index)));
+  });
+
+  document.getElementById('gallery-prev')?.addEventListener('click', () => onImageUpdate(activeImageIndex - 1));
+  document.getElementById('gallery-next')?.addEventListener('click', () => onImageUpdate(activeImageIndex + 1));
+
+  updateShareLinks();
 
   document.getElementById('add-to-cart-btn')?.addEventListener('click', () => {
     addToCart(product);
