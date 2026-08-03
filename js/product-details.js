@@ -79,15 +79,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const getCurrentShareImageUrl = () => images[activeImageIndex] || productPageUrl;
   const buildShareUrls = () => {
     const targetUrl = encodeURIComponent(productPageUrl);
-    const imageUrl = encodeURIComponent(getCurrentShareImageUrl());
+    const imageUrl = getCurrentShareImageUrl();
     const headerTag = 'SHARE';
     const adminNote = 'Shared by IsokoHub Admin for direct contact.';
-    const fullQuote = `${headerTag}: ${shareText} - ${productPageUrl}`;
-    const whatsappText = `${fullQuote}%0A${imageUrl}%0A%0A${encodeURIComponent(adminNote)}`;
+    const whatsappText = `${headerTag}: ${shareText} - ${productPageUrl}\nImage: ${imageUrl}\n\n${adminNote}`;
+    const shareQuote = `${headerTag}: ${shareText} - ${productPageUrl}\nImage: ${imageUrl}`;
     return {
-      whatsapp: `https://wa.me/?text=${whatsappText}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${targetUrl}&quote=${encodeURIComponent(fullQuote)}`,
-      twitter: `https://twitter.com/intent/tweet?url=${targetUrl}&text=${encodeURIComponent(`${fullQuote} ${getCurrentShareImageUrl()}`)}`
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(whatsappText)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${targetUrl}&quote=${encodeURIComponent(shareQuote)}`,
+      twitter: `https://twitter.com/intent/tweet?url=${targetUrl}&text=${encodeURIComponent(shareQuote)}`
     };
   };
 
