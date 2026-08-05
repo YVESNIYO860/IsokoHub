@@ -225,6 +225,11 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMsg.style.borderRadius = '';
   }
 
+  function redirectToDashboard() {
+    const dashboardUrl = window.location.protocol + '//' + window.location.host + '/dashboard.html';
+    window.location.href = dashboardUrl;
+  }
+
   // Supabase Auth State Listener
   if (supabase && supabase.auth) {
     supabase.auth.onAuthStateChange((event, session) => {
@@ -258,9 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // If on auth pages, redirect to dashboard
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('login.html') || currentPath.includes('signup.html')) {
-          // Redirect to dashboard on current domain
-          const dashboardUrl = window.location.protocol + '//' + window.location.host + '/dashboard.html';
-          setTimeout(() => { window.location.href = dashboardUrl; }, 500);
+          setTimeout(redirectToDashboard, 500);
         }
       } else {
         // User is signed out

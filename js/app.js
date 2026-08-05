@@ -596,6 +596,7 @@ function renderNavbar() {
             <ul>
               <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
               <li><a href="${settingsHref}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              ${user ? `<li><a href="#" onclick="handleLogout(event)"><i class="fa-solid fa-right-from-bracket" style="margin-right:0.5rem; opacity:0.7;"></i> Logout</a></li>` : ''}
               ${isAdmin ? `<li><a href="admin.html"><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem; opacity:0.7;"></i> Admin Dashboard <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>` : ''}
             </ul>
           </div>
