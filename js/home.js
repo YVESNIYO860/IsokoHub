@@ -26,7 +26,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderShops();
   renderFeaturedProducts();
   startSellerShowcase();
+  initHomepageAdPopup();
 });
+
+function initHomepageAdPopup() {
+  const AD_POPUP_DISPLAY_KEY = 'isokoHubAdPopupLastShown';
+  const lastShown = Number(localStorage.getItem(AD_POPUP_DISPLAY_KEY));
+  const oneDayMs = 24 * 60 * 60 * 1000;
+
+  if (Number.isFinite(lastShown) && Date.now() - lastShown < oneDayMs) {
+    return;
+  }
+
+  setTimeout(() => {
+    if (typeof showAdPopup === 'function') {
+      showAdPopup({
+        title: 'Hot Offer: Save on Popular Listings',
+        message: 'Explore hand-picked featured items with special pricing available today.',
+        imageUrl: 'assets/logo.png',
+        ctaText: 'View Deals',
+        ctaUrl: 'products.html'
+      });
+      localStorage.setItem(AD_POPUP_DISPLAY_KEY, String(Date.now()));
+    }
+  }, 2200);
+}
 
 function formatStatValue(value, target = null) {
   const effectiveTarget = Number.isFinite(target) && target > 0 ? target : value;

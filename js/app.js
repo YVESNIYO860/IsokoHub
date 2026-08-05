@@ -1,6 +1,15 @@
 const DRAWER_SETTINGS_KEY = 'isokoHubDrawerSettings';
 const ADMIN_EMAIL = 'yvesniyonkuru2022@gmail.com';
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function isAdminUser(user = getCurrentUser()) {
   const email = user?.email || '';
   return Boolean(user?.role === 'admin' || email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
@@ -54,9 +63,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   renderNavbar();
+  setupSupabaseAuthRefresh();
   renderFooter();
   setupStickyHeader();
 });
+
+function setupSupabaseAuthRefresh() {
+  if (!window.supabase || !supabase?.auth || typeof supabase.auth.onAuthStateChange !== 'function') {
+    return;
+  }
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('App auth state changed:', event);
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'SIGNED_OUT') {
+      if (typeof renderNavbar === 'function') {
+        renderNavbar();
+      } else {
+        window.location.reload();
+      }
+    }
+  });
+}
 
 function ensurePwaMetaTags() {
   if (!document.querySelector('link[rel="manifest"]')) {
@@ -210,6 +237,40 @@ function showInstallGuideModal() {
       </div>
     </div>
   `;
+  document.body.appendChild(modal);
+}
+
+function closeAdPopup() {
+  const modal = document.getElementById('ad-popup-modal');
+  if (modal) modal.remove();
+}
+
+function showAdPopup(options = {}) {
+  if (document.getElementById('ad-popup-modal')) return;
+
+  const { title = 'Sponsored Deal', message = 'Discover our latest featured offer and get special pricing today.', imageUrl = 'assets/logo.png', ctaText = 'Shop Now', ctaUrl = 'products.html' } = options;
+
+  const modal = document.createElement('div');
+  modal.id = 'ad-popup-modal';
+  modal.className = 'install-guide-modal';
+  modal.innerHTML = `
+    <div class="install-guide-card ad-popup-card">
+      <button class="install-guide-close" onclick="closeAdPopup()" aria-label="Close ad popup">×</button>
+      <div class="install-guide-icon" style="background: #2563eb; color: #fff;">
+        <i class="fa-solid fa-bullhorn"></i>
+      </div>
+      <h3>${escapeHtml(title)}</h3>
+      <div class="ad-popup-media">
+        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" decoding="async">
+      </div>
+      <p>${escapeHtml(message)}</p>
+      <div class="install-guide-actions">
+        <button class="install-guide-secondary" onclick="closeAdPopup()">Maybe later</button>
+        <a href="${escapeHtml(ctaUrl)}" class="install-guide-primary" onclick="closeAdPopup()">${escapeHtml(ctaText)}</a>
+      </div>
+    </div>
+  `;
+
   document.body.appendChild(modal);
 }
 

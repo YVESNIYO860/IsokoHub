@@ -317,9 +317,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           // Clear message on success
           hideMessage();
-          console.log('Login successful for:', email);
-          // Redirect happens automatically via auth state listener
+        console.log('Login successful for:', email);
+        if (typeof renderNavbar === 'function') {
+          renderNavbar();
         }
+        setTimeout(() => {
+          window.location.href = 'dashboard.html';
+        }, 300);
+      }
       } catch (error) {
         showMessage('Login failed. Please try again.', 'error');
         console.error('Login error:', error);
