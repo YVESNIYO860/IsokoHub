@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visitor Analytics - IsokoHub</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
+</head>
+<body>
+  <main class="admin-container">
+    <div class="admin-page-header">
+      <div>
+        <h1 class="admin-title">
+          <i class="fa-solid fa-chart-line" style="color:#3b82f6;"></i>
+          Visitor Analytics
+        </h1>
+        <p class="text-muted">Track website traffic with hourly, daily, weekly, and monthly visitor metrics.</p>
+      </div>
+      <div class="admin-page-actions">
+        <a href="admin.html" class="btn btn-secondary">Back to Admin</a>
+      </div>
+    </div>
+
+    <section class="admin-main">
+      <div class="admin-stat-cards">
+        <div class="admin-stat-card">
+          <span class="stat-label">Total Visits</span>
+          <strong id="visitor-count">0</strong>
+          <p class="text-muted">All visits tracked across the marketplace.</p>
+        </div>
+        <div class="admin-stat-card">
+          <span class="stat-label">Hourly Visits</span>
+          <strong id="visitor-hourly-count">0</strong>
+          <p class="text-muted">Last 60 minutes of traffic.</p>
+        </div>
+        <div class="admin-stat-card">
+          <span class="stat-label">Daily Visits</span>
+          <strong id="visitor-daily-count">0</strong>
+          <p class="text-muted">Last 24 hours of traffic.</p>
+        </div>
+        <div class="admin-stat-card">
+          <span class="stat-label">Weekly Visits</span>
+          <strong id="visitor-weekly-count">0</strong>
+          <p class="text-muted">Last 7 days of traffic.</p>
+        </div>
+        <div class="admin-stat-card">
+          <span class="stat-label">Monthly Visits</span>
+          <strong id="visitor-monthly-count">0</strong>
+          <p class="text-muted">Last 30 days of traffic.</p>
+        </div>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="admin-section-title">Visitor Places Overview</div>
+        <div id="visitor-places-graph" class="analytics-graph">
+          <div class="text-center">Loading visitor place breakdown...</div>
+        </div>
+        <p class="text-muted analytics-description">This chart shows the most visited pages (places) across IsokoHub and helps you understand which sections of the marketplace visitors use most often.</p>
+      </div>
+
+      <div class="dashboard-card">
+        <div class="admin-section-title">Recent Visits</div>
+        <div class="visitor-table-wrapper">
+          <table class="analytics-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Page</th>
+                <th>Visitor ID</th>
+              </tr>
+            </thead>
+            <tbody id="visitor-table-body">
+              <tr>
+                <td colspan="3" class="text-center">Loading visitor records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/visitors.js"></script>
+</body>
+</html>

@@ -37,6 +37,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const approvedCountSpan = document.getElementById('approved-count');
   const totalCountSpan = document.getElementById('total-count');
   const userCountSpan = document.getElementById('user-count');
+  const visitorCountSpan = document.getElementById('visitor-count');
+  const visitorHourlySpan = document.getElementById('visitor-hourly-count');
+  const visitorDailySpan = document.getElementById('visitor-daily-count');
+  const visitorWeeklySpan = document.getElementById('visitor-weekly-count');
+  const visitorMonthlySpan = document.getElementById('visitor-monthly-count');
   const categorySelect = document.getElementById('admin-category-filter');
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
@@ -44,9 +49,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabUsers = document.getElementById('tab-users');
   const tabShops = document.getElementById('tab-shops');
   const tabSettings = document.getElementById('tab-settings');
+  const tabButtons = [tabPending, tabAds, tabInventory, tabUsers, tabShops, tabSettings].filter(Boolean);
   const menuButtons = Array.from(document.querySelectorAll('.admin-menu button'));
   const refreshBtn = document.getElementById('refresh-admin-btn');
   const urlParams = new URLSearchParams(window.location.search);
+
+  const adminSidebar = document.querySelector('.admin-sidebar');
+  const sidebarToggleBtn = document.getElementById('admin-sidebar-toggle');
+  const sidebarBackdrop = document.createElement('div');
+  sidebarBackdrop.id = 'admin-sidebar-backdrop';
+  sidebarBackdrop.className = 'admin-sidebar-backdrop';
+  document.body.appendChild(sidebarBackdrop);
+
+  const closeAdminSidebar = () => {
+    adminSidebar?.classList.remove('open');
+    sidebarBackdrop.classList.remove('visible');
+    sidebarToggleBtn?.setAttribute('aria-expanded', 'false');
+  };
+
+  const openAdminSidebar = () => {
+    adminSidebar?.classList.add('open');
+    sidebarBackdrop.classList.add('visible');
+    sidebarToggleBtn?.setAttribute('aria-expanded', 'true');
+  };
+
+  if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', () => {
+      if (adminSidebar?.classList.contains('open')) {
+        closeAdminSidebar();
+      } else {
+        openAdminSidebar();
+      }
+    });
+  }
+
+  sidebarBackdrop.addEventListener('click', closeAdminSidebar);
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 960) {
+      closeAdminSidebar();
+    }
+  });
 
   let activeTab = ['pending', 'ads', 'inventory', 'users', 'shops', 'settings'].includes(urlParams.get('tab') || urlParams.get('view')) ? (urlParams.get('tab') || urlParams.get('view')) : 'pending';
   let selectedCategory = 'all';
@@ -163,6 +206,67 @@ document.addEventListener('DOMContentLoaded', async () => {
     categorySelect.value = currentValue;
   }
 
+  function buildTabOverview(activeTab, metrics) {
+    const { pendingCount, adRequestCount, approvedCount, totalCount, userCount, adminUserCount, sellerUserCount, buyerUserCount, shopCount, assignedProductCount, visitorMetrics, settings } = metrics;
+
+    const stats = {
+      pending: [
+        { label: 'Pending listings', value: pendingCount },
+        { label: 'Ad requests', value: adRequestCount },
+        { label: 'Approved listings', value: approvedCount },
+        { label: 'Total inventory', value: totalCount }
+      ],
+      ads: [
+        { label: 'Ad requests', value: adRequestCount },
+        { label: 'Pending approvals', value: pendingCount },
+        { label: 'Live listings', value: approvedCount },
+        { label: 'Site visits last 24h', value: visitorMetrics?.daily ?? 0 }
+      ],
+      inventory: [
+        { label: 'Total listings', value: totalCount },
+        { label: 'Approved inventory', value: approvedCount },
+        { label: 'Pending review', value: pendingCount },
+        { label: 'Shops connected', value: shopCount }
+      ],
+      users: [
+        { label: 'Total users', value: userCount },
+        { label: 'Admins', value: adminUserCount },
+        { label: 'Sellers', value: sellerUserCount },
+        { label: 'Buyers', value: buyerUserCount }
+      ],
+      shops: [
+        { label: 'Shop count', value: shopCount },
+        { label: 'Assigned products', value: assignedProductCount },
+        { label: 'Total listings', value: totalCount },
+        { label: 'Live listings', value: approvedCount }
+      ],
+      settings: [
+        { label: 'Default view', value: settings?.dashboardView || 'pending' },
+        { label: 'Refresh interval', value: `${settings?.refreshInterval || 30}s` },
+        { label: 'Show promoted', value: settings?.showPromoted ? 'Yes' : 'No' },
+        { label: 'Maintenance mode', value: settings?.maintenanceMode ? 'Enabled' : 'Disabled' }
+      ]
+    };
+
+    const items = stats[activeTab] || stats.pending;
+    return `
+      <div class="admin-tab-overview">
+        <div class="admin-tab-overview-header">
+          <h2>${activeTab === 'pending' ? 'Pending Review Analytics' : activeTab === 'ads' ? 'Ad Requests Analytics' : activeTab === 'inventory' ? 'Inventory Analytics' : activeTab === 'users' ? 'User Analytics' : activeTab === 'shops' ? 'Shop Analytics' : 'Settings Overview'}</h2>
+          <p class="text-muted">Live summary metrics for the currently selected admin section.</p>
+        </div>
+        <div class="admin-tab-overview-grid">
+          ${items.map((item) => `
+            <div class="admin-tab-overview-card">
+              <span class="stat-label">${item.label}</span>
+              <strong>${item.value ?? 0}</strong>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   function loadAdminSettings() {
     const raw = localStorage.getItem('isokoHubAdminSettings');
     try {
@@ -179,8 +283,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const switchTab = (tab) => {
     activeTab = tab;
-    [tabPending, tabAds, tabInventory, tabUsers, tabShops, tabSettings].forEach((btn) => {
-      if (!btn) return;
+    tabButtons.forEach((btn) => {
       btn.classList.toggle('active-tab', btn.id === `tab-${tab}`);
     });
     menuButtons.forEach((btn) => {
@@ -189,15 +292,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderAdmin();
   };
 
-  tabPending.onclick = () => switchTab('pending');
-  tabAds.onclick = () => switchTab('ads');
-  tabInventory.onclick = () => switchTab('inventory');
+  if (tabPending) tabPending.onclick = () => switchTab('pending');
+  if (tabAds) tabAds.onclick = () => switchTab('ads');
+  if (tabInventory) tabInventory.onclick = () => switchTab('inventory');
   if (tabUsers) tabUsers.onclick = () => switchTab('users');
   if (tabShops) tabShops.onclick = () => switchTab('shops');
   if (tabSettings) tabSettings.onclick = () => switchTab('settings');
 
   menuButtons.forEach((btn) => {
-    btn.onclick = () => switchTab(btn.dataset.tab);
+    btn.onclick = () => {
+      switchTab(btn.dataset.tab);
+      closeAdminSidebar();
+    };
   });
 
   if (refreshBtn) {
@@ -402,7 +508,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       approvedCount,
       totalCount,
       adRequestCount,
-      userCount
+      userCount,
+      visitorCount
     ] = await Promise.all([
       fetchPendingProducts(),
       fetchAdRequests(),
@@ -411,11 +518,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchProductCount({ status: 'approved' }),
       fetchProductCount(),
       fetchProductCount({ ad_requested: true }),
-      fetchUserCount()
+      fetchUserCount(),
+      (typeof fetchSiteVisitMetrics === 'function' ? fetchSiteVisitMetrics() : fetchSiteVisitCount())
     ]);
 
     const categories = getUniqueCategories([...pendingProducts, ...adRequests, ...allProducts]);
     updateCategoryFilterOptions(categories);
+
+    const shops = await loadShopSettings();
+    const shopCount = Array.isArray(shops) ? shops.length : 0;
+    const assignedProductCount = Array.isArray(shops)
+      ? shops.reduce((sum, shop) => sum + (Array.isArray(shop.products) ? shop.products.length : 0), 0)
+      : 0;
+    const users = await fetchUserProfiles();
+    const adminUserCount = Array.isArray(users) ? users.filter((user) => user.role === 'admin').length : 0;
+    const sellerUserCount = Array.isArray(users) ? users.filter((user) => user.role === 'seller').length : 0;
+    const buyerUserCount = Array.isArray(users) ? Math.max(0, users.length - adminUserCount - sellerUserCount) : 0;
+    const adminSettings = loadAdminSettings();
+    const visitorMetrics = typeof visitorCount === 'object' && visitorCount !== null ? visitorCount : { total: visitorCount, hourly: 0, daily: 0, weekly: 0, monthly: 0 };
+    const sectionSummaryHtml = buildTabOverview(activeTab, {
+      pendingCount,
+      adRequestCount,
+      approvedCount,
+      totalCount,
+      userCount,
+      adminUserCount,
+      sellerUserCount,
+      buyerUserCount,
+      shopCount,
+      assignedProductCount,
+      visitorMetrics,
+      settings: adminSettings
+    });
 
     countSpan.textContent = pendingCount;
     adCountSpan.textContent = adRequestCount;
@@ -423,8 +557,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     totalCountSpan.textContent = totalCount;
     userCountSpan.textContent = userCount;
 
+    if (visitorCountSpan) {
+      visitorCountSpan.textContent = visitorMetrics.total || 0;
+    }
+
+    if (visitorHourlySpan) {
+      visitorHourlySpan.textContent = visitorMetrics.hourly || 0;
+    }
+
+    if (visitorDailySpan) {
+      visitorDailySpan.textContent = visitorMetrics.daily || 0;
+    }
+
+    if (visitorWeeklySpan) {
+      visitorWeeklySpan.textContent = visitorMetrics.weekly || 0;
+    }
+
+    if (visitorMonthlySpan) {
+      visitorMonthlySpan.textContent = visitorMetrics.monthly || 0;
+    }
+
     // Debug info for admin to diagnose empty queues and verify Supabase connectivity.
     const supabaseStatus = (typeof supabase !== 'undefined' && supabase) ? 'initialized' : 'missing';
+    const existingSummary = document.getElementById('admin-tab-overview-block');
+    if (!existingSummary) {
+      const summaryWrapper = document.createElement('div');
+      summaryWrapper.id = 'admin-tab-overview-block';
+      summaryWrapper.innerHTML = sectionSummaryHtml;
+      content.parentNode.insertBefore(summaryWrapper, content);
+    } else {
+      existingSummary.innerHTML = sectionSummaryHtml;
+    }
     const debugHtml = `
       <div style="margin: 0.5rem 0 1rem; padding: 0.75rem; border-radius:8px; background:#0f172a; color:#fff; font-size:0.9rem;">
         <strong>Debug:</strong>

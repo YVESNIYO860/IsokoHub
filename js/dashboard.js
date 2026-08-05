@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Display user avatar from database
   const avatarImg = document.getElementById('user-avatar');
   if (avatarImg) {
-    const avatarUrl = await getUserAvatar(user.id);
-    avatarImg.src = avatarUrl;
+    const avatarUrl = await getUserAvatar(user.id, user.email);
+    avatarImg.src = avatarUrl || createInitialsAvatarUrl(user.name, user.email);
   }
 
   document.getElementById('user-greeting').textContent = `Manage your inventory and promotions, ${user.name.split(' ')[0]}`;

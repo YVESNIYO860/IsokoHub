@@ -66,6 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSupabaseAuthRefresh();
   renderFooter();
   setupStickyHeader();
+
+  if (typeof logSiteVisit === 'function') {
+    logSiteVisit().catch(() => {});
+  }
 });
 
 function setupSupabaseAuthRefresh() {
@@ -553,6 +557,7 @@ function renderNavbar() {
   const user = getCurrentUser();
   const showInstallAction = !isInStandaloneMode();
   const isAdmin = isAdminUser(user);
+  const isAdminPage = /admin\.html/.test(window.location.pathname);
   const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'login.html';
   const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Sign In';
   const accountHref = user ? 'dashboard.html' : 'login.html';
@@ -588,6 +593,7 @@ function renderNavbar() {
             <strong>Account</strong>
           </a>
 
+          ${isAdminPage ? '' : `
           <a href="houses-rent.html" target="_blank" rel="noopener" class="nav-action-item mobile-househub-link">
             <i class="fa-solid fa-house"></i>
             <strong>Househub</strong>
@@ -599,6 +605,7 @@ function renderNavbar() {
             <strong>Install</strong>
           </button>
           ` : ''}
+          `}
 
           <a href="#" class="nav-action-item cart-icon">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.5rem;"></i>
@@ -609,10 +616,12 @@ function renderNavbar() {
       </div>
 
       <!-- Bottom Tier: Categories -->
+      ${isAdminPage ? '' : `
       <div class="navbar-bottom">
         <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">HOUSEHUB</a>
         <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on IsokoHub</a>
       </div>
+      `}
     </nav>
 
     <!-- Side Navigation Drawer (Amazon Style) -->
@@ -755,6 +764,7 @@ function renderNavbar() {
 
 function renderFooter() {
   const footerHTML = `
+    <div id="site-footer-root"></div>
     <footer class="footer">
       <div class="container footer-grid">
         <div class="footer-col">
@@ -810,7 +820,8 @@ function renderFooter() {
       </div>
     </footer>
   `;
-  document.body.insertAdjacentHTML('beforeend', footerHTML);
+  const footerTarget = document.getElementById('site-footer-root') || document.body;
+  footerTarget.insertAdjacentHTML('beforeend', footerHTML);
 }
 
 function handleSearch(e) {

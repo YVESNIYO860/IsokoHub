@@ -1,5 +1,9 @@
 // Supabase PostgreSQL Data Layer (100% Supabase, no Firebase)
 const CURRENT_USER_KEY = 'isokoHubCurrentUser';
+const SITE_VISITS_TABLE = 'site_visits';
+const SITE_VISIT_STORAGE_KEY = 'isokoHubSiteVisitHistory';
+const SITE_VISITOR_ID_KEY = 'isokoHubVisitorId';
+const PRODUCT_LISTING_HISTORY_KEY = 'isokoHubProductListingCount';
 const RWANDA_DISTRICTS = [
   'Bugesera', 'Burera', 'Gakenke', 'Gasabo', 'Gatsibo', 'Gicumbi', 'Gisagara', 'Huye',
   'Kamonyi', 'Karongi', 'Kayonza', 'Kicukiro', 'Kirehe', 'Muhanga', 'Musanze', 'Ngoma',
@@ -101,23 +105,31 @@ function formatHeroResponseTime(minutes) {
 }
 
 async function fetchHeroStats() {
+  const localListingCount = getStoredProductListingCount();
   if (!supabase) {
-    return { productCount: 0, responseMinutes: 15 };
+    return { productCount: localListingCount, responseMinutes: 15 };
   }
 
   try {
-    const { count } = await supabase
+    const { count, error } = await supabase
       .from('products')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'approved');
+      .select('id', { count: 'exact', head: true });
 
-    const productCount = count || 0;
+    if (error) {
+      throw error;
+    }
+
+    const dbCount = Number.isFinite(count) ? count : 0;
+    const productCount = Math.max(localListingCount, dbCount);
+    if (dbCount > localListingCount) {
+      saveStoredProductListingCount(dbCount);
+    }
+
     const responseMinutes = 15;
-
     return { productCount, responseMinutes };
   } catch (err) {
-    console.error('Error fetching hero stats:', err);
-    return { productCount: 0, responseMinutes: 15 };
+    console.error('Error fetching hero stats:', err?.message || err);
+    return { productCount: localListingCount, responseMinutes: 15 };
   }
 }
 
@@ -149,6 +161,7 @@ async function fetchProductCount(filters = {}) {
 }
 
 let supabaseUserProfilesTableMissing = false;
+let siteVisitsTableMissing = false;
 
 async function fetchUserCount() {
   if (!supabase || supabaseUserProfilesTableMissing) {
@@ -185,6 +198,242 @@ async function fetchUserCount() {
     console.error('Error fetching user count:', err?.message || err);
     const stored = getStoredUserProfiles();
     return stored.length;
+  }
+}
+
+function getVisitorId() {
+  try {
+    let visitorId = localStorage.getItem(SITE_VISITOR_ID_KEY);
+    if (!visitorId) {
+      visitorId = `visitor-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      localStorage.setItem(SITE_VISITOR_ID_KEY, visitorId);
+    }
+    return visitorId;
+  } catch (err) {
+    return `visitor-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  }
+}
+
+function getStoredProductListingCount() {
+  try {
+    const storedValue = Number(localStorage.getItem(PRODUCT_LISTING_HISTORY_KEY));
+    return Number.isFinite(storedValue) && storedValue >= 0 ? storedValue : 0;
+  } catch (err) {
+    return 0;
+  }
+}
+
+function saveStoredProductListingCount(value = 0) {
+  try {
+    localStorage.setItem(PRODUCT_LISTING_HISTORY_KEY, String(Math.max(0, Number(value) || 0)));
+  } catch (err) {
+    console.warn('Unable to save local product listing count:', err);
+  }
+}
+
+function incrementStoredProductListingCount(count = 1) {
+  const current = getStoredProductListingCount();
+  const next = current + (Number.isFinite(count) ? count : 1);
+  saveStoredProductListingCount(next);
+  return next;
+}
+
+function getStoredSiteVisits() {
+  try {
+    const rawVisits = localStorage.getItem(SITE_VISIT_STORAGE_KEY);
+    const visits = rawVisits ? JSON.parse(rawVisits) : [];
+    return Array.isArray(visits) ? visits : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveStoredSiteVisits(visits = []) {
+  try {
+    localStorage.setItem(SITE_VISIT_STORAGE_KEY, JSON.stringify(Array.isArray(visits) ? visits : []));
+  } catch (err) {
+    console.warn('Unable to save local site visits:', err);
+  }
+}
+
+async function logSiteVisit(pagePath = window.location.pathname) {
+  const visitorId = getVisitorId();
+  const visitRecord = {
+    visitor_id: visitorId,
+    page: String(pagePath || window.location.pathname),
+    visited_at: new Date().toISOString()
+  };
+
+  const storedVisits = getStoredSiteVisits();
+  if (!supabase || siteVisitsTableMissing) {
+    storedVisits.push(visitRecord);
+    saveStoredSiteVisits(storedVisits);
+    return storedVisits.length;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(SITE_VISITS_TABLE)
+      .insert([visitRecord]);
+
+    if (error) {
+      throw error;
+    }
+
+    return storedVisits.length + 1;
+  } catch (err) {
+    const tableMissing = err?.status === 404
+      || (err?.message && /not found|does not exist|relation .* does not exist/i.test(err.message));
+
+    if (tableMissing) {
+      siteVisitsTableMissing = true;
+      storedVisits.push(visitRecord);
+      saveStoredSiteVisits(storedVisits);
+      return storedVisits.length;
+    }
+
+    console.warn('Unable to log site visit:', err?.message || err);
+    storedVisits.push(visitRecord);
+    saveStoredSiteVisits(storedVisits);
+    return storedVisits.length;
+  }
+}
+
+async function fetchSiteVisitCount() {
+  const storedVisits = getStoredSiteVisits();
+  let totalVisits = storedVisits.length;
+
+  if (!supabase || siteVisitsTableMissing) {
+    return totalVisits;
+  }
+
+  try {
+    const { count, error } = await supabase
+      .from(SITE_VISITS_TABLE)
+      .select('id', { count: 'exact', head: true });
+
+    if (!error && typeof count === 'number') {
+      totalVisits = count;
+    }
+  } catch (err) {
+    const tableMissing = err?.status === 404
+      || (err?.message && /not found|does not exist|relation .* does not exist/i.test(err.message));
+
+    if (tableMissing) {
+      siteVisitsTableMissing = true;
+      return totalVisits;
+    }
+
+    console.warn('Unable to fetch site visit count from Supabase:', err?.message || err);
+  }
+
+  return totalVisits;
+}
+
+function countStoredVisitsSince(startDate) {
+  const storedVisits = getStoredSiteVisits();
+  return storedVisits.reduce((count, visit) => {
+    const visitedAt = new Date(visit?.visited_at || '');
+    return count + (Number.isFinite(visitedAt.valueOf()) && visitedAt >= startDate ? 1 : 0);
+  }, 0);
+}
+
+async function fetchSiteVisitCountSince(startDate) {
+  if (!supabase || siteVisitsTableMissing) {
+    return countStoredVisitsSince(startDate);
+  }
+
+  try {
+    const { count, error } = await supabase
+      .from(SITE_VISITS_TABLE)
+      .select('id', { count: 'exact', head: true })
+      .gte('visited_at', startDate.toISOString());
+
+    if (!error && typeof count === 'number') {
+      return count;
+    }
+  } catch (err) {
+    const tableMissing = err?.status === 404
+      || (err?.message && /not found|does not exist|relation .* does not exist/i.test(err.message));
+
+    if (tableMissing) {
+      siteVisitsTableMissing = true;
+      return countStoredVisitsSince(startDate);
+    }
+
+    console.warn('Unable to fetch site visit count since date from Supabase:', err?.message || err);
+  }
+
+  return countStoredVisitsSince(startDate);
+}
+
+async function fetchSiteVisitMetrics(timeframe = null) {
+  const now = new Date();
+  const hourlyAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const dailyAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const weeklyAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const monthlyAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const metrics = {
+    hourly: await fetchSiteVisitCountSince(hourlyAgo),
+    daily: await fetchSiteVisitCountSince(dailyAgo),
+    weekly: await fetchSiteVisitCountSince(weeklyAgo),
+    monthly: await fetchSiteVisitCountSince(monthlyAgo),
+    total: await fetchSiteVisitCount()
+  };
+
+  if (typeof timeframe === 'string') {
+    const key = timeframe.toLowerCase();
+    return metrics[key] ?? 0;
+  }
+
+  return metrics;
+}
+
+async function fetchRecentVisits(limit = 10) {
+  if (!supabase || siteVisitsTableMissing) {
+    const storedVisits = getStoredSiteVisits();
+    return storedVisits
+      .slice(-limit)
+      .reverse()
+      .map((visit) => ({
+        visitor_id: visit.visitor_id || 'Guest',
+        page: visit.page || 'Unknown',
+        visited_at: visit.visited_at || visit.timestamp || ''
+      }));
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from(SITE_VISITS_TABLE)
+      .select('visitor_id, page, visited_at')
+      .order('visited_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!Array.isArray(data)) {
+      return [];
+    }
+
+    return data.map((visit) => ({
+      visitor_id: visit.visitor_id || 'Guest',
+      page: visit.page || 'Unknown',
+      visited_at: visit.visited_at || ''
+    }));
+  } catch (err) {
+    console.warn('Unable to fetch recent visits from Supabase:', err);
+    const storedVisits = getStoredSiteVisits();
+    return storedVisits
+      .slice(-limit)
+      .reverse()
+      .map((visit) => ({
+        visitor_id: visit.visitor_id || 'Guest',
+        page: visit.page || 'Unknown',
+        visited_at: visit.visited_at || visit.timestamp || ''
+      }));
   }
 }
 
@@ -357,32 +606,13 @@ async function createProduct(productData) {
       .single();
     
     if (error) throw error;
-    
+    incrementStoredProductListingCount(1);
     console.log('✓ Product saved to Supabase with ID:', data.id);
     return data;
-  } catch (error) {
-    console.error('✗ Error saving product to Supabase:', error);
-    console.error('Error message:', error.message);
-    throw error;
+  } catch (err) {
+    console.error('✗ Error saving product to Supabase:', err?.message || err);
+    throw err;
   }
-}
-
-async function updateProductData(id, updatedData) {
-  if (!supabase) return;
-  
-  // Convert camelCase to snake_case
-  const snakeCaseData = {};
-  Object.keys(updatedData).forEach(key => {
-    const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-    snakeCaseData[snakeKey] = updatedData[key];
-  });
-  
-  const { error } = await supabase
-    .from('products')
-    .update(snakeCaseData)
-    .eq('id', id);
-  
-  if (error) throw error;
 }
 
 async function updateProductStatus(id, status) {

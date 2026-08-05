@@ -390,6 +390,7 @@
   </style>
 </head>
 <body>
+  <div id="site-header-root"></div>
   <!-- Header injected by app.js -->
 
   <main class="admin-container">
@@ -406,12 +407,13 @@
         </div>
       </div>
       <div class="admin-page-actions">
+        <button id="admin-sidebar-toggle" class="btn btn-secondary admin-sidebar-toggle" aria-expanded="false" aria-controls="admin-sidebar">Menu</button>
         <button id="refresh-admin-btn" class="btn btn-primary">Refresh dashboard</button>
       </div>
     </div>
 
     <div class="admin-dashboard-grid">
-      <aside class="admin-sidebar">
+      <aside id="admin-sidebar" class="admin-sidebar">
         <h2>Quick Menu</h2>
         <div class="admin-menu">
           <button type="button" class="active" data-tab="pending">Pending Review</button>
@@ -420,6 +422,7 @@
           <button type="button" data-tab="users">Users</button>
           <button type="button" data-tab="shops">Shop Management</button>
           <button type="button" data-tab="settings">Settings</button>
+          <a href="visitors.html" class="admin-visitor-link">Visitor Analytics</a>
         </div>
 
         <div class="admin-sidebar-section">
@@ -468,15 +471,40 @@
             <strong id="user-count">0</strong>
             <p class="text-muted">Registered marketplace accounts</p>
           </div>
+          <div class="admin-stat-card">
+            <span class="stat-label">Site visits</span>
+            <strong id="visitor-count">0</strong>
+            <p class="text-muted">Total marketplace page views</p>
+          </div>
+          <div class="admin-stat-card">
+            <span class="stat-label">Hourly visits</span>
+            <strong id="visitor-hourly-count">0</strong>
+            <p class="text-muted">Last 60 minutes</p>
+          </div>
+          <div class="admin-stat-card">
+            <span class="stat-label">Daily visits</span>
+            <strong id="visitor-daily-count">0</strong>
+            <p class="text-muted">Last 24 hours</p>
+          </div>
+          <div class="admin-stat-card">
+            <span class="stat-label">Weekly visits</span>
+            <strong id="visitor-weekly-count">0</strong>
+            <p class="text-muted">Last 7 days</p>
+          </div>
+          <div class="admin-stat-card">
+            <span class="stat-label">Monthly visits</span>
+            <strong id="visitor-monthly-count">0</strong>
+            <p class="text-muted">Last 30 days</p>
+          </div>
         </div>
 
-        <div class="admin-tabs">
-          <button class="btn btn-secondary active-tab" id="tab-pending">Pending Review</button>
-          <button class="btn btn-secondary" id="tab-ads">Ad Requests</button>
-          <button class="btn btn-secondary" id="tab-inventory">Inventory</button>
-          <button class="btn btn-secondary" id="tab-users">Users</button>
-          <button class="btn btn-secondary" id="tab-shops">Shop Management</button>
-          <button class="btn btn-secondary" id="tab-settings">Settings</button>
+        <div class="admin-tabs" role="tablist" aria-label="Admin dashboard sections">
+          <button class="btn btn-secondary active-tab" id="tab-pending" role="tab" aria-selected="true">Pending Review</button>
+          <button class="btn btn-secondary" id="tab-ads" role="tab">Ad Requests</button>
+          <button class="btn btn-secondary" id="tab-inventory" role="tab">Inventory</button>
+          <button class="btn btn-secondary" id="tab-users" role="tab">Users</button>
+          <button class="btn btn-secondary" id="tab-shops" role="tab">Shop Management</button>
+          <button class="btn btn-secondary" id="tab-settings" role="tab">Settings</button>
         </div>
 
         <div class="dashboard-card">
