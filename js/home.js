@@ -38,16 +38,41 @@ function initHomepageAdPopup() {
     return;
   }
 
-  setTimeout(() => {
-    if (typeof showAdPopup === 'function') {
+  setTimeout(async () => {
+    if (typeof fetchPromotedProducts !== 'function' || typeof enrichProductsWithShopData !== 'function' || typeof showAdPopup !== 'function') {
+      return;
+    }
+
+    try {
+      const rawPromoted = await fetchPromotedProducts();
+      const promotedProducts = await enrichProductsWithShopData(rawPromoted || []);
+      const promoted = Array.isArray(promotedProducts) ? promotedProducts[0] : null;
+
+      if (!promoted || !promoted.id) {
+        return;
+      }
+
+      const imageUrl = normalizeProductImage(Array.isArray(promoted.image) ? promoted.image[0] : promoted.image) || 'assets/logo.png';
+      const productLabel = promoted.name || 'Promoted listing';
+      const productMeta = [];
+      if (promoted.category) productMeta.push(promoted.category);
+      if (promoted.price != null) productMeta.push(formatPrice(promoted.price));
+      if (promoted.shop?.name) productMeta.push(promoted.shop.name);
+
+      const message = productMeta.length
+        ? productMeta.join(' · ')
+        : `${productLabel} is a promoted listing on IsokoHub.`;
+
       showAdPopup({
-        title: 'Hot Offer: Save on Popular Listings',
-        message: 'Explore hand-picked featured items with special pricing available today.',
-        imageUrl: 'assets/logo.png',
-        ctaText: 'View Deals',
-        ctaUrl: 'products.html'
+        title: `Promoted Product: ${productLabel}`,
+        message,
+        imageUrl,
+        ctaText: 'View product',
+        ctaUrl: `product.html?id=${encodeURIComponent(promoted.id)}`
       });
       localStorage.setItem(AD_POPUP_DISPLAY_KEY, String(Date.now()));
+    } catch (err) {
+      console.warn('Unable to load promoted product popup:', err);
     }
   }, 2200);
 }

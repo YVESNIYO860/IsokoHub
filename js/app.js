@@ -265,7 +265,7 @@ function showAdPopup(options = {}) {
       </div>
       <p>${escapeHtml(message)}</p>
       <div class="install-guide-actions">
-        <button class="install-guide-secondary" onclick="closeAdPopup()">Maybe later</button>
+        <button class="install-guide-secondary" onclick="closeAdPopup()">Close</button>
         <a href="${escapeHtml(ctaUrl)}" class="install-guide-primary" onclick="closeAdPopup()">${escapeHtml(ctaText)}</a>
       </div>
     </div>
