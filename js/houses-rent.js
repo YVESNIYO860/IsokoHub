@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
       const listingType = p.listingType || p.subcategory || 'Property';
       const imageMarkup = displayImg
-        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Property image')}" class="product-card-img" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
+        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Property image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
         : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
       return `
         <a href="product.html?id=${p.id}" class="product-card" style="border: 1px solid #dbeafe;">

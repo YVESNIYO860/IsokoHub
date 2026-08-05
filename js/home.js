@@ -94,6 +94,141 @@ function startSellerShowcase() {
   }, 2600);
 }
 
+const FEATURED_PRODUCTS_PAGE_SIZE = 4;
+let featuredProducts = [];
+let featuredRenderedCount = 0;
+let featuredProductsObserver = null;
+let featuredProductsScrollListener = null;
+let featuredProductsLoading = false;
+
+function createFeaturedProductCard(p) {
+  const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
+  const imageMarkup = displayImg
+    ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);" style="object-fit: cover;">`
+    : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+  const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
+  const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
+  const shopBadge = p.shop?.name ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>` : '';
+  const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}` : '';
+  const emailUrl = email ? `mailto:${email}?subject=${encodeURIComponent(`Question about ${p.name}`)}` : '';
+  const productShareUrl = `${window.location.origin}/product.html?id=${p.id}`;
+  const shareText = encodeURIComponent(`Check out this listing on IsokoHub: ${p.name} - ${formatPrice(p.price)}`);
+  const shareUrl = `https://wa.me/?text=${shareText}%0A${encodeURIComponent(productShareUrl)}`;
+  const contactUrl = whatsappUrl || emailUrl || productShareUrl;
+  const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : (emailUrl ? 'fa-solid fa-envelope' : 'fa-solid fa-share-nodes');
+  const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'Share listing';
+
+  return `
+        <div class="product-card" role="button" tabindex="0" onclick="window.location.href='product.html?id=${p.id}'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='product.html?id=${p.id}'; }">
+          <div class="product-card-badge">Featured</div>
+          ${imageMarkup}
+          <div class="product-card-content">
+            <div class="product-card-meta-row">
+              <span class="product-category">${p.category}</span>
+              <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
+            </div>
+            <h3 class="product-title">${p.name}</h3>
+            ${shopBadge}
+            <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
+            <div class="product-card-foot">
+              <span class="product-price">${formatPrice(p.price)}</span>
+              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl ? shareUrl : contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
+                <i class="${contactIcon}"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+}
+
+function updateFeaturedProductsStatus(message) {
+  let status = document.getElementById('featured-products-status');
+  if (!status) {
+    const container = document.getElementById('featured-products');
+    if (!container) return null;
+    status = document.createElement('div');
+    status.id = 'featured-products-status';
+    status.className = 'featured-products-status';
+    container.insertAdjacentElement('afterend', status);
+  }
+  status.textContent = message;
+  return status;
+}
+
+function removeFeaturedProductsSentinel() {
+  const status = document.getElementById('featured-products-status');
+  if (status) {
+    status.remove();
+  }
+}
+
+function disconnectFeaturedProductsObserver() {
+  if (featuredProductsObserver) {
+    featuredProductsObserver.disconnect();
+    featuredProductsObserver = null;
+  }
+  if (featuredProductsScrollListener) {
+    window.removeEventListener('scroll', featuredProductsScrollListener);
+    featuredProductsScrollListener = null;
+  }
+}
+
+function setupFeaturedProductsInfiniteScroll() {
+  disconnectFeaturedProductsObserver();
+  const status = document.getElementById('featured-products-status');
+  if (!status) return;
+
+  if ('IntersectionObserver' in window) {
+    featuredProductsObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          loadMoreFeaturedProducts();
+        }
+      });
+    }, {
+      rootMargin: '200px',
+      threshold: 0.1
+    });
+    featuredProductsObserver.observe(status);
+  } else {
+    featuredProductsScrollListener = () => {
+      const rect = status.getBoundingClientRect();
+      if (rect.top <= window.innerHeight + 200) {
+        loadMoreFeaturedProducts();
+      }
+    };
+    window.addEventListener('scroll', featuredProductsScrollListener, { passive: true });
+  }
+}
+
+function renderFeaturedProductsPage() {
+  const container = document.getElementById('featured-products');
+  if (!container) return;
+
+  const nextCount = Math.min(featuredRenderedCount + FEATURED_PRODUCTS_PAGE_SIZE, featuredProducts.length);
+  const nextProducts = featuredProducts.slice(featuredRenderedCount, nextCount);
+  if (!nextProducts.length) return;
+
+  container.insertAdjacentHTML('beforeend', nextProducts.map(createFeaturedProductCard).join(''));
+  featuredRenderedCount = nextCount;
+
+  if (featuredRenderedCount >= featuredProducts.length) {
+    updateFeaturedProductsStatus('All featured products loaded.');
+    disconnectFeaturedProductsObserver();
+  } else {
+    updateFeaturedProductsStatus('Scroll to load more featured products...');
+  }
+}
+
+async function loadMoreFeaturedProducts() {
+  if (featuredProductsLoading || featuredRenderedCount >= featuredProducts.length) return;
+  featuredProductsLoading = true;
+  updateFeaturedProductsStatus('Loading more featured products...');
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  renderFeaturedProductsPage();
+  featuredProductsLoading = false;
+}
+
 const CATEGORIES = [
   { name: 'Electronics', icon: 'fa-solid fa-laptop' },
   { name: 'Fashion', icon: 'fa-solid fa-shirt' },
@@ -191,52 +326,23 @@ async function renderFeaturedProducts() {
 
   try {
     const products = await enrichProductsWithShopData(await fetchProducts(true));
-    const featured = products.filter((product) => product && product.status !== 'pending').slice(0, 4);
+    featuredProducts = products.filter((product) => product && product.status !== 'pending');
+    featuredRenderedCount = 0;
+    disconnectFeaturedProductsObserver();
+    removeFeaturedProductsSentinel();
 
-    if (featured.length === 0) {
+    if (featuredProducts.length === 0) {
       container.innerHTML = '<p class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">No products available at the moment. Check back soon!</p>';
       return;
     }
 
-    container.innerHTML = featured.map((p) => {
-      const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
-      const imageMarkup = displayImg
-        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';" style="object-fit: cover;">`
-        : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
-      const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
-      const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
-      const shopBadge = p.shop?.name ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>` : '';
-      const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}` : '';
-      const emailUrl = email ? `mailto:${email}?subject=${encodeURIComponent(`Question about ${p.name}`)}` : '';
-      const productShareUrl = `${window.location.origin}/product.html?id=${p.id}`;
-      const shareText = encodeURIComponent(`Check out this listing on IsokoHub: ${p.name} - ${formatPrice(p.price)}`);
-      const shareUrl = `https://wa.me/?text=${shareText}%0A${encodeURIComponent(productShareUrl)}`;
-      const contactUrl = whatsappUrl || emailUrl || productShareUrl;
-      const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : (emailUrl ? 'fa-solid fa-envelope' : 'fa-solid fa-share-nodes');
-      const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'Share listing';
+    container.innerHTML = '';
+    renderFeaturedProductsPage();
 
-      return `
-        <div class="product-card" role="button" tabindex="0" onclick="window.location.href='product.html?id=${p.id}'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='product.html?id=${p.id}'; }">
-          <div class="product-card-badge">Featured</div>
-          ${imageMarkup}
-          <div class="product-card-content">
-            <div class="product-card-meta-row">
-              <span class="product-category">${p.category}</span>
-              <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
-            </div>
-            <h3 class="product-title">${p.name}</h3>
-            ${shopBadge}
-            <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
-            <div class="product-card-foot">
-              <span class="product-price">${formatPrice(p.price)}</span>
-              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl ? shareUrl : contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
-                <i class="${contactIcon}"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
+    if (featuredRenderedCount < featuredProducts.length) {
+      updateFeaturedProductsStatus('Scroll to load more featured products...');
+      setupFeaturedProductsInfiniteScroll();
+    }
   } catch (err) {
     console.error('Unable to render featured products:', err);
     container.innerHTML = '<p class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">No products available at the moment. Check back soon!</p>';
