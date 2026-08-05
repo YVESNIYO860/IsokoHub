@@ -1,6 +1,42 @@
+async function syncDashboardUserFromSupabase() {
+  if (!window.supabase || !supabase || !supabase.auth || typeof supabase.auth.session !== 'function') {
+    return null;
+  }
+
+  try {
+    const session = supabase.auth.session();
+    if (session?.user) {
+      const user = {
+        id: session.user.id,
+        email: session.user.email,
+        name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+        role: session.user.email === 'yvesniyonkuru2022@gmail.com' ? 'admin' : 'seller'
+      };
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      return user;
+    }
+  } catch (err) {
+    console.warn('Unable to sync dashboard user from Supabase session:', err);
+  }
+
+  return null;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   let user = getCurrentUser();
+
   if (!user) {
+    user = await syncDashboardUserFromSupabase();
+  }
+
+  if (!user) {
+    if (window.supabase && supabase && supabase.auth && typeof supabase.auth.onAuthStateChange === 'function') {
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          window.location.reload();
+        }
+      });
+    }
     window.location.href = 'login.html';
     return;
   }
