@@ -245,10 +245,22 @@ function closeAdPopup() {
   if (modal) modal.remove();
 }
 
+function dismissAdPopupPermanently(storageKey = 'isokoHubAdPopupDismissed') {
+  localStorage.setItem(storageKey, 'true');
+  closeAdPopup();
+}
+
 function showAdPopup(options = {}) {
   if (document.getElementById('ad-popup-modal')) return;
 
-  const { title = 'Sponsored Deal', message = 'Discover our latest featured offer and get special pricing today.', imageUrl = 'assets/logo.png', ctaText = 'Shop Now', ctaUrl = 'products.html' } = options;
+  const {
+    title = 'Sponsored Deal',
+    message = 'Discover our latest featured offer and get special pricing today.',
+    imageUrl = 'assets/logo.png',
+    ctaText = 'Shop Now',
+    ctaUrl = 'products.html',
+    dismissStorageKey = 'isokoHubAdPopupDismissed'
+  } = options;
 
   const modal = document.createElement('div');
   modal.id = 'ad-popup-modal';
@@ -264,8 +276,9 @@ function showAdPopup(options = {}) {
         <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(title)}" loading="lazy" decoding="async">
       </div>
       <p>${escapeHtml(message)}</p>
-      <div class="install-guide-actions">
+      <div class="install-guide-actions ad-popup-actions">
         <button class="install-guide-secondary" onclick="closeAdPopup()">Close</button>
+        <button class="install-guide-secondary" onclick="dismissAdPopupPermanently('${escapeHtml(dismissStorageKey)}')">Don't show again</button>
         <a href="${escapeHtml(ctaUrl)}" class="install-guide-primary" onclick="closeAdPopup()">${escapeHtml(ctaText)}</a>
       </div>
     </div>

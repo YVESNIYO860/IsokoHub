@@ -30,11 +30,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function initHomepageAdPopup() {
-  const AD_POPUP_DISPLAY_KEY = 'isokoHubAdPopupLastShown';
-  const lastShown = Number(localStorage.getItem(AD_POPUP_DISPLAY_KEY));
-  const oneDayMs = 24 * 60 * 60 * 1000;
-
-  if (Number.isFinite(lastShown) && Date.now() - lastShown < oneDayMs) {
+  const AD_POPUP_DISMISS_KEY = 'isokoHubAdPopupDismissed';
+  if (localStorage.getItem(AD_POPUP_DISMISS_KEY) === 'true') {
     return;
   }
 
@@ -68,9 +65,9 @@ function initHomepageAdPopup() {
         message,
         imageUrl,
         ctaText: 'View product',
-        ctaUrl: `product.html?id=${encodeURIComponent(promoted.id)}`
+        ctaUrl: `product.html?id=${encodeURIComponent(promoted.id)}`,
+        dismissStorageKey: AD_POPUP_DISMISS_KEY
       });
-      localStorage.setItem(AD_POPUP_DISPLAY_KEY, String(Date.now()));
     } catch (err) {
       console.warn('Unable to load promoted product popup:', err);
     }

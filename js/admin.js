@@ -225,6 +225,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  window.handleSelectAdImage = async function(id, imageUrl) {
+    if (!id || !imageUrl) return;
+    try {
+      const product = await fetchProductById(id);
+      if (!product) return;
+
+      const images = Array.isArray(product.image) ? product.image.slice() : (product.image ? [product.image] : []);
+      const normalized = images.filter(Boolean);
+      const selectedIndex = normalized.findIndex((img) => img === imageUrl);
+      if (selectedIndex === -1) return;
+
+      const selected = normalized.splice(selectedIndex, 1)[0];
+      normalized.unshift(selected);
+
+      await updateProductData(id, { image: normalized });
+      renderAdmin();
+    } catch (err) {
+      console.error('Failed to select ad image:', err);
+      alert('Unable to save the selected ad image. Check the console for details.');
+    }
+  };
+
   window.handleRejectAd = async function(id) {
     if (confirm('Reject this Ad request?')) {
       await rejectAdPlacement(id);
@@ -843,17 +865,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         </thead>
         <tbody>
           ${items.map(p => {
-            const displayImg = Array.isArray(p.image) ? p.image[0] : p.image;
+            const imageCandidates = Array.isArray(p.image) ? p.image : (p.image ? [p.image] : []);
+            const selectedAdImage = p.ad_image || imageCandidates[0] || 'https://via.placeholder.com/80x80';
+            const imageOptions = imageCandidates.length ? imageCandidates.map((img, idx) => `
+                <option value="${escapeHtml(img)}" ${selectedAdImage === img ? 'selected' : ''}>Image ${idx + 1}</option>
+              `).join('') : '';
             const isSold = p.sold === true;
             return `
               <tr style="border-bottom: 1px solid #f0f0f0;">
                 <td style="padding: 1rem;">
                   <div style="display:flex; gap: 1rem; align-items: center;">
-                    <img src="${displayImg}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/80x80'">
-                    <div>
+                    <img src="${escapeHtml(selectedAdImage)}" style="width:60px; height:60px; object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/80x80'">
+                    <div style="flex:1; min-width:0;">
                       <h4 style="margin:0;">${p.name}</h4>
                       <p style="margin:0; font-size:0.8rem; color:#666;">Category: ${p.category}</p>
                       ${isSold ? '<p style="margin:0.2rem 0 0; color:#b91c1c; font-weight:700;">Sold</p>' : ''}
+                      ${imageOptions ? `
+                        <label style="display:block; margin-top:0.5rem; font-size:0.82rem; color:#475569;">
+                          Ad image:
+                          <select onchange="handleSelectAdImage('${p.id}', this.value)" style="width:100%; margin-top:0.3rem; padding:0.45rem 0.7rem; border-radius:12px; border:1px solid #d1d5db; background:#fff; color:#111;">
+                            ${imageOptions}
+                          </select>
+                        </label>
+                      ` : '<p style="margin:0.55rem 0 0; font-size:0.82rem; color:#64748b;">No ad image available</p>'}
                     </div>
                   </div>
                 </td>
