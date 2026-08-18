@@ -35,7 +35,10 @@
     .product-main-img {
       max-width: 100%;
       max-height: 500px;
-      object-fit: contain;
+      width: auto;
+      height: auto;
+      object-fit: contain !important;
+      object-position: center;
     }
     .product-info-box {
       flex: 1;
@@ -126,7 +129,10 @@
     .product-main-img {
       max-width: 100%;
       max-height: calc(66vh - 1.5rem);
-      object-fit: contain;
+      width: auto;
+      height: auto;
+      object-fit: contain !important; /* ensure image is not zoomed or cropped */
+      object-position: center;
       cursor: zoom-in;
       border-radius: 12px;
     }
@@ -197,8 +203,10 @@
     .gallery-thumb img {
       width: 100%;
       height: 72px;
-      object-fit: cover;
+      object-fit: contain; /* show full image, avoid cropping/zoom */
+      object-position: center;
       border-radius: 8px;
+      background: transparent;
     }
 
     .product-info-card {
@@ -387,6 +395,36 @@
 
     .gallery-modal-image.is-pannable:active {
       cursor: grabbing;
+    }
+
+    /* Fullscreen adjustments: make modal body and image fill viewport when in fullscreen */
+    .gallery-modal:fullscreen,
+    .gallery-modal:-webkit-full-screen {
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .gallery-modal:fullscreen .gallery-modal-body,
+    .gallery-modal:-webkit-full-screen .gallery-modal-body {
+      width: 100vw;
+      height: 100vh;
+      padding: 0;
+      max-width: 100%;
+      max-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gallery-modal:fullscreen .gallery-modal-image,
+    .gallery-modal:-webkit-full-screen .gallery-modal-image {
+      max-width: 98vw;
+      max-height: 98vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      object-position: center;
+      transform: translate(var(--pan-x, 0px), var(--pan-y, 0px)) scale(var(--zoom-level, 1));
     }
 
     .gallery-controls {
