@@ -314,6 +314,24 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (pageHeader) pageHeader.textContent = isEditing ? 'Edit Product' : 'Sell a New Product';
       if (submitBtn) submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
     }
+    // Update upload zone hint to indicate photos are optional for Househub special listings
+    try {
+      const uploadZoneSub = document.querySelector('.upload-zone-sub');
+      if (uploadZoneSub) {
+        if (isHouseCategory && isHousehubChecked) {
+          uploadZoneSub.textContent = 'Photos are optional for Househub listings (you can still add images).';
+        } else {
+          uploadZoneSub.textContent = 'Supports JPG, PNG, WEBP — up to 6 photos';
+        }
+      }
+    } catch (e) { /* ignore */ }
+    // Hide condition select for Househub special listings
+    try {
+      const conditionEl = document.getElementById('prod-condition');
+      if (conditionEl && conditionEl.parentElement) {
+        conditionEl.parentElement.style.display = (isHouseCategory && isHousehubChecked) ? 'none' : '';
+      }
+    } catch (e) { /* ignore */ }
   }
   try {
     if (isHousehubCheckbox) isHousehubCheckbox.addEventListener('change', updateHeaderForHousehub);
@@ -546,15 +564,18 @@ document.addEventListener('DOMContentLoaded', async function() {
       const useLocalVideo = videoSourceLocal ? videoSourceLocal.checked : !!videoFile;
       const isHousehub    = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
 
-      if (isHousing) {
+      if (isHousehub) {
         if (!propertyType) throw new Error('Please select a property type for the house listing.');
         if (!listingType)  throw new Error('Please choose a rental period for the listing.');
         if (useLocalVideo && !videoFile) throw new Error('Please upload a local house video or switch to Video URL.');
         if (!useLocalVideo && !videoUrlVal) throw new Error('Please provide a video URL or switch to Local upload.');
         if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
+      } else if (isHousing) {
+        // Non-househub housing: video optional
+        if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
       }
 
-      const condition = isHousing ? 'New' : conditionSelect.value;
+      const condition = isHousehub ? null : (isHousing ? 'New' : conditionSelect.value);
 
       const productData = {
         name:        document.getElementById('prod-name').value,
@@ -563,7 +584,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         currency:    'RWF',
         image:       imageUrls,
         description: document.getElementById('prod-description').value,
-        condition,
+        ...(condition ? { condition } : {}),
         sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
