@@ -40,6 +40,12 @@
       margin-bottom: 1rem;
     }
 
+    .househub-cta {
+      display: inline-flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
     .househub-home-btn {
       display: inline-flex;
       align-items: center;
@@ -221,6 +227,13 @@
         top: auto;
       }
     }
+
+    @media (max-width: 720px) {
+      /* On small devices hide the filters to simplify the view and make hero prominent */
+      .filters-sidebar { display: none; }
+      .househub-panel { max-width: 100%; padding: 1rem; border-radius: 12px; }
+      .houses-hero { padding: 1rem 0; }
+    }
   </style>
 </head>
 <body>
@@ -229,8 +242,13 @@
       <section class="houses-hero">
         <div class="househub-panel">
           <div class="househub-header">
-            <span class="househub-tag">HOUSEHUB</span>
-            <a href="index.html" class="househub-home-btn">Back to IsokoHub</a>
+            <div>
+              <span class="househub-tag">HOUSEHUB</span>
+            </div>
+            <div class="househub-cta">
+              <a href="sell.html?category=Houses%20%26%20Rents" class="btn btn-primary" style="padding:0.6rem 0.9rem; border-radius:999px; font-weight:700;">Post a Listing</a>
+              <a href="index.html" class="househub-home-btn">Back to IsokoHub</a>
+            </div>
           </div>
           <div class="househub-copy">
             <h1>Search homes and rentals across Rwanda</h1>

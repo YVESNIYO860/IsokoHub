@@ -512,6 +512,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     try {
       const files = window._sellImages.slice();
+      const isHousehub = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
       // For Househub special listings, photos are optional; otherwise require 3-6 images
@@ -562,7 +563,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       const videoFile    = videoFileInput && videoFileInput.files ? videoFileInput.files[0] : null;
       const videoUrlVal  = videoUrlInput ? String(videoUrlInput.value || '').trim() : '';
       const useLocalVideo = videoSourceLocal ? videoSourceLocal.checked : !!videoFile;
-      const isHousehub    = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
+      // isHousehub already initialized earlier
 
       if (isHousehub) {
         if (!propertyType) throw new Error('Please select a property type for the house listing.');
