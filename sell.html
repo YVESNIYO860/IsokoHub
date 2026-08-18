@@ -289,8 +289,29 @@
 
             <div class="form-group">
               <label class="form-label">House Video (Max 20MB)</label>
+              <div style="display:flex;gap:0.6rem;align-items:center;margin-bottom:0.5rem;">
+                <label style="margin:0; font-weight:600; font-size:0.92rem;">Video source:</label>
+                <label style="margin:0; font-size:0.88rem;"><input type="radio" name="prod-video-source" value="local" id="prod-video-source-local" checked> Local file</label>
+                <label style="margin:0; font-size:0.88rem;"><input type="radio" name="prod-video-source" value="url" id="prod-video-source-url"> Video URL</label>
+              </div>
               <input type="file" id="prod-video" class="form-control" accept="video/*">
               <small class="text-muted d-block mt-1">Upload a local video for the house or rental listing. Maximum size is 20MB.</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Or paste a video URL</label>
+              <input type="url" id="prod-video-url" class="form-control" placeholder="https:// (YouTube, Vimeo, or direct .mp4)">
+              <small class="text-muted d-block mt-1">You can paste a YouTube/Vimeo link or a direct video URL. Local file uploads are preferred.</small>
+              <div id="prod-video-preview" style="margin-top:0.6rem;"></div>
+            </div>
+
+            <div class="form-group" style="margin-top:0.6rem;">
+              <label class="form-label">Special Househub Listing</label>
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <input type="checkbox" id="prod-is-househub" />
+                <label for="prod-is-househub" style="margin:0;">Mark this listing as a Househub special listing</label>
+              </div>
+              <small class="text-muted d-block mt-1">When checked, your listing will be included in Househub special listings.</small>
             </div>
           </div>
 

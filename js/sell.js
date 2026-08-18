@@ -176,6 +176,12 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
+  const videoFileInput  = document.getElementById('prod-video');
+  const videoUrlInput   = document.getElementById('prod-video-url');
+  const videoPreviewEl  = document.getElementById('prod-video-preview');
+  const videoSourceLocal = document.getElementById('prod-video-source-local');
+  const videoSourceUrl   = document.getElementById('prod-video-source-url');
+  const isHousehubCheckbox = document.getElementById('prod-is-househub');
   // create capture location button and status (insert after district select)
   const captureBtn = document.createElement('button');
   captureBtn.type = 'button';
@@ -255,6 +261,20 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (product.condition) {
         document.getElementById('prod-condition').value = product.condition;
       }
+      // Prefill video URL if present
+      try {
+        const existingVideo = product.videoUrl || product.video_url || product.video || '';
+        if (existingVideo && videoUrlInput) {
+          videoUrlInput.value = existingVideo;
+          // render preview if preview element exists
+          if (videoPreviewEl) {
+            // use the helper once defined later; if not defined yet, setTimeout fallback
+            setTimeout(() => { if (typeof renderVideoPreview === 'function') renderVideoPreview(existingVideo); else if (videoPreviewEl) videoPreviewEl.innerHTML = ''; }, 120);
+          }
+        }
+      } catch (e) {
+        console.warn('Unable to prefill video URL', e);
+      }
       if (existingImages.length > 0) {
         renderImagePreviews();
       }
@@ -282,6 +302,79 @@ document.addEventListener('DOMContentLoaded', async function() {
   /* ────────────────────────────────────────
      Upload helpers
   ──────────────────────────────────────── */
+
+  function clearVideoPreview() {
+    if (!videoPreviewEl) return;
+    videoPreviewEl.innerHTML = '';
+  }
+
+  function renderVideoPreview(url) {
+    if (!videoPreviewEl || !url) return;
+    clearVideoPreview();
+    try {
+      const lower = String(url).toLowerCase();
+      if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
+        // extract id
+        let id = '';
+        const m = url.match(/(?:v=|embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+        if (m && m[1]) id = m[1];
+        if (!id) {
+          const parts = url.split('/'); id = parts[parts.length - 1];
+        }
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '320';
+        iframe.src = 'https://www.youtube.com/embed/' + encodeURIComponent(id);
+        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        iframe.frameBorder = '0';
+        iframe.loading = 'lazy';
+        videoPreviewEl.appendChild(iframe);
+        return;
+      }
+      // fallback: HTML5 video player
+      const video = document.createElement('video');
+      video.controls = true;
+      video.style.maxWidth = '100%';
+      video.style.maxHeight = '320px';
+      video.src = url;
+      videoPreviewEl.appendChild(video);
+    } catch (err) {
+      console.warn('Video preview error', err);
+    }
+  }
+
+  if (videoUrlInput) {
+    videoUrlInput.addEventListener('input', () => {
+      const v = (videoUrlInput.value || '').trim();
+      if (!v) return clearVideoPreview();
+      renderVideoPreview(v);
+    });
+  }
+
+  if (videoFileInput) {
+    videoFileInput.addEventListener('change', () => {
+      const f = videoFileInput.files && videoFileInput.files[0];
+      if (!f) return;
+      const blobUrl = URL.createObjectURL(f);
+      renderVideoPreview(blobUrl);
+    });
+  }
+
+  // Toggle video input visibility based on selected source
+  function updateVideoSourceVisibility() {
+    const useLocal = videoSourceLocal && videoSourceLocal.checked;
+    if (videoFileInput) videoFileInput.disabled = !useLocal;
+    if (videoUrlInput) videoUrlInput.disabled = useLocal;
+    // Clear preview when switching
+    clearVideoPreview();
+    if (!useLocal && videoUrlInput && videoUrlInput.value) renderVideoPreview(videoUrlInput.value.trim());
+    if (useLocal && videoFileInput && videoFileInput.files && videoFileInput.files[0]) renderVideoPreview(URL.createObjectURL(videoFileInput.files[0]));
+  }
+  try {
+    if (videoSourceLocal) videoSourceLocal.addEventListener('change', updateVideoSourceVisibility);
+    if (videoSourceUrl) videoSourceUrl.addEventListener('change', updateVideoSourceVisibility);
+    updateVideoSourceVisibility();
+  } catch (e) { /* ignore */ }
 
   async function uploadProductImages(files) {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
@@ -421,13 +514,17 @@ document.addEventListener('DOMContentLoaded', async function() {
       const isHousing    = category === 'Houses & Rents';
       const propertyType = document.getElementById('prod-property-type').value.trim();
       const listingType  = document.getElementById('prod-listing-type').value.trim();
-      const videoFile    = document.getElementById('prod-video').files[0];
+      const videoFile    = videoFileInput && videoFileInput.files ? videoFileInput.files[0] : null;
+      const videoUrlVal  = videoUrlInput ? String(videoUrlInput.value || '').trim() : '';
+      const useLocalVideo = videoSourceLocal ? videoSourceLocal.checked : !!videoFile;
+      const isHousehub    = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
 
       if (isHousing) {
         if (!propertyType) throw new Error('Please select a property type for the house listing.');
         if (!listingType)  throw new Error('Please choose a rental period for the listing.');
-        if (!videoFile)    throw new Error('Please upload a house video.');
-        if (videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
+        if (useLocalVideo && !videoFile) throw new Error('Please upload a local house video or switch to Video URL.');
+        if (!useLocalVideo && !videoUrlVal) throw new Error('Please provide a video URL or switch to Local upload.');
+        if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
       }
 
       const condition = isHousing ? 'New' : conditionSelect.value;
@@ -449,18 +546,24 @@ document.addEventListener('DOMContentLoaded', async function() {
         isAd:        false,
         adRequested: false,
         sold: false,
-        ...(isHousing ? { propertyType, listingType, videoUrl: '' } : {})
+        ...(isHousing ? { propertyType, listingType, videoUrl: '' } : {}),
+        isHousehub: isHousehub
       };
 
       console.log('Product data to save:', productData);
 
       let uploadedVideoUrl = '';
-      if (isHousing && videoFile) {
-        progressLabel.textContent = 'Uploading video…';
-        if (overlayText) overlayText.textContent = 'Uploading video…';
-        if (overlaySubtext) overlaySubtext.textContent = 'Please wait';
-        uploadedVideoUrl = await uploadHousingVideo(videoFile, user.id);
-        progressLabel.textContent = 'Video uploaded ✓';
+      if (isHousing) {
+        if (videoFile) {
+          progressLabel.textContent = 'Uploading video…';
+          if (overlayText) overlayText.textContent = 'Uploading video…';
+          if (overlaySubtext) overlaySubtext.textContent = 'Please wait';
+          uploadedVideoUrl = await uploadHousingVideo(videoFile, user.id);
+          progressLabel.textContent = 'Video uploaded ✓';
+        } else if (videoUrlVal) {
+          // use provided external URL
+          uploadedVideoUrl = videoUrlVal;
+        }
       }
 
       if (isEditing) {
