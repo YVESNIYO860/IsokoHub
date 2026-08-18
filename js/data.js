@@ -600,9 +600,13 @@ async function createProduct(productData) {
     property_type: productData.propertyType || null,
     listing_type: productData.listingType || null,
     video_url: productData.videoUrl || null,
-    is_househub: (productData.isHousehub === true) || ['Houses & Rents', 'Housing', 'House', 'HouseHub', 'Rent'].includes(productData.category),
-    exclude_from_browse: (productData.isHousehub === true) || false,
+    // Do NOT include `is_househub` or `exclude_from_browse` in the products
+    // insert payload to avoid schema-cache errors on remotes that haven't
+    // applied migrations yet. We will mirror Househub listings into the
+    // `househub_listings` table instead.
   };
+
+  const intendedHousehub = (productData.isHousehub === true) || ['Houses & Rents', 'Housing', 'House', 'HouseHub', 'Rent'].includes(productData.category);
   
   if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
   
@@ -643,27 +647,25 @@ async function createProduct(productData) {
     incrementStoredProductListingCount(1);
     if (window.ISOKO_DEBUG === true) console.log('✓ Product saved to Supabase with ID:', data.id);
 
-    // If this is a Househub listing (based on intended flag), try to insert a
-    // mirror record into `househub_listings` to make Househub queries faster.
-    // Ignore errors (e.g., table doesn't exist) to remain backward compatible.
+    // Mirror into `househub_listings` for Househub-intended products so the
+    // frontend can rely on that table even if `products.is_househub` is
+    // missing. Ignore errors (e.g., mirror table missing).
     try {
       if (intendedHousehub === true) {
         try {
-          await supabase
-            .from('househub_listings')
-            .insert([{
-              product_id: data.id,
-              seller_id: data.seller_id || null,
-              title: data.name || null,
-              district: data.district || null,
-              location: null,
-              price: data.price || null,
-              currency: data.currency || 'RWF',
-              image: data.image || null,
-              video_url: data.video_url || null,
-              property_type: data.property_type || null,
-              listing_type: data.listing_type || null
-            }]);
+          await supabase.from('househub_listings').insert([{
+            product_id: data.id,
+            seller_id: data.seller_id || null,
+            title: data.name || null,
+            district: data.district || null,
+            location: null,
+            price: data.price || null,
+            currency: data.currency || 'RWF',
+            image: data.image || null,
+            video_url: data.video_url || null,
+            property_type: data.property_type || null,
+            listing_type: data.listing_type || null
+          }]);
         } catch (e) {
           if (window.ISOKO_DEBUG === true) console.warn('Could not insert into househub_listings:', e?.message || e);
         }
@@ -703,15 +705,16 @@ async function updateProductData(id, changes = {}) {
     const dbKey = convertKey(k);
     payload[dbKey] = v;
   });
-
-  // If updating the Househub flag, ensure exclude_from_browse follows it
+  // Preserve intended Househub state, but do NOT write `is_househub` or
+  // `exclude_from_browse` directly to `products` to avoid remote schema issues.
+  let intendedHousehub = null;
   try {
     if (Object.prototype.hasOwnProperty.call(payload, 'is_househub')) {
-      payload.exclude_from_browse = payload.is_househub === true;
+      intendedHousehub = payload.is_househub === true;
+      delete payload.is_househub;
+      delete payload.exclude_from_browse;
     }
-  } catch (e) {
-    // ignore
-  }
+  } catch (e) { /* ignore */ }
 
   try {
     // Attempt update; if remote schema lacks `exclude_from_browse`, retry once
@@ -751,19 +754,22 @@ async function updateProductData(id, changes = {}) {
     // changes or when a product update affects Househub-relevant fields.
     (async () => {
       try {
-        // Determine current is_househub state
-        const isHousehubPayload = Object.prototype.hasOwnProperty.call(payload, 'is_househub') ? payload.is_househub === true : null;
-        let isHousehubState = isHousehubPayload;
+        // Use intendedHousehub from earlier payload processing if present,
+        // otherwise try to infer from the DB (best-effort). We don't write
+        // is_househub to `products`, so the mirror table is the source of
+        // truth for Househub front-end queries.
+        let isHousehubState = intendedHousehub;
         if (isHousehubState === null) {
-          // Fetch fresh record
           try {
-            const { data: refreshed, error: fetchErr } = await supabase.from('products').select('is_househub').eq('id', id).single();
-            if (!fetchErr && refreshed) isHousehubState = refreshed.is_househub === true;
+            const { data: refreshed, error: fetchErr } = await supabase.from('products').select().eq('id', id).single();
+            if (!fetchErr && refreshed) {
+              // If product has signals (category), infer Househub
+              isHousehubState = (refreshed.is_househub === true) || ['Houses & Rents', 'Housing', 'House', 'HouseHub', 'Rent'].includes(refreshed.category);
+            }
           } catch (e) { /* ignore */ }
         }
 
         if (isHousehubState === true) {
-          // Upsert into househub_listings
           try {
             await supabase.from('househub_listings').upsert([{ product_id: id,
               seller_id: data.seller_id || null,
@@ -781,7 +787,6 @@ async function updateProductData(id, changes = {}) {
             if (window.ISOKO_DEBUG === true) console.warn('househub upsert failed:', e?.message || e);
           }
         } else if (isHousehubState === false) {
-          // Remove any existing mirror record
           try {
             await supabase.from('househub_listings').delete().eq('product_id', id);
           } catch (e) {
