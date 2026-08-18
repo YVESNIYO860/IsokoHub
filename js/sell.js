@@ -176,6 +176,48 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
+  // create capture location button and status (insert after district select)
+  const captureBtn = document.createElement('button');
+  captureBtn.type = 'button';
+  captureBtn.id = 'capture-location-btn';
+  captureBtn.className = 'btn btn-secondary';
+  captureBtn.style.marginLeft = '8px';
+  captureBtn.textContent = 'Use my location';
+  const captureStatus = document.createElement('div');
+  captureStatus.id = 'capture-location-status';
+  captureStatus.style.fontSize = '0.9rem';
+  captureStatus.style.color = '#64748b';
+  captureStatus.style.marginTop = '6px';
+  if (districtSelect && districtSelect.parentNode) {
+    districtSelect.parentNode.appendChild(captureBtn);
+    districtSelect.parentNode.appendChild(captureStatus);
+  }
+
+  // store captured coordinates here
+  window._capturedSellerLocation = window._capturedSellerLocation || null;
+
+  captureBtn.addEventListener('click', function() {
+    if (!navigator.geolocation) {
+      captureStatus.textContent = 'Geolocation not supported in this browser.';
+      return;
+    }
+    captureStatus.textContent = 'Requesting location…';
+    captureBtn.disabled = true;
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      window._capturedSellerLocation = { lat, lng };
+      captureStatus.textContent = `Location captured (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+      // Optionally set prod-location field with readable lat/lng for user
+      const locField = document.getElementById('prod-location');
+      if (locField && !locField.value) locField.value = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      captureBtn.disabled = false;
+    }, function(err) {
+      console.error('Geolocation error', err);
+      captureStatus.textContent = 'Unable to get location. Please enable location or try again.';
+      captureBtn.disabled = false;
+    }, { enableHighAccuracy: true, timeout: 15000 });
+  });
 
   districtSelect.innerHTML =
     '<option value="">Select your district</option>' +
@@ -398,6 +440,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
+        // attach captured seller coordinates when available
+        ...(window._capturedSellerLocation ? { sellerLat: window._capturedSellerLocation.lat, sellerLng: window._capturedSellerLocation.lng } : {}),
         isAd:        false,
         adRequested: false,
         sold: false,

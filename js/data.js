@@ -587,6 +587,8 @@ async function createProduct(productData) {
     seller_email: productData.sellerEmail,
     seller_phone: productData.sellerPhone,
     district: productData.district,
+    seller_lat: productData.sellerLat || productData.seller_lat || null,
+    seller_lng: productData.sellerLng || productData.seller_lng || null,
     seller_id: session.user.id,
     status: 'pending',
     is_ad: false,
