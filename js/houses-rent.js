@@ -72,6 +72,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderHousingProducts();
   });
 
+  // Re-render housing listings when a product is updated elsewhere (e.g., price change)
+  try { window.addEventListener('product:updated', () => { renderHousingProducts(); }); } catch (e) { /* ignore */ }
+
   function parseRangeValue(rangeString) {
     const [min, max] = (rangeString || '').split('-').map((value) => Number(value.trim()));
     return {
@@ -140,8 +143,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     productsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p class="mt-1">Loading housing listings...</p></div>';
 
     const allProducts = await fetchProducts(true);
+    const housingKeywords = ['house', 'home', 'rent', 'apartment', 'flat', 'room', 'housing', 'houses & rents', 'househub', 'property', 'villa', 'studio', 'landlord', 'tenant'];
+
     const housingProducts = allProducts.filter((product) => {
-      const isHousing = product.category === 'Houses & Rents' || product.category === 'Housing' || product.category === 'Rent' || product.category === 'House' || product.category === 'HouseHub';
+      const textFields = ((product.category || '') + ' ' + (product.subcategory || '') + ' ' + (product.name || '') + ' ' + (product.description || '') + ' ' + (product.tags || '') + ' ' + (product.property_type || '')).toString().toLowerCase();
+
+      const isHousing = product.is_househub === true || housingKeywords.some((kw) => textFields.includes(kw));
       if (!isHousing) return false;
 
       const normalizedCategory = (product.subcategory || product.houseType || product.listingType || product.category || '').toString().toLowerCase();
