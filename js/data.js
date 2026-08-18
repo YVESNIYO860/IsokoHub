@@ -607,8 +607,9 @@ async function createProduct(productData) {
   if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
   
   try {
-    // Attempt insert; if the remote schema is missing `exclude_from_browse`,
-    // retry once without that key to remain backward compatible.
+    // Attempt insert; if the remote schema is missing `exclude_from_browse` or
+    // `is_househub`, retry once without those keys to remain backward compatible.
+    const intendedHousehub = newProduct.is_househub === true;
     let insertAttempt = 0;
     let insertResult = null;
     let insertError = null;
@@ -624,12 +625,12 @@ async function createProduct(productData) {
         break;
       } catch (e) {
         insertError = e;
-        // detect missing-column/schema-cache error mentioning exclude_from_browse
+        // detect missing-column/schema-cache errors mentioning known optional cols
         const msg = String(e?.message || e || '').toLowerCase();
-        if (msg.includes('exclude_from_browse') || msg.includes("column \"exclude_from_browse\" does not exist") || msg.includes('schema cache')) {
-          // remove the optional key and retry
-          delete newProduct.exclude_from_browse;
-          // Also avoid re-adding is_househub as exclude_from_browse mirrors it only when present.
+        if (msg.includes('exclude_from_browse') || msg.includes('is_househub') || msg.includes("column \"exclude_from_browse\" does not exist") || msg.includes("column \"is_househub\" does not exist") || msg.includes('schema cache')) {
+          // remove optional keys and retry
+          try { delete newProduct.exclude_from_browse; } catch (er) {}
+          try { delete newProduct.is_househub; } catch (er) {}
         } else {
           break; // unknown error — stop retrying
         }
@@ -642,11 +643,11 @@ async function createProduct(productData) {
     incrementStoredProductListingCount(1);
     if (window.ISOKO_DEBUG === true) console.log('✓ Product saved to Supabase with ID:', data.id);
 
-    // If this is a Househub listing, try to insert a mirror record into
-    // `househub_listings` to make Househub queries faster. Ignore errors
-    // (e.g., table doesn't exist) to remain backward compatible.
+    // If this is a Househub listing (based on intended flag), try to insert a
+    // mirror record into `househub_listings` to make Househub queries faster.
+    // Ignore errors (e.g., table doesn't exist) to remain backward compatible.
     try {
-      if (newProduct.is_househub === true) {
+      if (intendedHousehub === true) {
         try {
           await supabase
             .from('househub_listings')
@@ -732,8 +733,9 @@ async function updateProductData(id, changes = {}) {
       } catch (e) {
         updateError = e;
         const msg = String(e?.message || e || '').toLowerCase();
-        if (msg.includes('exclude_from_browse') || msg.includes("column \"exclude_from_browse\" does not exist") || msg.includes('schema cache')) {
-          delete payload.exclude_from_browse;
+        if (msg.includes('exclude_from_browse') || msg.includes('is_househub') || msg.includes("column \"exclude_from_browse\" does not exist") || msg.includes("column \"is_househub\" does not exist") || msg.includes('schema cache')) {
+          try { delete payload.exclude_from_browse; } catch (er) {}
+          try { delete payload.is_househub; } catch (er) {}
         } else {
           break;
         }
