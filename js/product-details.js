@@ -13,12 +13,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  const prevPriceVal = Number(product.previous_price || product.previousPrice || 0);
-  const currentPriceVal = Number(product.price || 0);
-  const priceHtml = (prevPriceVal && prevPriceVal > currentPriceVal)
-    ? `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price"><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div></div>`
-    : `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price">${formatPrice(currentPriceVal)}</div></div>`;
-
   wrapper.innerHTML = `
     <div style="text-align: center; padding: 5rem;">
       <i class="fa-solid fa-spinner fa-spin fa-3x"></i>
@@ -44,6 +38,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.title = `${product.name} - IsokoHub`;
+
+  // compute price HTML after product is loaded
+  const prevPriceVal = Number(product.previous_price || product.previousPrice || 0);
+  const currentPriceVal = Number(product.price || 0);
+  const priceHtml = (prevPriceVal && prevPriceVal > currentPriceVal)
+    ? `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price"><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div></div>`
+    : `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price">${formatPrice(currentPriceVal)}</div></div>`;
 
   const getPlaceholderImage = () => {
     const svg = `
