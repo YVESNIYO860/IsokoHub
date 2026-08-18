@@ -642,6 +642,22 @@ h3 { font-size: 1.5rem; }
   border-radius: 8px;
 }
 
+/* Responsive adjustments for Buy Online button */
+.btn-buy-online {
+  border-radius: 10px;
+}
+
+@media (max-width: 720px) {
+  .btn-buy-online {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.65rem 0.9rem !important;
+    font-weight: 700;
+    text-align: center;
+  }
+  .product-card > .product-card-content { padding-bottom: 0.75rem; }
+}
+
 .product-card-foot {
   display: flex;
   justify-content: space-between;

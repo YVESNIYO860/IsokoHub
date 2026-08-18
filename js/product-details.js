@@ -324,6 +324,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // AI assistant functionality removed/disabled for now.
 
+  // If user arrived with ?buy=1, highlight and scroll to the Buy Online CTA
+  try {
+    const buyFlag = urlParams.get('buy');
+    if (buyFlag) {
+      const buyBtn = document.querySelector('.add-cart-btn');
+      if (buyBtn) {
+        setTimeout(() => {
+          buyBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          buyBtn.style.transition = 'box-shadow 0.35s ease, transform 0.2s ease';
+          buyBtn.style.boxShadow = '0 10px 30px rgba(6, 95, 70, 0.18)';
+          buyBtn.style.transform = 'translateY(-2px)';
+          setTimeout(() => {
+            buyBtn.style.boxShadow = '';
+            buyBtn.style.transform = '';
+          }, 2400);
+        }, 650);
+      }
+    }
+  } catch (e) {
+    console.warn('Buy highlight error', e);
+  }
+
   function updateActiveImage(index) {
     activeImageIndex = index;
     const safeIndex = (index + images.length) % images.length;
