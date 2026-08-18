@@ -49,6 +49,73 @@ function saveDrawerUiSettings(settings) {
   applyDrawerUiSettings(settings);
 }
 
+// Immediate offline guard: show an overlay as early as possible when offline
+(function () {
+  try {
+    if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) {
+      const overlay = document.createElement('div');
+      overlay.id = 'offline-overlay-immediate';
+      overlay.style.position = 'fixed';
+      overlay.style.inset = '0';
+      overlay.style.zIndex = '2147483647';
+      overlay.style.background = 'rgba(3,7,18,0.98)';
+      overlay.style.color = '#fff';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.fontFamily = 'sans-serif';
+      overlay.innerHTML = `
+        <div style="max-width:520px;text-align:center;padding:24px">
+          <img src="assets/logo.png" alt="IsokoHub" style="width:80px;height:80px;margin-bottom:12px;opacity:.95">
+          <h2 style="margin:6px 0 12px;font-size:20px">You're offline</h2>
+          <p style="margin:0 0 18px;opacity:.95">IsokoHub requires an internet connection to load. Please reconnect to continue.</p>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px">
+            <button id="offline-immediate-retry" style="padding:10px 16px;border-radius:6px;border:0;background:#2563eb;color:#fff">Retry</button>
+            <button id="offline-immediate-continue" style="padding:10px 16px;border-radius:6px;border:1px solid #334155;background:transparent;color:#fff">Continue offline</button>
+          </div>
+        </div>
+      `;
+
+      const appendOverlay = () => {
+        try {
+          if (!document.body) return document.addEventListener('DOMContentLoaded', appendOverlay);
+          document.body.appendChild(overlay);
+        } catch (e) {}
+      };
+      appendOverlay();
+
+      const retryBtn = () => document.getElementById('offline-immediate-retry');
+      const continueBtn = () => document.getElementById('offline-immediate-continue');
+
+      const wired = setInterval(() => {
+        if (retryBtn()) {
+          clearInterval(wired);
+          retryBtn().addEventListener('click', () => {
+            if (navigator.onLine) {
+              overlay.remove();
+              window.location.reload();
+            } else {
+              retryBtn().textContent = 'Still offline';
+              setTimeout(() => { if (retryBtn()) retryBtn().textContent = 'Retry'; }, 1400);
+            }
+          });
+          continueBtn().addEventListener('click', () => {
+            overlay.remove();
+          });
+        }
+      }, 100);
+
+      window.addEventListener('online', () => {
+        try { overlay.remove(); } catch (e) {}
+        window.location.reload();
+      });
+    }
+  } catch (err) {
+    // ignore
+  }
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
   setupConsoleFilter();
   // If offline, show offline UI and skip normal initialization
