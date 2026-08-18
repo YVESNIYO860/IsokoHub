@@ -616,6 +616,33 @@ async function createProduct(productData) {
     if (error) throw error;
     incrementStoredProductListingCount(1);
     if (window.ISOKO_DEBUG === true) console.log('✓ Product saved to Supabase with ID:', data.id);
+
+    // If this is a Househub listing, try to insert a mirror record into
+    // `househub_listings` to make Househub queries faster. Ignore errors
+    // (e.g., table doesn't exist) to remain backward compatible.
+    try {
+      if (newProduct.is_househub === true) {
+        try {
+          await supabase
+            .from('househub_listings')
+            .insert([{
+              product_id: data.id,
+              seller_id: data.seller_id || null,
+              title: data.name || null,
+              district: data.district || null,
+              location: null,
+              price: data.price || null,
+              currency: data.currency || 'RWF',
+              image: data.image || null,
+              video_url: data.video_url || null,
+              property_type: data.property_type || null,
+              listing_type: data.listing_type || null
+            }]);
+        } catch (e) {
+          if (window.ISOKO_DEBUG === true) console.warn('Could not insert into househub_listings:', e?.message || e);
+        }
+      }
+    } catch (e) { /* ignore */ }
     return data;
   } catch (err) {
     console.error('✗ Error saving product to Supabase:', err?.message || err);
@@ -670,6 +697,51 @@ async function updateProductData(id, changes = {}) {
 
     if (error) throw error;
     try { window.dispatchEvent(new CustomEvent('product:updated', { detail: data })); } catch (e) { /* ignore */ }
+
+    // Maintain the `househub_listings` mirror table when the Househub flag
+    // changes or when a product update affects Househub-relevant fields.
+    (async () => {
+      try {
+        // Determine current is_househub state
+        const isHousehubPayload = Object.prototype.hasOwnProperty.call(payload, 'is_househub') ? payload.is_househub === true : null;
+        let isHousehubState = isHousehubPayload;
+        if (isHousehubState === null) {
+          // Fetch fresh record
+          try {
+            const { data: refreshed, error: fetchErr } = await supabase.from('products').select('is_househub').eq('id', id).single();
+            if (!fetchErr && refreshed) isHousehubState = refreshed.is_househub === true;
+          } catch (e) { /* ignore */ }
+        }
+
+        if (isHousehubState === true) {
+          // Upsert into househub_listings
+          try {
+            await supabase.from('househub_listings').upsert([{ product_id: id,
+              seller_id: data.seller_id || null,
+              title: data.name || null,
+              district: data.district || null,
+              location: null,
+              price: data.price || null,
+              currency: data.currency || 'RWF',
+              image: data.image || null,
+              video_url: data.video_url || null,
+              property_type: data.property_type || null,
+              listing_type: data.listing_type || null
+            }], { onConflict: 'product_id' });
+          } catch (e) {
+            if (window.ISOKO_DEBUG === true) console.warn('househub upsert failed:', e?.message || e);
+          }
+        } else if (isHousehubState === false) {
+          // Remove any existing mirror record
+          try {
+            await supabase.from('househub_listings').delete().eq('product_id', id);
+          } catch (e) {
+            if (window.ISOKO_DEBUG === true) console.warn('househub delete failed:', e?.message || e);
+          }
+        }
+      } catch (e) { /* ignore */ }
+    })();
+
     return data;
   } catch (err) {
     console.error('Error updating product data:', err?.message || err);

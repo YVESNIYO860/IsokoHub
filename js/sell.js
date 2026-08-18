@@ -182,6 +182,13 @@ document.addEventListener('DOMContentLoaded', async function() {
   const videoSourceLocal = document.getElementById('prod-video-source-local');
   const videoSourceUrl   = document.getElementById('prod-video-source-url');
   const isHousehubCheckbox = document.getElementById('prod-is-househub');
+  // Safe getter to avoid 'Cannot access "isHousehub" before initialization' errors
+  window.getIsHousehub = function() {
+    try {
+      const cb = document.getElementById('prod-is-househub');
+      return cb ? Boolean(cb.checked) : false;
+    } catch (e) { return false; }
+  };
   // create capture location button and status (insert after district select)
   const captureBtn = document.createElement('button');
   captureBtn.type = 'button';
@@ -303,7 +310,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const pageHeader = document.querySelector('.sell-container h2');
   function updateHeaderForHousehub() {
     const isHouseCategory = (categorySelect.value === 'Houses & Rents');
-    const isHousehubChecked = isHousehubCheckbox ? isHousehubCheckbox.checked : false;
+    const isHousehubChecked = window.getIsHousehub();
     if (isHouseCategory && isHousehubChecked) {
       if (pageHeader) pageHeader.textContent = 'List New House';
       if (submitBtn) submitBtn.textContent = isEditing ? 'Update House' : 'List House';
