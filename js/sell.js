@@ -512,11 +512,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     try {
       const files = window._sellImages.slice();
+      const category = categorySelect.value;
+      const isHousing = category === 'Houses & Rents';
       const isHousehub = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
-      // For Househub special listings, photos are optional; otherwise require 3-6 images
-      if (!isHousehub && !isEditing && files.length < 3) {
+      // For Houses category, photos are optional; otherwise require 3-6 images
+      if (!isHousing && !isEditing && files.length < 3) {
         throw new Error('Please upload at least 3 product photos.');
       }
       if (files.length > 6) {
@@ -534,7 +536,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         imageUrls = imageUrls.concat(uploadedUrls);
       }
 
-      if (!isHousehub && imageUrls.length < 3) {
+      if (!isHousing && imageUrls.length < 3) {
         throw new Error('Please provide at least 3 product photos.');
       }
 
@@ -555,9 +557,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         throw new Error('Please enter a valid seller email address.');
       }
 
-      // Housing-specific
-      const category     = categorySelect.value;
-      const isHousing    = category === 'Houses & Rents';
+      // Housing-specific (category/isHousing already initialized above)
       const propertyType = document.getElementById('prod-property-type').value.trim();
       const listingType  = document.getElementById('prod-listing-type').value.trim();
       const videoFile    = videoFileInput && videoFileInput.files ? videoFileInput.files[0] : null;
@@ -565,18 +565,19 @@ document.addEventListener('DOMContentLoaded', async function() {
       const useLocalVideo = videoSourceLocal ? videoSourceLocal.checked : !!videoFile;
       // isHousehub already initialized earlier
 
-      if (isHousehub) {
+      if (isHousing) {
         if (!propertyType) throw new Error('Please select a property type for the house listing.');
         if (!listingType)  throw new Error('Please choose a rental period for the listing.');
+        // For all house listings, require a video (file or URL)
         if (useLocalVideo && !videoFile) throw new Error('Please upload a local house video or switch to Video URL.');
         if (!useLocalVideo && !videoUrlVal) throw new Error('Please provide a video URL or switch to Local upload.');
         if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
-      } else if (isHousing) {
-        // Non-househub housing: video optional
+      } else {
+        // Non-housing categories: video optional
         if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
       }
 
-      const condition = isHousehub ? null : (isHousing ? 'New' : conditionSelect.value);
+      const condition = isHousing ? null : conditionSelect.value;
 
       const productData = {
         name:        document.getElementById('prod-name').value,
