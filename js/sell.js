@@ -386,10 +386,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   function updateVideoSourceVisibility() {
     const useLocal = videoSourceLocal && videoSourceLocal.checked;
     if (videoFileInput) videoFileInput.disabled = !useLocal;
-    if (videoUrlInput) videoUrlInput.disabled = useLocal;
+    // Keep video URL input editable so users can paste a URL anytime
+    if (videoUrlInput) videoUrlInput.disabled = false;
     // Clear preview when switching
     clearVideoPreview();
-    if (!useLocal && videoUrlInput && videoUrlInput.value) renderVideoPreview(videoUrlInput.value.trim());
+    if (!useLocal && videoUrlInput && videoUrlInput.value) {
+      renderVideoPreview(videoUrlInput.value.trim());
+      try { videoUrlInput.focus(); } catch(e) {}
+    }
     if (useLocal && videoFileInput && videoFileInput.files && videoFileInput.files[0]) renderVideoPreview(URL.createObjectURL(videoFileInput.files[0]));
   }
   try {
@@ -492,7 +496,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       const files = window._sellImages.slice();
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
-      if (!isEditing && files.length < 3) {
+      // For Househub special listings, photos are optional; otherwise require 3-6 images
+      if (!isHousehub && !isEditing && files.length < 3) {
         throw new Error('Please upload at least 3 product photos.');
       }
       if (files.length > 6) {
@@ -510,7 +515,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         imageUrls = imageUrls.concat(uploadedUrls);
       }
 
-      if (imageUrls.length < 3) {
+      if (!isHousehub && imageUrls.length < 3) {
         throw new Error('Please provide at least 3 product photos.');
       }
 

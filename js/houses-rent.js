@@ -192,6 +192,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imageMarkup = displayImg
         ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Property image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
         : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+      // Use location/district as title when name is missing for Househub listings
+      const displayTitle = (p.name && String(p.name).trim()) ? p.name : (p.district || p.location || `House in ${p.district || 'unknown location'}`);
+      const displayDescription = p.description ? p.description.slice(0, 90) + (p.description.length > 90 ? '...' : '') : '';
       return `
         <a href="product.html?id=${p.id}" class="product-card" style="border: 1px solid #dbeafe;">
           ${imageMarkup}
@@ -200,8 +203,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               <span class="product-category">${p.category}</span>
               <span style="padding: 0.2rem 0.55rem; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: 0.7rem; font-weight: 700;">${listingType}</span>
             </div>
-            <h3 class="product-title">${p.name}</h3>
-            <p style="font-size: 0.92rem; color: #64748b; margin-bottom: 0.9rem;">${p.description ? p.description.slice(0, 90) + (p.description.length > 90 ? '...' : '') : 'Beautiful property ready for viewing.'}</p>
+            <h3 class="product-title">${escapeHtml(displayTitle)}</h3>
+            <p style="font-size: 0.92rem; color: #64748b; margin-bottom: 0.9rem;">${escapeHtml(displayDescription)}</p>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; gap: 0.75rem;">
               <span class="product-price">${formatPrice(p.price)}</span>
               <button onclick='event.preventDefault(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="btn btn-primary" style="padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; background: #febd69; color: #131921; border:none;">
