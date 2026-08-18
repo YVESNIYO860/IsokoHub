@@ -955,6 +955,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       emptyMessage = 'No inventory items found.';
     }
 
+    // compute currently promoted products
+    const promotedProducts = Array.isArray(allProducts) ? allProducts.filter(p => p && (p.is_ad === true || p.is_ad === 'true')) : [];
+
     if (selectedCategory !== 'all') {
       const normalizedSelected = selectedCategory.toLowerCase();
       items = items.filter((p) => {
@@ -966,7 +969,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    if (items.length === 0) {
+    if (items.length === 0 && promotedProducts.length === 0) {
       content.innerHTML = `
         <div style="text-align:center; padding: 4rem 0;">
           <i class="fa-solid fa-circle-check fa-4x" style="color: #dcfce7; margin-bottom: 1rem;"></i>
@@ -1016,7 +1019,35 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    content.innerHTML = `
+    // Build optional promoted products block (shown above ad requests)
+    let promotedHtml = '';
+    if (activeTab === 'ads' && promotedProducts.length > 0) {
+      promotedHtml = `
+        <div style="margin-bottom:1rem;">
+          <h3>Currently Promoted</h3>
+          <div style="display:grid; grid-auto-flow:column; gap:0.8rem; overflow:auto; padding:0.5rem 0;">
+            ${promotedProducts.map(p => {
+              const thumb = Array.isArray(p.image) ? p.image[0] : (p.image || 'https://via.placeholder.com/120');
+              return `
+                <div style="min-width:220px; background:#fff; border:1px solid #e6eef8; border-radius:12px; padding:0.75rem; display:flex; gap:0.6rem; align-items:center;">
+                  <img src="${escapeHtml(thumb)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/120'">
+                  <div style="flex:1; min-width:0;">
+                    <div style="font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(p.name || 'Untitled')}</div>
+                    <div style="font-size:0.85rem;color:#64748b">${escapeHtml(p.category || '')}</div>
+                    <div style="margin-top:6px; display:flex; gap:8px;"> 
+                      <button class="btn btn-secondary" onclick="handleRemoveBoost('${p.id}')">Remove Boost</button>
+                      <button class="btn btn-secondary" onclick="handleOpenListing('${p.id}')">View</button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    content.innerHTML = promotedHtml + `
       <table style="width:100%; border-collapse: collapse;">
         <thead>
           <tr style="text-align: left; border-bottom: 2px solid #eee;">

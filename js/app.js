@@ -50,6 +50,13 @@ function saveDrawerUiSettings(settings) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  setupConsoleFilter();
+  // If offline, show offline UI and skip normal initialization
+  if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) {
+    showOfflineOverlay();
+    return;
+  }
+
   addDependencies();
   setupLoaderLogic();
   ensurePwaMetaTags();
@@ -71,6 +78,107 @@ document.addEventListener('DOMContentLoaded', () => {
     logSiteVisit().catch(() => {});
   }
 });
+
+function setupConsoleFilter() {
+  try {
+    if (!window || window.location == null) return;
+    const hostname = window.location.hostname || '';
+    const isLocal = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
+    // Allow verbose logs on local dev only
+    if (isLocal) return;
+
+    window.ISOKO_DEBUG = window.ISOKO_DEBUG === true;
+
+    const originalLog = console.log.bind(console);
+    const originalWarn = console.warn.bind(console);
+    const originalError = console.error.bind(console);
+
+    const sensitivePatterns = [
+      /supabase/i,
+      /site_visits/i,
+      /foxfyzytxcuxsncaawwb\.supabase\.co/i,
+      /Supabase client/i,
+      /Could not find the table/i
+    ];
+
+    function shouldSuppress(args) {
+      if (window.ISOKO_DEBUG) return false;
+      try {
+        const joined = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+        return sensitivePatterns.some((rx) => rx.test(joined));
+      } catch (e) {
+        return false;
+      }
+    }
+
+    console.log = function (...args) {
+      if (shouldSuppress(args)) return;
+      originalLog(...args);
+    };
+
+    console.warn = function (...args) {
+      if (shouldSuppress(args)) return;
+      originalWarn(...args);
+    };
+
+    console.error = function (...args) {
+      if (shouldSuppress(args)) return;
+      originalError(...args);
+    };
+  } catch (err) {
+    // ignore failures setting up console filter
+  }
+}
+
+function showOfflineOverlay() {
+  if (document.getElementById('offline-overlay')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'offline-overlay';
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.background = 'rgba(3,7,18,0.95)';
+  overlay.style.color = '#fff';
+  overlay.style.display = 'flex';
+  overlay.style.flexDirection = 'column';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = '99999';
+  overlay.innerHTML = `
+    <div style="max-width:520px;text-align:center;padding:24px">
+      <img src="assets/logo.png" alt="IsokoHub" style="width:80px;height:80px;margin-bottom:12px;opacity:.95">
+      <h2 style="margin:6px 0 12px;font-size:20px">You're offline</h2>
+      <p style="margin:0 0 18px;opacity:.9">IsokoHub needs an internet connection to access live data. Please reconnect to continue.</p>
+      <div style="display:flex;gap:8px;justify-content:center">
+        <button id="offline-retry" style="padding:10px 16px;border-radius:6px;border:0;background:#2563eb;color:#fff">Retry</button>
+        <button id="offline-continue" style="padding:10px 16px;border-radius:6px;border:1px solid #334155;background:transparent;color:#fff">Continue offline</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById('offline-retry').addEventListener('click', () => {
+    if (navigator.onLine) {
+      overlay.remove();
+      window.location.reload();
+    } else {
+      // quick visual feedback
+      (document.getElementById('offline-retry')).textContent = 'Still offline';
+      setTimeout(() => { (document.getElementById('offline-retry')).textContent = 'Retry'; }, 1400);
+    }
+  });
+
+  document.getElementById('offline-continue').addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  window.addEventListener('online', () => {
+    const el = document.getElementById('offline-overlay');
+    if (el) el.remove();
+  });
+  window.addEventListener('offline', () => {
+    if (!document.getElementById('offline-overlay')) showOfflineOverlay();
+  });
+}
 
 function setupSupabaseAuthRefresh() {
   if (!window.supabase || !supabase?.auth || typeof supabase.auth.onAuthStateChange !== 'function') {

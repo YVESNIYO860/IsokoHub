@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Update Page Title
   document.title = `${post.title} - IsokoHub Blog`;
 
-  // Inject Meta Data
+  // Inject `Meta Data
   document.getElementById('post-category').textContent = post.category;
   document.getElementById('post-title').textContent = post.title;
   document.getElementById('post-date').textContent = post.date;

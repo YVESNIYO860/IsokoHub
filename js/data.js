@@ -572,8 +572,8 @@ async function createProduct(productData) {
     throw new Error("You must be logged in to save a product.");
   }
 
-  console.log('Current Supabase User ID:', session.user.id);
-  console.log('Creating product with data:', productData);
+  if (window.ISOKO_DEBUG === true) console.log('Current Supabase User ID:', session.user.id);
+  if (window.ISOKO_DEBUG === true) console.log('Creating product with data:', productData);
 
   // Convert camelCase keys to snake_case for PostgreSQL
   const newProduct = {
@@ -596,7 +596,7 @@ async function createProduct(productData) {
     video_url: productData.videoUrl || null,
   };
   
-  console.log('Final product object for Supabase:', newProduct);
+  if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
   
   try {
     const { data, error } = await supabase
@@ -607,7 +607,7 @@ async function createProduct(productData) {
     
     if (error) throw error;
     incrementStoredProductListingCount(1);
-    console.log('✓ Product saved to Supabase with ID:', data.id);
+    if (window.ISOKO_DEBUG === true) console.log('✓ Product saved to Supabase with ID:', data.id);
     return data;
   } catch (err) {
     console.error('✗ Error saving product to Supabase:', err?.message || err);
@@ -624,6 +624,39 @@ async function updateProductStatus(id, status) {
     .eq('id', id);
   
   if (error) throw error;
+}
+
+/**
+ * Update product fields. Accepts camelCase keys and converts to snake_case for the DB.
+ * Example: updateProductData(id, { isAd: false, adRequested: false })
+ */
+async function updateProductData(id, changes = {}) {
+  if (!id) throw new Error('Product id required');
+  if (!supabase) return null;
+
+  // Convert camelCase to snake_case for common fields
+  const convertKey = (key) => key.replace(/([A-Z])/g, '_$1').toLowerCase();
+  const payload = {};
+  Object.keys(changes || {}).forEach((k) => {
+    const v = changes[k];
+    const dbKey = convertKey(k);
+    payload[dbKey] = v;
+  });
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (err) {
+    console.error('Error updating product data:', err?.message || err);
+    throw err;
+  }
 }
 
 async function deleteProduct(id) {
@@ -652,7 +685,7 @@ async function deleteProduct(id) {
     .eq('id', id);
   
   if (error) throw error;
-  console.log('✓ Product and associated files deleted');
+  if (window.ISOKO_DEBUG === true) console.log('✓ Product and associated files deleted');
 }
 
 /**
@@ -681,7 +714,7 @@ async function deleteFileFromBucket(fileUrl, bucketName) {
       return false;
     }
     
-    console.log(`✓ Deleted: ${filePath} from ${bucketName}`);
+    if (window.ISOKO_DEBUG === true) console.log(`✓ Deleted: ${filePath} from ${bucketName}`);
     return true;
   } catch (err) {
     console.error('Error in deleteFileFromBucket:', err);
@@ -741,7 +774,7 @@ async function deleteMultipleFilesFromBucket(fileUrls, bucketName) {
       return false;
     }
     
-    console.log(`✓ Deleted ${filePaths.length} files from ${bucketName}`);
+    if (window.ISOKO_DEBUG === true) console.log(`✓ Deleted ${filePaths.length} files from ${bucketName}`);
     return true;
   } catch (err) {
     console.error('Error in deleteMultipleFilesFromBucket:', err);

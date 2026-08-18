@@ -28,19 +28,21 @@ try {
   const hasSdk = sdk && typeof sdk.createClient === 'function';
   const hasClient = sdk && typeof sdk.from === 'function';
 
+  const DEBUG = window.ISOKO_DEBUG === true;
+
   if (hasClient) {
     isokoSupabaseClient = sdk;
-    console.log('✓ Supabase client already available on window.supabase');
+    if (DEBUG) console.log('✓ Supabase client already available on window.supabase');
   } else if (hasSdk) {
     isokoSupabaseClient = sdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✓ Supabase client created from SDK');
+    if (DEBUG) console.log('✓ Supabase client created from SDK');
   } else if (window.supabaseClient && typeof window.supabaseClient.from === 'function') {
     isokoSupabaseClient = window.supabaseClient;
-    console.log('✓ Supabase client loaded from window.supabaseClient fallback');
+    if (DEBUG) console.log('✓ Supabase client loaded from window.supabaseClient fallback');
   }
 
   if (!isokoSupabaseClient) {
-    console.error('Supabase initialization failed. window.supabase:', window.supabase, 'window.supabaseClient:', window.supabaseClient);
+    if (DEBUG) console.error('Supabase initialization failed. window.supabase or window.supabaseClient not available');
     throw new Error('Supabase SDK failed to initialize. Confirm the SDK script loaded successfully and that the remote host can access the CDN.');
   }
 
