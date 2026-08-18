@@ -1,0 +1,17 @@
+{
+  "name": "isokohub-server",
+  "version": "0.1.0",
+  "description": "Minimal server for MTN payment initiation and distance proxy for IsokoHub",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
+  }
+}

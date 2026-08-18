@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const searchQuery = urlParams.get('q');
   const queryCat = urlParams.get('category');
   const queryDistrict = urlParams.get('district');
+  const queryBuyOnline = urlParams.get('buy_online') || urlParams.get('buyonline') || null;
   
   if (queryCat) {
     currentCategory = queryCat;
@@ -101,6 +102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentDistrict !== 'all') {
       allProducts = allProducts.filter(p => (String(p.district || '').split(' • ')[0] || 'Unknown') === currentDistrict);
     }
+
+    if (queryBuyOnline && (queryBuyOnline === '1' || queryBuyOnline === 'true')) {
+      allProducts = allProducts.filter(p => p.buy_online === true || p.buy_online === 'true' || p.buyOnline === true);
+    }
     
     if (queryStr) {
       const q = queryStr.toLowerCase();
@@ -135,6 +140,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     productsContainer.innerHTML = allProducts.map(p => {
+      const prevPriceVal = Number(p.previous_price || p.previousPrice || 0);
+      const currentPriceVal = Number(p.price || 0);
+      const priceMarkup = (prevPriceVal && prevPriceVal > currentPriceVal)
+        ? `<div><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div>`
+        : `<span class="product-price">${formatPrice(currentPriceVal)}</span>`;
       // render multiple image angles when available
       let imageMarkup = '';
       if (Array.isArray(p.image) && p.image.length > 0) {
@@ -169,13 +179,13 @@ document.addEventListener('DOMContentLoaded', async () => {
               ${shopBadge}
               <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.6rem;"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
               <div style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; margin-top:auto; flex-wrap:wrap;">
-                <span class="product-price">${formatPrice(p.price)}</span>
+                ${priceMarkup}
                 <span style="background:#ecfeff;color:#0f766e;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-phone"></i> Contact</span>
               </div>
             </div>
           </a>
           <div style="padding: 0 1rem 1rem; display:flex; gap:0.5rem; align-items:center;">
-            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='checkout.html?buy=${p.id}'" class="btn btn-primary" style="padding:0.45rem 0.8rem;">Buy Online</button>` : ''}
+            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='product.html?id=${p.id}&buy=1'" class="btn btn-primary btn-buy-online" style="padding:0.45rem 0.8rem;">Buy Online</button>` : ''}
             <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(shareUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Share listing">
               <i class="fa-solid fa-share-nodes"></i>
             </button>

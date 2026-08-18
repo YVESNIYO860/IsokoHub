@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  const prevPriceVal = Number(product.previous_price || product.previousPrice || 0);
+  const currentPriceVal = Number(product.price || 0);
+  const priceHtml = (prevPriceVal && prevPriceVal > currentPriceVal)
+    ? `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price"><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div></div>`
+    : `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price">${formatPrice(currentPriceVal)}</div></div>`;
+
   wrapper.innerHTML = `
     <div style="text-align: center; padding: 5rem;">
       <i class="fa-solid fa-spinner fa-spin fa-3x"></i>
@@ -123,10 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
         </div>
  
-        <div class="pd-price-row">
-          <div class="pd-price-label">Price:</div>
-          <div class="pd-price">${formatPrice(product.price)}</div>
-        </div>
+        ${priceHtml}
 
         <div class="pd-description" style="margin-top: 0.5rem;">
           <strong>Location:</strong><br>
@@ -201,6 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px; margin-top:0.5rem;">
             <i class="fa-solid fa-cart-plus"></i> Add to Cart
           </button>
+          ${getCurrentUser && getCurrentUser() && (getCurrentUser().id === product.seller_id || getCurrentUser().id === product.sellerId) ? `<a href="sell.html?editId=${product.id}" class="btn btn-secondary btn-block" style="border-radius:999px;">Edit this listing</a>` : ''}
         </div>
 
         <div class="review-card">

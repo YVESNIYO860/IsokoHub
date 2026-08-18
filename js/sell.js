@@ -236,6 +236,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       isEditing      = true;
       existingImages = Array.isArray(product.image) ? product.image : [product.image];
 
+      // keep original price so we can store previous_price when updating
+      window._editingOriginalPrice = Number(product.price || 0);
+
       document.querySelector('.sell-container h2').textContent = 'Edit Product';
       submitBtn.textContent                                    = 'Update Product';
       document.getElementById('prod-name').value              = product.name;
@@ -461,10 +464,16 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
 
       if (isEditing) {
-        await updateProductData(editId, {
+        const changes = {
           ...productData,
           ...(isHousing ? { videoUrl: uploadedVideoUrl || productData.videoUrl } : {})
-        });
+        };
+        // If price changed, keep previous_price to show strike-through in listings
+        const originalPrice = Number(window._editingOriginalPrice || 0);
+        if (Number(productData.price) !== originalPrice && originalPrice > 0) {
+          changes.previousPrice = originalPrice;
+        }
+        await updateProductData(editId, changes);
         window._sellImages = []; // clear after success
         window.location.href = 'dashboard.html?message=Your listing was updated successfully.';
       } else {

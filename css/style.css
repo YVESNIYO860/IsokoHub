@@ -625,6 +625,23 @@ h3 { font-size: 1.5rem; }
   white-space: nowrap;
 }
 
+.old-price {
+  font-size: 0.95rem;
+  color: #6b7280;
+  text-decoration: line-through;
+  margin-right: 0.5rem;
+}
+
+.new-price {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #047857; /* green similar to Alibaba accent */
+  background: linear-gradient(90deg, #ecfdf5 0%, #ffffff 100%);
+  border: 1px solid rgba(16, 185, 129, 0.12);
+  padding: 0.28rem 0.6rem;
+  border-radius: 8px;
+}
+
 .product-card-foot {
   display: flex;
   justify-content: space-between;

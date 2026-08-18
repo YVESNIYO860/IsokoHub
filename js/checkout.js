@@ -61,11 +61,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   let computedDeliveryTotal = deliveryTotalInitial;
   let userLocation = null;
 
+  // compute initial total and render summary
+  const total = subtotal + computedDeliveryTotal;
+
   summary.innerHTML = `
     <div style="border:1px solid #e6eef8; border-radius:12px; padding:1rem; background:#fff; display:grid; gap:0.75rem;">
       <div style="display:flex; justify-content:space-between;"><div>Subtotal</div><div>${formatPrice(subtotal)}</div></div>
-      <div style="display:flex; justify-content:space-between;"><div>Delivery</div><div>${formatPrice(deliveryTotal)}</div></div>
-      <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem;"><div>Total</div><div>${formatPrice(total)}</div></div>
+      <div style="display:flex; justify-content:space-between;"><div>Delivery</div><div id="summary-delivery-amount">${formatPrice(computedDeliveryTotal)}</div></div>
+      <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem;"><div>Total</div><div id="summary-total-amount">${formatPrice(total)}</div></div>
 
       <label style="display:flex; flex-direction:column; gap:0.35rem;">
         Your phone number (for MTN Mobile Money):
@@ -98,16 +101,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     payBtn.textContent = 'Processing…';
     feedback.style.display = 'none';
 
+    // Try to request buyer location (best-effort) to improve delivery pricing and include in payment payload
+    let buyerCoords = null;
     try {
-      // Prepare payload for backend MTN payment creation
+      if (navigator.geolocation) {
+        feedback.style.display = 'block';
+        feedback.style.color = '#0f172a';
+        feedback.textContent = 'Requesting location permission to calculate delivery...';
+        buyerCoords = await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('Location timed out')), 7000);
+          navigator.geolocation.getCurrentPosition((pos) => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); }, (err) => { clearTimeout(timer); reject(err); }, { enableHighAccuracy: true, timeout: 7000 });
+        });
+        // Recompute delivery totals using buyer location
+        try { await updateDeliveryCostsWithLocation(buyerCoords.lat, buyerCoords.lng); } catch (e) { /* ignore */ }
+        feedback.textContent = `Location captured: ${buyerCoords.lat.toFixed(5)}, ${buyerCoords.lng.toFixed(5)}`;
+      }
+    } catch (err) {
+      console.warn('Buyer location unavailable:', err);
+      feedback.style.display = 'block';
+      feedback.style.color = '#f59e0b';
+      feedback.textContent = 'Location unavailable; continuing without buyer coordinates.';
+      buyerCoords = null;
+    }
+
+    // Recalculate final total after any potential delivery recalculation
+    const finalTotal = subtotal + computedDeliveryTotal;
+
+    const proceed = window.confirm(`You will be charged ${formatPrice(finalTotal)}. Phone: ${phone}. Proceed to initiate MTN payment?`);
+    if (!proceed) {
+      payBtn.disabled = false;
+      payBtn.textContent = 'Pay with MTN Mobile Money';
+      return;
+    }
+
+    try {
       const payload = {
-        amount: total,
+        amount: finalTotal,
         currency: 'RWF',
         phone,
-        items: cart.map(i => ({ id: i.id, name: i.name, qty: i.quantity, price: i.price, seller_phone: i.seller_phone }))
+        items: cart.map(i => ({ id: i.id, name: i.name, qty: i.quantity, price: i.price, seller_phone: i.seller_phone })),
+        buyer_location: buyerCoords ? { lat: buyerCoords.lat, lng: buyerCoords.lng } : null
       };
 
-      // Call your backend endpoint that implements MTN payment API server-side.
       const resp = await fetch('/api/mtn/create-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,22 +155,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       const data = await resp.json();
-      // Expect backend to return { checkout_url } or { transactionId }
       if (data.checkout_url) {
-        // Redirect user to payment page/hosted flow
         window.location.href = data.checkout_url;
         return;
       }
 
-      // Or show instructions/confirmation
       feedback.style.display = 'block';
       feedback.style.color = '#0b6c4a';
       feedback.textContent = 'Payment initiated. Follow the instructions on your phone.';
-
-      // Optionally clear cart after successful start
       localStorage.removeItem('isokoHubCart');
       window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: [] } }));
-
     } catch (err) {
       console.error('Payment error:', err);
       feedback.style.display = 'block';
