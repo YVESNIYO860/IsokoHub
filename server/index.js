@@ -16,6 +16,14 @@ const MTN_CLIENT_ID = process.env.MTN_CLIENT_ID;
 const MTN_CLIENT_SECRET = process.env.MTN_CLIENT_SECRET;
 const MTN_TARGET_ENVIRONMENT = process.env.MTN_TARGET_ENVIRONMENT || 'sandbox';
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+let supabaseAdmin = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+  const { createClient } = require('@supabase/supabase-js');
+  supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+}
 
 async function getMtnToken() {
   if (!MTN_TOKEN_URL || !MTN_CLIENT_ID || !MTN_CLIENT_SECRET) {
@@ -63,6 +71,14 @@ app.post('/api/mtn/create-payment', async (req, res) => {
     const resp = await axios.post(MTN_REQUESTTOPAY_URL, body, { headers, validateStatus: () => true });
     // Many MTN endpoints return 202 Accepted on success
     if (resp.status === 202 || resp.status === 200) {
+      // Persist order record in Supabase if available
+      try {
+        if (supabaseAdmin) {
+          await supabaseAdmin.from('orders').insert([{ reference_id: referenceId, phone: String(phone), amount: amount, currency: currency || 'RWF', status: 'initiated', items: items || [], buyer_location: buyer_location || null }]);
+        }
+      } catch (e) {
+        console.warn('Could not persist order to Supabase', e.message || e);
+      }
       return res.status(200).json({ referenceId, status: 'initiated' });
     }
 
@@ -87,6 +103,36 @@ app.get('/api/mtn/status/:ref', async (req, res) => {
   } catch (err) {
     console.error('mtn status error', err && err.response ? err.response.data : err.message || err);
     return res.status(500).json({ error: String(err.message || err) });
+  }
+});
+
+// Webhook endpoint for MTN callbacks
+app.post('/api/mtn/webhook', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    // Basic validation: if MTN_SUBSCRIPTION_KEY is configured, require header match
+    if (MTN_SUBSCRIPTION_KEY) {
+      const incoming = req.header('Ocp-Apim-Subscription-Key') || req.header('ocp-apim-subscription-key');
+      if (!incoming || incoming !== MTN_SUBSCRIPTION_KEY) {
+        console.warn('Webhook subscription key mismatch');
+        return res.status(403).send('forbidden');
+      }
+    }
+
+    console.log('MTN webhook received', payload);
+    // Pull reference id from common fields (depends on MTN payload structure)
+    const ref = payload.referenceId || payload.reference_id || payload.transactionId || payload.transactionid || payload.externalId;
+
+    if (supabaseAdmin && ref) {
+      // Update order status if record exists, otherwise insert a minimal record
+      const status = payload.status || payload.paymentStatus || payload.result || 'unknown';
+      await supabaseAdmin.from('orders').upsert({ reference_id: ref, status, phone: payload.phone || payload.msisdn || null, amount: payload.amount || null, items: payload.items || null }, { onConflict: 'reference_id' });
+    }
+
+    return res.status(200).send('OK');
+  } catch (err) {
+    console.error('webhook handler error', err);
+    return res.status(500).send('error');
   }
 });
 
