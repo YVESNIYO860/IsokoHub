@@ -513,6 +513,22 @@ async function fetchProducts(approvedOnly = true, sellerId = null, includeHouseh
     // If caller does not want Househub items, filter them client-side.
     const rows = Array.isArray(data) ? data : [];
     if (!includeHousehub) {
+      // Try to fetch mirror `househub_listings` product ids and filter them out.
+      try {
+        const { data: hhData, error: hhErr } = await supabase
+          .from('househub_listings')
+          .select('product_id');
+        if (!hhErr && Array.isArray(hhData)) {
+          const hhSet = new Set(hhData.map(x => String(x.product_id)));
+          return rows.filter((r) => {
+            if (!r || !r.id) return false;
+            if (hhSet.has(String(r.id))) return false;
+            return !(r && (r.exclude_from_browse === true || r.excludeFromBrowse === true));
+          });
+        }
+      } catch (e) {
+        // If mirror table not available, fall back to column-based filter
+      }
       return rows.filter((r) => !(r && (r.exclude_from_browse === true || r.excludeFromBrowse === true)));
     }
     return rows;
@@ -1033,7 +1049,17 @@ async function fetchPromotedProducts() {
     
     hideAppLoader();
     if (error) throw error;
-    return data || [];
+    const rows = Array.isArray(data) ? data : [];
+    // Exclude Househub listings from featured deals
+    try {
+      const { data: hhData, error: hhErr } = await supabase.from('househub_listings').select('product_id');
+      if (!hhErr && Array.isArray(hhData)) {
+        const hhSet = new Set(hhData.map(x => String(x.product_id)));
+        return rows.filter(r => r && r.id && !hhSet.has(String(r.id)));
+      }
+    } catch (e) { /* ignore */ }
+    // Fallback: exclude_by flag on products
+    return rows.filter((r) => !(r && (r.exclude_from_browse === true || r.excludeFromBrowse === true)));
   } catch (err) {
     hideAppLoader();
     console.error("Error fetching promoted products:", err);
