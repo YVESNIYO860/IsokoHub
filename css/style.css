@@ -496,6 +496,42 @@ h3 { font-size: 1.5rem; }
   opacity: 1;
 }
 
+/* Product card gallery for multiple image angles */
+.product-card-gallery {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  height: 200px;
+}
+.product-card-gallery img {
+  flex: 1 1 0;
+  width: 0; /* allow flex to manage width */
+  height: 100%;
+  object-fit: cover;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 0;
+}
+
+@media (max-width: 820px) {
+  /* On smaller screens show only the first image to save space */
+  .product-card-gallery img:nth-child(n+2) {
+    display: none;
+  }
+}
+
+/* Buy Online nav action styling */
+.nav-action-item.buy-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-weight: 700;
+}
+
+
 .product-card-content {
   padding: 0.95rem 1rem 1rem;
   flex: 1;

@@ -135,10 +135,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     productsContainer.innerHTML = allProducts.map(p => {
-      const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
-      const imageMarkup = displayImg
-        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
-        : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+      // render multiple image angles when available
+      let imageMarkup = '';
+      if (Array.isArray(p.image) && p.image.length > 0) {
+        const imgs = p.image.map(img => normalizeProductImage(img)).filter(Boolean);
+        if (imgs.length === 1) {
+          imageMarkup = `<img src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`;
+        } else if (imgs.length > 1) {
+          imageMarkup = `<div class="product-card-gallery">${imgs.slice(0,3).map(i => `<img src="${escapeHtml(i)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`).join('')}</div>`;
+        }
+      } else {
+        const displayImg = normalizeProductImage(p.image);
+        imageMarkup = displayImg
+          ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`
+          : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+      }
       const shopBadge = p.shop?.name
         ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>`
         : '';

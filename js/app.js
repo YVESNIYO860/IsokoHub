@@ -782,6 +782,11 @@ function renderNavbar() {
           ` : ''}
           `}
 
+          <a href="checkout.html" class="nav-action-item buy-online" title="Buy Online">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <strong>Buy Online</strong>
+          </a>
+
           <a href="#" class="nav-action-item cart-icon">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.5rem;"></i>
             <span class="cart-count">0</span>
@@ -1079,7 +1084,10 @@ function addToCart(product) {
       seller_phone: product.seller_phone || product.sellerPhone || '',
       seller_email: product.seller_email || product.sellerEmail || '',
       delivery_cost: product.delivery_cost !== undefined ? product.delivery_cost : (product.deliveryCost || null),
-      free_delivery: product.free_delivery === true || product.freeDelivery === true || false
+      free_delivery: product.free_delivery === true || product.freeDelivery === true || false,
+      // include seller/shop coordinates if available (lat/lng)
+      seller_lat: product.seller_lat || product.sellerLat || (product.shop && product.shop.lat) || (product.shop && product.shop.latitude) || null,
+      seller_lng: product.seller_lng || product.sellerLng || (product.shop && product.shop.lng) || (product.shop && product.shop.longitude) || null
     });
   }
   
