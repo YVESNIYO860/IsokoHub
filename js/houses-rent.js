@@ -142,13 +142,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function renderHousingProducts() {
     productsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p class="mt-1">Loading housing listings...</p></div>';
 
-    const allProducts = await fetchProducts(true);
+    // Include Househub items in the fetch so we only show those here
+    const allProducts = await fetchProducts(true, null, true);
     const housingKeywords = ['house', 'home', 'rent', 'apartment', 'flat', 'room', 'housing', 'houses & rents', 'househub', 'property', 'villa', 'studio', 'landlord', 'tenant'];
 
     const housingProducts = allProducts.filter((product) => {
       const textFields = ((product.category || '') + ' ' + (product.subcategory || '') + ' ' + (product.name || '') + ' ' + (product.description || '') + ' ' + (product.tags || '') + ' ' + (product.property_type || '')).toString().toLowerCase();
 
-      const isHousing = product.is_househub === true || housingKeywords.some((kw) => textFields.includes(kw));
+      // Only show products explicitly marked as Househub special listings
+      const isHousing = product && (product.is_househub === true || product.isHousehub === true);
       if (!isHousing) return false;
 
       const normalizedCategory = (product.subcategory || product.houseType || product.listingType || product.category || '').toString().toLowerCase();

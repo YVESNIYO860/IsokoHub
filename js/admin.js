@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     ] = await Promise.all([
       fetchPendingProducts(),
       fetchAdRequests(),
-      fetchProducts(false),
+      fetchProducts(false, null, true),
       fetchProductCount({ status: 'pending' }),
       fetchProductCount({ status: 'approved' }),
       fetchProductCount(),

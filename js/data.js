@@ -495,7 +495,7 @@ async function fetchVerifiedSellerCount() {
  * @param {boolean} approvedOnly - If true, only returns products with status 'approved'
  * @param {string} sellerId - Optional: filter by seller
  */
-async function fetchProducts(approvedOnly = true, sellerId = null) {
+async function fetchProducts(approvedOnly = true, sellerId = null, includeHousehub = false) {
   if (!supabase) return [];
   showAppLoader('Loading marketplace items...');
   try {
@@ -507,12 +507,56 @@ async function fetchProducts(approvedOnly = true, sellerId = null) {
     if (sellerId) {
       query = query.eq('seller_id', sellerId);
     }
-    
-    const { data, error } = await query.order('created_at', { ascending: false });
-    
-    hideAppLoader();
-    if (error) throw error;
-    return data || [];
+    // Exclude special Househub-only listings from general queries unless explicitly requested
+    if (!includeHousehub) {
+      // Try the query with the exclude filter. If the column doesn't exist (migration not applied)
+      // Supabase may return a server error — fall back to the unfiltered query in that case.
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .modify((q) => {
+            if (approvedOnly) q.eq('status', 'approved');
+            if (sellerId) q.eq('seller_id', sellerId);
+            q.not('exclude_from_browse', 'eq', true);
+          })
+          .order('created_at', { ascending: false });
+
+        hideAppLoader();
+        if (!error) return data || [];
+
+        // If we get a specific error about missing column, fall back
+        const msg = String(error?.message || '').toLowerCase();
+        if (msg.includes('column') && msg.includes('exclude_from_browse') || error?.status === 400) {
+          console.warn('exclude_from_browse column missing or query failed; retrying without filter:', error.message || error);
+        } else {
+          throw error;
+        }
+      } catch (err) {
+        console.warn('Query with exclude_from_browse failed, retrying without it:', err?.message || err);
+        // fallthrough to unfiltered query
+      }
+    }
+
+    // Default: unfiltered query (or includeHousehub=true)
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .modify((q) => {
+          if (approvedOnly) q.eq('status', 'approved');
+          if (sellerId) q.eq('seller_id', sellerId);
+        })
+        .order('created_at', { ascending: false });
+
+      hideAppLoader();
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      hideAppLoader();
+      console.error('Error fetching products (final attempt):', err);
+      return [];
+    }
   } catch (err) {
     hideAppLoader();
     console.error("Error fetching products:", err);
@@ -598,6 +642,7 @@ async function createProduct(productData) {
     listing_type: productData.listingType || null,
     video_url: productData.videoUrl || null,
     is_househub: (productData.isHousehub === true) || ['Houses & Rents', 'Housing', 'House', 'HouseHub', 'Rent'].includes(productData.category),
+    exclude_from_browse: (productData.isHousehub === true) || false,
   };
   
   if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
@@ -646,6 +691,15 @@ async function updateProductData(id, changes = {}) {
     const dbKey = convertKey(k);
     payload[dbKey] = v;
   });
+
+  // If updating the Househub flag, ensure exclude_from_browse follows it
+  try {
+    if (Object.prototype.hasOwnProperty.call(payload, 'is_househub')) {
+      payload.exclude_from_browse = payload.is_househub === true;
+    }
+  } catch (e) {
+    // ignore
+  }
 
   try {
     const { data, error } = await supabase

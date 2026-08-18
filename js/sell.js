@@ -299,6 +299,28 @@ document.addEventListener('DOMContentLoaded', async function() {
   categorySelect.addEventListener('change', toggleHousingFields);
   toggleHousingFields();
 
+  // Update header and submit label when listing Househub houses
+  const pageHeader = document.querySelector('.sell-container h2');
+  function updateHeaderForHousehub() {
+    const isHouseCategory = (categorySelect.value === 'Houses & Rents');
+    const isHousehubChecked = isHousehubCheckbox ? isHousehubCheckbox.checked : false;
+    if (isHouseCategory && isHousehubChecked) {
+      if (pageHeader) pageHeader.textContent = 'List New House';
+      if (submitBtn) submitBtn.textContent = isEditing ? 'Update House' : 'List House';
+    } else if (isHouseCategory) {
+      if (pageHeader) pageHeader.textContent = 'Sell a New Property';
+      if (submitBtn) submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
+    } else {
+      if (pageHeader) pageHeader.textContent = isEditing ? 'Edit Product' : 'Sell a New Product';
+      if (submitBtn) submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
+    }
+  }
+  try {
+    if (isHousehubCheckbox) isHousehubCheckbox.addEventListener('change', updateHeaderForHousehub);
+    categorySelect.addEventListener('change', updateHeaderForHousehub);
+    updateHeaderForHousehub();
+  } catch (e) { /* ignore */ }
+
   /* ────────────────────────────────────────
      Upload helpers
   ──────────────────────────────────────── */

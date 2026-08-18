@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       console.debug('Dashboard: fetching products for sellerId=', sellerId);
-      const myProducts = await fetchProducts(false, sellerId);
+      const myProducts = await fetchProducts(false, sellerId, true);
 
       // Update Stats
       const activeCount = myProducts.filter(p => p.status === 'approved').length;
