@@ -1073,9 +1073,13 @@ function addToCart(product) {
     cart.push({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: Number(product.price) || 0,
       image: Array.isArray(product.image) ? product.image[0] : product.image,
-      quantity: 1
+      quantity: 1,
+      seller_phone: product.seller_phone || product.sellerPhone || '',
+      seller_email: product.seller_email || product.sellerEmail || '',
+      delivery_cost: product.delivery_cost !== undefined ? product.delivery_cost : (product.deliveryCost || null),
+      free_delivery: product.free_delivery === true || product.freeDelivery === true || false
     });
   }
   
@@ -1188,9 +1192,9 @@ renderNavbar = function() {
             <strong style="font-size: 1.1rem;">Subtotal</strong>
             <strong id="cart-subtotal" style="font-size: 1.25rem; color: var(--text-dark);">0 RWF</strong>
           </div>
-          <button class="btn btn-primary btn-block" style="padding: 1rem; border-radius: 8px;">
+          <a href="checkout.html" class="btn btn-primary btn-block" style="padding: 1rem; border-radius: 8px; text-align:center; display:inline-block; text-decoration:none; color:#fff;">
             Proceed to Checkout
-          </button>
+          </a>
           <p style="text-align:center; font-size: 0.8rem; color: #64748b; margin-top: 0.8rem;">
             Shipping and taxes calculated at checkout.
           </p>

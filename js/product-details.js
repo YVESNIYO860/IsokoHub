@@ -150,6 +150,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
 
         <div class="pd-description">
+          <strong>Delivery:</strong><br>
+          ${product.free_delivery === true || product.freeDelivery === true ? `<div style="color:#166534; font-weight:700;">Free delivery available</div>` : ''}
+          ${product.delivery_cost || product.deliveryCost ? `<div style="color:#475569;">Delivery cost: ${formatPrice(product.delivery_cost || product.deliveryCost)}</div>` : (product.free_delivery || product.freeDelivery ? '' : '<div class="text-muted">Delivery details not specified</div>')}
+        </div>
+
+        <div class="pd-description">
           <strong>About this item:</strong><br>
           ${escapeHtml(product.description || '').replace(/\n/g, '<br>')}
         </div>
