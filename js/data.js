@@ -597,6 +597,7 @@ async function createProduct(productData) {
     property_type: productData.propertyType || null,
     listing_type: productData.listingType || null,
     video_url: productData.videoUrl || null,
+    is_househub: (productData.isHousehub === true) || ['Houses & Rents', 'Housing', 'House', 'HouseHub', 'Rent'].includes(productData.category),
   };
   
   if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
@@ -655,6 +656,7 @@ async function updateProductData(id, changes = {}) {
       .single();
 
     if (error) throw error;
+    try { window.dispatchEvent(new CustomEvent('product:updated', { detail: data })); } catch (e) { /* ignore */ }
     return data;
   } catch (err) {
     console.error('Error updating product data:', err?.message || err);
