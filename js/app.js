@@ -782,18 +782,7 @@ function renderNavbar() {
           ` : ''}
           `}
 
-          <div class="nav-action-item buy-online" id="buy-online-root" style="position:relative;">
-            <button type="button" id="buy-online-toggle" class="buy-online" aria-expanded="false" style="border:none; background:transparent; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem;">
-              <i class="fa-solid fa-bag-shopping"></i>
-              <strong>Buy Online</strong>
-              <i class="fa-solid fa-caret-down" style="font-size:0.8rem; margin-left:6px;"></i>
-            </button>
-            <div id="buy-online-menu" style="display:none; position:absolute; right:0; top:44px; background:#fff; border:1px solid rgba(0,0,0,0.08); border-radius:8px; box-shadow: 0 8px 30px rgba(2,6,23,0.08); min-width:220px; z-index:1200; overflow:hidden;">
-              <a href="products.html?buy_online=1" style="display:block;padding:10px 12px;color:#0f172a;text-decoration:none;border-bottom:1px solid #f1f5f9;">Shop Buy Online Listings</a>
-              <a href="checkout.html" style="display:block;padding:10px 12px;color:#0f172a;text-decoration:none;border-bottom:1px solid #f1f5f9;">Checkout (Cart)</a>
-              <a href="dashboard.html?view=orders" style="display:block;padding:10px 12px;color:#0f172a;text-decoration:none;">My Orders</a>
-            </div>
-          </div>
+
 
           <a href="#" class="nav-action-item cart-icon">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.5rem;"></i>
@@ -949,18 +938,7 @@ function renderNavbar() {
     });
   });
 
-  // Buy Online menu toggle
-  const buyToggle = document.getElementById('buy-online-toggle');
-  const buyMenu = document.getElementById('buy-online-menu');
-  if (buyToggle && buyMenu) {
-    buyToggle.addEventListener('click', (e) => {
-      const expanded = buyToggle.getAttribute('aria-expanded') === 'true';
-      buyToggle.setAttribute('aria-expanded', String(!expanded));
-      buyMenu.style.display = expanded ? 'none' : 'block';
-      e.stopPropagation();
-    });
-    document.addEventListener('click', () => { if (buyMenu) buyMenu.style.display = 'none'; if (buyToggle) buyToggle.setAttribute('aria-expanded', 'false'); });
-  }
+  
 }
 
 function renderFooter() {
