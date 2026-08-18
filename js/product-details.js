@@ -155,6 +155,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${product.delivery_cost || product.deliveryCost ? `<div style="color:#475569;">Delivery cost: ${formatPrice(product.delivery_cost || product.deliveryCost)}</div>` : (product.free_delivery || product.freeDelivery ? '' : '<div class="text-muted">Delivery details not specified</div>')}
         </div>
 
+        ${product.buy_online ? `<div style="margin-top:12px;"><button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button></div>` : ''}
+
         <div class="pd-description">
           <strong>About this item:</strong><br>
           ${escapeHtml(product.description || '').replace(/\n/g, '<br>')}

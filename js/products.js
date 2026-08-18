@@ -174,7 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
             </div>
           </a>
-          <div style="padding: 0 1rem 1rem;">
+          <div style="padding: 0 1rem 1rem; display:flex; gap:0.5rem; align-items:center;">
+            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='checkout.html?buy=${p.id}'" class="btn btn-primary" style="padding:0.45rem 0.8rem;">Buy Online</button>` : ''}
             <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(shareUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Share listing">
               <i class="fa-solid fa-share-nodes"></i>
             </button>

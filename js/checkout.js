@@ -1,9 +1,35 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const cart = getCart();
+document.addEventListener('DOMContentLoaded', async () => {
+  const params = new URLSearchParams(window.location.search);
+  const buyId = params.get('buy');
+  let cart = [];
   const container = document.getElementById('checkout-cart');
   const summary = document.getElementById('checkout-summary');
 
   if (!container || !summary) return;
+
+  if (buyId) {
+    // Prefill checkout with single product for immediate buy
+    const prod = await fetchProductById(buyId).catch(() => null);
+    if (prod) {
+      cart = [{
+        id: prod.id,
+        name: prod.name,
+        price: Number(prod.price) || 0,
+        image: Array.isArray(prod.image) ? prod.image[0] : prod.image,
+        quantity: 1,
+        seller_phone: prod.seller_phone || prod.sellerPhone || '',
+        seller_email: prod.seller_email || prod.sellerEmail || '',
+        delivery_cost: prod.delivery_cost || prod.deliveryCost || null,
+        free_delivery: prod.free_delivery === true || prod.freeDelivery === true || false,
+        seller_lat: prod.seller_lat || prod.sellerLat || null,
+        seller_lng: prod.seller_lng || prod.sellerLng || null
+      }];
+    }
+  }
+
+  if (!buyId) {
+    cart = getCart();
+  }
 
   if (!cart || cart.length === 0) {
     container.innerHTML = `<div style="text-align:center; padding:3rem;">Your cart is empty. <a href="products.html">Continue shopping</a></div>`;

@@ -442,6 +442,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         district: fullLocation,
         // attach captured seller coordinates when available
         ...(window._capturedSellerLocation ? { sellerLat: window._capturedSellerLocation.lat, sellerLng: window._capturedSellerLocation.lng } : {}),
+        buyOnline: document.getElementById('prod-buy-online') ? Boolean(document.getElementById('prod-buy-online').checked) : false,
         isAd:        false,
         adRequested: false,
         sold: false,

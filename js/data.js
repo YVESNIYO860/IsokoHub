@@ -589,6 +589,7 @@ async function createProduct(productData) {
     district: productData.district,
     seller_lat: productData.sellerLat || productData.seller_lat || null,
     seller_lng: productData.sellerLng || productData.seller_lng || null,
+    buy_online: productData.buyOnline === true || productData.buy_online === true || false,
     seller_id: session.user.id,
     status: 'pending',
     is_ad: false,
