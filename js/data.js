@@ -607,13 +607,38 @@ async function createProduct(productData) {
   if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
   
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .insert([newProduct])
-      .select()
-      .single();
-    
-    if (error) throw error;
+    // Attempt insert; if the remote schema is missing `exclude_from_browse`,
+    // retry once without that key to remain backward compatible.
+    let insertAttempt = 0;
+    let insertResult = null;
+    let insertError = null;
+    while (insertAttempt < 2) {
+      try {
+        const resp = await supabase
+          .from('products')
+          .insert([newProduct])
+          .select()
+          .single();
+        insertResult = resp;
+        insertError = resp.error;
+        break;
+      } catch (e) {
+        insertError = e;
+        // detect missing-column/schema-cache error mentioning exclude_from_browse
+        const msg = String(e?.message || e || '').toLowerCase();
+        if (msg.includes('exclude_from_browse') || msg.includes("column \"exclude_from_browse\" does not exist") || msg.includes('schema cache')) {
+          // remove the optional key and retry
+          delete newProduct.exclude_from_browse;
+          // Also avoid re-adding is_househub as exclude_from_browse mirrors it only when present.
+        } else {
+          break; // unknown error — stop retrying
+        }
+      }
+      insertAttempt += 1;
+    }
+
+    if (insertError) throw insertError;
+    const { data } = insertResult;
     incrementStoredProductListingCount(1);
     if (window.ISOKO_DEBUG === true) console.log('✓ Product saved to Supabase with ID:', data.id);
 
@@ -688,14 +713,36 @@ async function updateProductData(id, changes = {}) {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('products')
-      .update(payload)
-      .eq('id', id)
-      .select()
-      .single();
+    // Attempt update; if remote schema lacks `exclude_from_browse`, retry once
+    // without that key.
+    let updateAttempt = 0;
+    let updateResult = null;
+    let updateError = null;
+    while (updateAttempt < 2) {
+      try {
+        const resp = await supabase
+          .from('products')
+          .update(payload)
+          .eq('id', id)
+          .select()
+          .single();
+        updateResult = resp;
+        updateError = resp.error;
+        break;
+      } catch (e) {
+        updateError = e;
+        const msg = String(e?.message || e || '').toLowerCase();
+        if (msg.includes('exclude_from_browse') || msg.includes("column \"exclude_from_browse\" does not exist") || msg.includes('schema cache')) {
+          delete payload.exclude_from_browse;
+        } else {
+          break;
+        }
+      }
+      updateAttempt += 1;
+    }
 
-    if (error) throw error;
+    if (updateError) throw updateError;
+    const { data } = updateResult;
     try { window.dispatchEvent(new CustomEvent('product:updated', { detail: data })); } catch (e) { /* ignore */ }
 
     // Maintain the `househub_listings` mirror table when the Househub flag
