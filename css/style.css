@@ -4642,52 +4642,6 @@ body.high-contrast {
   text-align: center;
 }
 
-/* Marketplace conversation and trust surfaces */
-.marketplace-confidence {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  margin: 1.5rem 0 2.25rem;
-}
-
-.confidence-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.7rem;
-  padding: 0.9rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ffffff, #f8fafc);
-}
-
-.confidence-item > span {
-  display: grid;
-  place-items: center;
-  flex: 0 0 2rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 10px;
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.confidence-item strong,
-.confidence-item small {
-  display: block;
-}
-
-.confidence-item strong {
-  color: #0f172a;
-  font-size: 0.8rem;
-}
-
-.confidence-item small {
-  margin-top: 0.25rem;
-  color: #64748b;
-  font-size: 0.7rem;
-  line-height: 1.4;
-}
-
 .chat-page,
 .seller-profile-page,
 .admin-chat-page {
@@ -4975,10 +4929,6 @@ body.high-contrast {
 .admin-chat-thread-heading span { margin-top: 0.2rem; color: #64748b; font-size: 0.72rem; }
 
 @media (max-width: 760px) {
-  .marketplace-confidence {
-    grid-template-columns: 1fr;
-  }
-
   .chat-page,
   .seller-profile-page,
   .admin-chat-page {
