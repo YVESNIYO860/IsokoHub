@@ -142,15 +142,44 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function renderHousingProducts() {
     productsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align:center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p class="mt-1">Loading housing listings...</p></div>';
 
-    // Include Househub items in the fetch so we only show those here
-    const allProducts = await fetchProducts(true, null, true);
+    // HouseHub uses its dedicated table when available. The product bridge
+    // remains a fallback for deployments that have not run migration 010 yet.
+    let allProducts = [];
+    try {
+      const { data: househubRows, error: househubError } = await supabase
+        .from('househub_listings')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+      if (househubError) throw househubError;
+      allProducts = (househubRows || []).map((listing) => ({
+        ...listing,
+        id: listing.product_id,
+        name: listing.title,
+        category: 'Houses & Rents',
+        seller_id: listing.seller_id,
+        property_type: listing.property_type,
+        listing_type: listing.listing_type,
+        seller_phone: listing.seller_phone,
+        seller_email: listing.seller_email,
+        status: listing.status
+      }));
+    } catch (househubError) {
+      if (window.ISOKO_DEBUG === true) console.warn('HouseHub table unavailable; using product bridge:', househubError?.message || househubError);
+      allProducts = await fetchProducts(true, null, true);
+    }
     const housingKeywords = ['house', 'home', 'rent', 'apartment', 'flat', 'room', 'housing', 'houses & rents', 'househub', 'property', 'villa', 'studio', 'landlord', 'tenant'];
 
     const housingProducts = allProducts.filter((product) => {
       const textFields = ((product.category || '') + ' ' + (product.subcategory || '') + ' ' + (product.name || '') + ' ' + (product.description || '') + ' ' + (product.tags || '') + ' ' + (product.property_type || '')).toString().toLowerCase();
 
       // Only show products explicitly marked as Househub special listings
-      const isHousing = product && (product.is_househub === true || product.isHousehub === true);
+      const normalizedProductCategory = String(product?.category || '').trim().toLowerCase();
+      const isHousing = product && (
+        product.is_househub === true
+        || product.isHousehub === true
+        || ['houses & rents', 'housing', 'househub', 'rent'].includes(normalizedProductCategory)
+      );
       if (!isHousing) return false;
 
       const normalizedCategory = (product.subcategory || product.houseType || product.listingType || product.category || '').toString().toLowerCase();

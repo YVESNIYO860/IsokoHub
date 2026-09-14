@@ -685,9 +685,8 @@ async function createProduct(productData) {
   if (window.ISOKO_DEBUG === true) console.log('Final product object for Supabase:', newProduct);
   
   try {
-    // Attempt insert; if the remote schema is missing `exclude_from_browse` or
-    // `is_househub`, retry once without those keys to remain backward compatible.
-    const intendedHousehub = newProduct.is_househub === true;
+    // Attempt insert; if the remote schema is missing optional HouseHub fields,
+    // retry once without those keys to remain backward compatible.
     let insertAttempt = 0;
     let insertResult = null;
     let insertError = null;
@@ -761,6 +760,20 @@ async function updateProductStatus(id, status) {
     .eq('id', id);
   
   if (error) throw error;
+
+  try {
+    const { error: househubError } = await supabase
+      .from('househub_listings')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('product_id', id);
+    if (househubError && !/not found|does not exist|relation .* does not exist|schema cache/i.test(househubError.message || '')) {
+      throw househubError;
+    }
+  } catch (househubError) {
+    if (!/not found|does not exist|relation .* does not exist|schema cache/i.test(househubError?.message || '')) {
+      throw househubError;
+    }
+  }
 }
 
 /**

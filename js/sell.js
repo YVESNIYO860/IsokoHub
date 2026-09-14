@@ -163,7 +163,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   const form           = document.getElementById('sell-form');
   const errorEl        = document.getElementById('sell-error');
-  const housingFields  = document.getElementById('housing-fields');
   const categorySelect = document.getElementById('prod-category');
   const conditionSelect= document.getElementById('prod-condition');
   const progressWrap   = document.getElementById('upload-progress-wrap');
@@ -176,19 +175,6 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
-  const videoFileInput  = document.getElementById('prod-video');
-  const videoUrlInput   = document.getElementById('prod-video-url');
-  const videoPreviewEl  = document.getElementById('prod-video-preview');
-  const videoSourceLocal = document.getElementById('prod-video-source-local');
-  const videoSourceUrl   = document.getElementById('prod-video-source-url');
-  const isHousehubCheckbox = document.getElementById('prod-is-househub');
-  // Safe getter to avoid 'Cannot access "isHousehub" before initialization' errors
-  window.getIsHousehub = function() {
-    try {
-      const cb = document.getElementById('prod-is-househub');
-      return cb ? Boolean(cb.checked) : false;
-    } catch (e) { return false; }
-  };
   districtSelect.innerHTML =
     '<option value="">Select your district</option>' +
     RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -220,24 +206,8 @@ document.addEventListener('DOMContentLoaded', async function() {
       const districtParts = String(product.district || '').split(' • ');
       document.getElementById('prod-district').value          = districtParts[0] || '';
       document.getElementById('prod-location').value          = districtParts.slice(1).join(' • ').trim();
-      document.getElementById('prod-property-type').value      = product.property_type || '';
-      document.getElementById('prod-listing-type').value       = product.listing_type || '';
       if (product.condition) {
         document.getElementById('prod-condition').value = product.condition;
-      }
-      // Prefill video URL if present
-      try {
-        const existingVideo = product.videoUrl || product.video_url || product.video || '';
-        if (existingVideo && videoUrlInput) {
-          videoUrlInput.value = existingVideo;
-          // render preview if preview element exists
-          if (videoPreviewEl) {
-            // use the helper once defined later; if not defined yet, setTimeout fallback
-            setTimeout(() => { if (typeof renderVideoPreview === 'function') renderVideoPreview(existingVideo); else if (videoPreviewEl) videoPreviewEl.innerHTML = ''; }, 120);
-          }
-        }
-      } catch (e) {
-        console.warn('Unable to prefill video URL', e);
       }
       if (existingImages.length > 0) {
         renderImagePreviews();
@@ -255,134 +225,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('prod-phone').value = currentUser.phone;
   }
 
-  /* ── Housing fields toggle ── */
-  function toggleHousingFields() {
-    const showHousing = categorySelect.value === 'Houses & Rents';
-    housingFields.style.display = showHousing ? 'block' : 'none';
-  }
-  categorySelect.addEventListener('change', toggleHousingFields);
-  toggleHousingFields();
-
-  // Update header and submit label when listing Househub houses
-  const pageHeader = document.querySelector('.sell-container h2');
-  function updateHeaderForHousehub() {
-    const isHouseCategory = (categorySelect.value === 'Houses & Rents');
-    const isHousehubChecked = window.getIsHousehub();
-    if (isHouseCategory && isHousehubChecked) {
-      if (pageHeader) pageHeader.textContent = 'List New House';
-      if (submitBtn) submitBtn.textContent = isEditing ? 'Update House' : 'List House';
-    } else if (isHouseCategory) {
-      if (pageHeader) pageHeader.textContent = 'Sell a New Property';
-      if (submitBtn) submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
-    } else {
-      if (pageHeader) pageHeader.textContent = isEditing ? 'Edit Product' : 'Sell a New Product';
-      if (submitBtn) submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
-    }
-    // Update upload zone hint to indicate photos are optional for Househub special listings
-    try {
-      const uploadZoneSub = document.querySelector('.upload-zone-sub');
-      if (uploadZoneSub) {
-        if (isHouseCategory && isHousehubChecked) {
-          uploadZoneSub.textContent = 'Photos are optional for Househub listings (you can still add images).';
-        } else {
-          uploadZoneSub.textContent = 'Supports JPG, PNG, WEBP — up to 6 photos';
-        }
-      }
-    } catch (e) { /* ignore */ }
-    // Hide condition select for Househub special listings
-    try {
-      const conditionEl = document.getElementById('prod-condition');
-      if (conditionEl && conditionEl.parentElement) {
-        conditionEl.parentElement.style.display = (isHouseCategory && isHousehubChecked) ? 'none' : '';
-      }
-    } catch (e) { /* ignore */ }
-  }
-  try {
-    if (isHousehubCheckbox) isHousehubCheckbox.addEventListener('change', updateHeaderForHousehub);
-    categorySelect.addEventListener('change', updateHeaderForHousehub);
-    updateHeaderForHousehub();
-  } catch (e) { /* ignore */ }
-
   /* ────────────────────────────────────────
      Upload helpers
   ──────────────────────────────────────── */
-
-  function clearVideoPreview() {
-    if (!videoPreviewEl) return;
-    videoPreviewEl.innerHTML = '';
-  }
-
-  function renderVideoPreview(url) {
-    if (!videoPreviewEl || !url) return;
-    clearVideoPreview();
-    try {
-      const lower = String(url).toLowerCase();
-      if (lower.includes('youtube.com') || lower.includes('youtu.be')) {
-        // extract id
-        let id = '';
-        const m = url.match(/(?:v=|embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
-        if (m && m[1]) id = m[1];
-        if (!id) {
-          const parts = url.split('/'); id = parts[parts.length - 1];
-        }
-        const iframe = document.createElement('iframe');
-        iframe.width = '100%';
-        iframe.height = '320';
-        iframe.src = 'https://www.youtube.com/embed/' + encodeURIComponent(id);
-        iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-        iframe.frameBorder = '0';
-        iframe.loading = 'lazy';
-        videoPreviewEl.appendChild(iframe);
-        return;
-      }
-      // fallback: HTML5 video player
-      const video = document.createElement('video');
-      video.controls = true;
-      video.style.maxWidth = '100%';
-      video.style.maxHeight = '320px';
-      video.src = url;
-      videoPreviewEl.appendChild(video);
-    } catch (err) {
-      console.warn('Video preview error', err);
-    }
-  }
-
-  if (videoUrlInput) {
-    videoUrlInput.addEventListener('input', () => {
-      const v = (videoUrlInput.value || '').trim();
-      if (!v) return clearVideoPreview();
-      renderVideoPreview(v);
-    });
-  }
-
-  if (videoFileInput) {
-    videoFileInput.addEventListener('change', () => {
-      const f = videoFileInput.files && videoFileInput.files[0];
-      if (!f) return;
-      const blobUrl = URL.createObjectURL(f);
-      renderVideoPreview(blobUrl);
-    });
-  }
-
-  // Toggle video input visibility based on selected source
-  function updateVideoSourceVisibility() {
-    const useLocal = videoSourceLocal && videoSourceLocal.checked;
-    if (videoFileInput) videoFileInput.disabled = !useLocal;
-    // Keep video URL input editable so users can paste a URL anytime
-    if (videoUrlInput) videoUrlInput.disabled = false;
-    // Clear preview when switching
-    clearVideoPreview();
-    if (!useLocal && videoUrlInput && videoUrlInput.value) {
-      renderVideoPreview(videoUrlInput.value.trim());
-      try { videoUrlInput.focus(); } catch(e) {}
-    }
-    if (useLocal && videoFileInput && videoFileInput.files && videoFileInput.files[0]) renderVideoPreview(URL.createObjectURL(videoFileInput.files[0]));
-  }
-  try {
-    if (videoSourceLocal) videoSourceLocal.addEventListener('change', updateVideoSourceVisibility);
-    if (videoSourceUrl) videoSourceUrl.addEventListener('change', updateVideoSourceVisibility);
-    updateVideoSourceVisibility();
-  } catch (e) { /* ignore */ }
 
   async function uploadProductImages(files) {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
@@ -437,35 +282,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     return urls;
   }
 
-  async function uploadHousingVideo(file, sellerId) {
-    if (!supabase) throw new Error('Supabase storage is not available at this time.');
-    
-    // Check if user is authenticated with Supabase
-    const session = supabase.auth.session();
-    if (!session || !session.user) {
-      throw new Error('You must be logged in with Supabase to upload videos. Please sign in first.');
-    }
-    
-    const fileName = sellerId + '_' + Date.now() + '_' + file.name.replace(/\s+/g, '_');
-    const { data, error } = await supabase.storage
-      .from(SUPABASE_VIDEO_BUCKET)
-      .upload(fileName, file, { cacheControl: '3600', upsert: false });
-
-    if (error) {
-      throw new Error(`Video upload failed for bucket "${SUPABASE_VIDEO_BUCKET}": ${error.message}`);
-    }
-
-    const { publicURL, error: urlError } = supabase.storage
-      .from(SUPABASE_VIDEO_BUCKET)
-      .getPublicUrl(fileName);
-
-    if (urlError || !publicURL) {
-      throw new Error('Unable to get video URL after upload.');
-    }
-
-    return publicURL;
-  }
-
   /* ────────────────────────────────────────
      Form submit
   ──────────────────────────────────────── */
@@ -477,12 +293,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
       const files = window._sellImages.slice();
       const category = categorySelect.value;
-      const isHousing = category === 'Houses & Rents';
-      const isHousehub = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
-      // House listings may omit photos; ordinary listings need one to six.
-      if (!isHousing && !isEditing && files.length < 1) {
+      if (!isEditing && files.length < 1) {
         throw new Error('Please upload at least 1 product photo.');
       }
       if (files.length > 6) {
@@ -500,7 +313,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         imageUrls = imageUrls.concat(uploadedUrls);
       }
 
-      if (!isHousing && imageUrls.length < 1) {
+      if (imageUrls.length < 1) {
         throw new Error('Please provide at least 1 product photo.');
       }
 
@@ -521,28 +334,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         throw new Error('Please enter a valid seller email address.');
       }
 
-      // Housing-specific (category/isHousing already initialized above)
-      const propertyType = document.getElementById('prod-property-type').value.trim();
-      const listingType  = document.getElementById('prod-listing-type').value.trim();
-      const videoFile    = videoFileInput && videoFileInput.files ? videoFileInput.files[0] : null;
-      const videoUrlVal  = videoUrlInput ? String(videoUrlInput.value || '').trim() : '';
-      const useLocalVideo = videoSourceLocal ? videoSourceLocal.checked : !!videoFile;
-      // isHousehub already initialized earlier
-
-      if (isHousing) {
-        if (!propertyType) throw new Error('Please select a property type for the house listing.');
-        if (!listingType)  throw new Error('Please choose a rental period for the listing.');
-        // For all house listings, require a video (file or URL)
-        if (useLocalVideo && !videoFile) throw new Error('Please upload a local house video or switch to Video URL.');
-        if (!useLocalVideo && !videoUrlVal) throw new Error('Please provide a video URL or switch to Local upload.');
-        if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
-      } else {
-        // Non-housing categories: video optional
-        if (videoFile && videoFile.size > 20 * 1024 * 1024) throw new Error('Video must be 20 MB or smaller.');
-      }
-
-      const condition = isHousing ? null : conditionSelect.value;
-
       const productData = {
         name:        document.getElementById('prod-name').value,
         category,
@@ -550,7 +341,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         currency:    'RWF',
         image:       imageUrls,
         description: document.getElementById('prod-description').value,
-        ...(condition ? { condition } : {}),
+        condition: conditionSelect.value,
         sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
@@ -559,31 +350,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         isAd:        false,
         adRequested: false,
         sold: false,
-        ...(isHousing ? { propertyType, listingType, videoUrl: '' } : {}),
-        isHousehub: isHousehub
       };
 
       console.log('Product data to save:', productData);
 
-      let uploadedVideoUrl = '';
-      if (isHousing) {
-        if (videoFile) {
-          progressLabel.textContent = 'Uploading video…';
-          if (overlayText) overlayText.textContent = 'Uploading video…';
-          if (overlaySubtext) overlaySubtext.textContent = 'Please wait';
-          uploadedVideoUrl = await uploadHousingVideo(videoFile, user.id);
-          progressLabel.textContent = 'Video uploaded ✓';
-        } else if (videoUrlVal) {
-          // use provided external URL
-          uploadedVideoUrl = videoUrlVal;
-        }
-      }
-
       if (isEditing) {
-        const changes = {
-          ...productData,
-          ...(isHousing ? { videoUrl: uploadedVideoUrl || productData.videoUrl } : {})
-        };
+        const changes = { ...productData };
         // If price changed, keep previous_price to show strike-through in listings
         const originalPrice = Number(window._editingOriginalPrice || 0);
         if (Number(productData.price) !== originalPrice && originalPrice > 0) {
@@ -594,8 +366,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         window.location.href = 'dashboard.html?message=Your listing was updated successfully.';
       } else {
         await createProduct({
-          ...productData,
-          ...(isHousing ? { videoUrl: uploadedVideoUrl } : {})
+          ...productData
         });
         window._sellImages = []; // clear after success
         if (uploadOverlay) uploadOverlay.classList.remove('visible');
