@@ -879,6 +879,8 @@ async function updateProductData(id, changes = {}) {
 
 async function deleteProduct(id) {
   if (!supabase) return;
+
+  const isMissingHousehubTable = (error) => /not found|does not exist|relation .* does not exist|schema cache|could not find the table/i.test(error?.message || error || '');
   
   // Get product data to delete associated files
   const product = await fetchProductById(id);
@@ -901,11 +903,11 @@ async function deleteProduct(id) {
       .from('househub_listings')
       .delete()
       .eq('product_id', id);
-    if (mirrorError && !/not found|does not exist|relation .* does not exist/i.test(mirrorError.message || '')) {
+    if (mirrorError && !isMissingHousehubTable(mirrorError)) {
       throw mirrorError;
     }
   } catch (error) {
-    if (!/not found|does not exist|relation .* does not exist/i.test(error?.message || '')) {
+    if (!isMissingHousehubTable(error)) {
       throw error;
     }
   }
