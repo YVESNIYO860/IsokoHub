@@ -1018,6 +1018,50 @@ function handleSearch(e) {
   }
 }
 
+function enableProductImageRotation(root = document) {
+  root.querySelectorAll('.product-card-image-shell[data-image-urls]').forEach((shell) => {
+    if (shell.dataset.rotationReady === 'true') return;
+
+    let imageUrls = [];
+    try {
+      imageUrls = JSON.parse(shell.dataset.imageUrls || '[]');
+    } catch (error) {
+      imageUrls = [];
+    }
+    if (imageUrls.length < 2) return;
+
+    const image = shell.querySelector('.product-card-img');
+    if (!image) return;
+    let index = 0;
+    let rotationTimer = null;
+    shell.dataset.rotationReady = 'true';
+
+    const stopRotation = () => {
+      if (rotationTimer) window.clearInterval(rotationTimer);
+      rotationTimer = null;
+      index = 0;
+      image.src = imageUrls[0];
+    };
+
+    shell.addEventListener('pointerenter', () => {
+      if (rotationTimer) return;
+      rotationTimer = window.setInterval(() => {
+        index = (index + 1) % imageUrls.length;
+        image.src = imageUrls[index];
+      }, 2000);
+    });
+    shell.addEventListener('pointerleave', stopRotation);
+    shell.addEventListener('focusin', () => shell.dispatchEvent(new Event('pointerenter')));
+    shell.addEventListener('focusout', stopRotation);
+  });
+}
+
+function startHomepageShelfScroll() {
+  const shelf = document.getElementById('homepage-product-shelf');
+  if (!shelf) return;
+  shelf.querySelector('.amazon-product-track')?.classList.add('is-auto-scrolling');
+}
+
 async function handleLogout(e) {
   e.preventDefault();
   const btn = e.currentTarget;

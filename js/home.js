@@ -26,9 +26,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHomepageProductCount();
   await renderShops();
   renderFeaturedProducts();
+  renderHomepageProductShelf();
   startSellerShowcase();
   initHomepageAdPopup();
 });
+
+async function renderHomepageProductShelf() {
+  const container = document.getElementById('homepage-product-shelf');
+  if (!container) return;
+  const track = container.querySelector('.amazon-product-track');
+  if (!track) return;
+
+  try {
+    const products = await enrichProductsWithShopData(await fetchProducts(true));
+    const picks = products.filter((product) => product && product.status !== 'pending').slice(0, 8);
+    if (!picks.length) {
+      track.innerHTML = '<div class="amazon-shelf-loading">No products available right now.</div>';
+      return;
+    }
+
+    const shelfProducts = [...picks];
+    while (shelfProducts.length < 8 && picks.length > 1) {
+      shelfProducts.push(...picks);
+    }
+    const cards = shelfProducts.map(createFeaturedProductCard).join('');
+    track.innerHTML = `${cards}${cards}`;
+    enableProductImageRotation(track);
+    startHomepageShelfScroll();
+  } catch (error) {
+    console.warn('Unable to render homepage product shelf:', error);
+    track.innerHTML = '<div class="amazon-shelf-loading">Products are temporarily unavailable.</div>';
+  }
+}
 
 function initHomepageAdPopup() {
   const AD_POPUP_DISMISS_KEY = 'isokoHubAdPopupDismissed';
@@ -162,21 +191,19 @@ let featuredProductsScrollListener = null;
 let featuredProductsLoading = false;
 
 function createFeaturedProductCard(p) {
-  const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
+  const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
+  const displayImg = imageUrls[0] || '';
   const imageMarkup = displayImg
-    ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);" style="object-fit: cover;">`
-    : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+    ? `<div class="product-card-image-shell" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);" style="object-fit: cover;"><span class="product-card-image-condition">Featured</span></div>`
+    : `<div class="product-card-image-shell"><div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div></div>`;
   const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
   const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
   const shopBadge = p.shop?.name ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>` : '';
   const whatsappUrl = phone ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${p.name}`)}` : '';
   const emailUrl = email ? `mailto:${email}?subject=${encodeURIComponent(`Question about ${p.name}`)}` : '';
-  const productShareUrl = `${window.location.origin}/product.html?id=${p.id}`;
-  const shareText = encodeURIComponent(`Check out this listing on IsokoHub: ${p.name} - ${formatPrice(p.price)}`);
-  const shareUrl = `https://wa.me/?text=${shareText}%0A${encodeURIComponent(productShareUrl)}`;
-  const contactUrl = whatsappUrl || emailUrl || productShareUrl;
-  const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : (emailUrl ? 'fa-solid fa-envelope' : 'fa-solid fa-share-nodes');
-  const contactTitle = whatsappUrl ? 'Contact seller' : emailUrl ? 'Email seller' : 'Share listing';
+  const contactUrl = whatsappUrl || emailUrl || `product.html?id=${encodeURIComponent(p.id)}`;
+  const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : 'fa-solid fa-envelope';
+  const contactTitle = whatsappUrl ? 'Contact seller' : 'Email seller';
 
   return `
         <div class="product-card" role="button" tabindex="0" onclick="window.location.href='product.html?id=${p.id}'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='product.html?id=${p.id}'; }">
@@ -192,7 +219,7 @@ function createFeaturedProductCard(p) {
             <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
             <div class="product-card-foot">
               <span class="product-price">${formatPrice(p.price)}</span>
-              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(whatsappUrl ? shareUrl : contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
+              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
                 <i class="${contactIcon}"></i>
               </button>
             </div>

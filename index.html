@@ -639,23 +639,23 @@
 <body>
   <div id="site-header-root"></div>
   <main>
-    <section class="hero-retail" id="home-slideshow">
-      <div class="hero-retail-inner">
-        <div class="hero-retail-copy">
-          <div class="hero-retail-eyebrow"><i class="fa-solid fa-location-dot"></i> Shop local in Rwanda</div>
-          <h1>Everything you need.<br><span>Right nearby.</span></h1>
-          <p>Compare listings, contact sellers, and find everyday products from people and shops around you.</p>
-          <div class="hero-retail-links"><a href="products.html"><i class="fa-solid fa-tag"></i> Browse deals</a><a href="sell.html"><i class="fa-solid fa-plus"></i> Sell on IsokoHub</a><a href="houses-rent.html"><i class="fa-solid fa-house"></i> Find a home</a></div>
-          <div class="hero-retail-stats"><span><strong id="stat-active-listings">0+</strong> active listings</span><span><i class="fa-solid fa-shield-heart"></i> Local marketplace</span></div>
+    <section class="amazon-product-shelf" aria-labelledby="amazon-shelf-title">
+      <div class="amazon-product-shelf-inner">
+        <div class="amazon-shelf-heading">
+          <div>
+            <span class="amazon-shelf-kicker"><i class="fa-solid fa-bolt"></i> Fresh from the marketplace</span>
+            <h1 id="amazon-shelf-title">Top picks for you</h1>
+            <p>Explore new listings from local sellers and shops.</p>
+          </div>
+          <a href="products.html" class="amazon-shelf-link">See all products <i class="fa-solid fa-arrow-right"></i></a>
         </div>
-        <div class="hero-retail-promo">
-          <div class="hero-retail-promo-head"><strong>Discover something new</strong><span><i class="fa-solid fa-bolt"></i> Updated daily</span></div>
-          <div class="hero-retail-media"><video class="hero-media-video" src="assets/hero.mp4" autoplay muted loop playsinline preload="metadata"></video><div><strong>Fresh finds from nearby sellers</strong><small>Explore products, homes, fashion, and more.</small></div></div>
-          <div class="hero-retail-promo-foot"><span><i class="fa-solid fa-truck-fast"></i> Easy local discovery</span><a href="products.html">Shop now <i class="fa-solid fa-arrow-right"></i></a></div>
+        <div id="homepage-product-shelf" class="amazon-product-grid" aria-live="polite">
+          <div class="amazon-product-track">
+            <div class="amazon-shelf-loading">Loading products...</div>
+          </div>
         </div>
       </div>
     </section>
-
 
     <div class="container">
       <section class="homepage-filter" aria-labelledby="homepage-filter-title">
@@ -686,37 +686,6 @@
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/home.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const video = document.querySelector('.hero-media-video');
-      const overlay = document.getElementById('hero-video-end-screen');
-      if (!video || !overlay) return;
-
-      let cycleTimer = null;
-
-      const showOverlay = () => {
-        overlay.classList.add('show');
-        clearTimeout(cycleTimer);
-        cycleTimer = setTimeout(() => {
-          overlay.classList.remove('show');
-        }, 5000);
-      };
-
-      video.addEventListener('play', () => {
-        overlay.classList.remove('show');
-      });
-
-      video.addEventListener('timeupdate', () => {
-        if (video.currentTime >= video.duration - 0.2) {
-          showOverlay();
-        }
-      });
-
-      video.addEventListener('ended', () => {
-        showOverlay();
-      });
-    });
-  </script>
 </body>
 
 </html>

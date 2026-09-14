@@ -145,27 +145,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       const priceMarkup = (prevPriceVal && prevPriceVal > currentPriceVal)
         ? `<div><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div>`
         : `<span class="product-price">${formatPrice(currentPriceVal)}</span>`;
-      // render multiple image angles when available
-      let imageMarkup = '';
-      if (Array.isArray(p.image) && p.image.length > 0) {
-        const imgs = p.image.map(img => normalizeProductImage(img)).filter(Boolean);
-        if (imgs.length === 1) {
-          imageMarkup = `<img src="${escapeHtml(imgs[0])}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`;
-        } else if (imgs.length > 1) {
-          imageMarkup = `<div class="product-card-gallery">${imgs.slice(0,3).map(i => `<img src="${escapeHtml(i)}" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`).join('')}</div>`;
-        }
-      } else {
-        const displayImg = normalizeProductImage(p.image);
-        imageMarkup = displayImg
-          ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`
-          : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
-      }
+      const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
+      const displayImg = imageUrls[0] || '';
+      const imageMarkup = displayImg
+        ? `<div class="product-card-image-shell" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"><span class="product-card-image-condition">${escapeHtml(p.condition || 'Used')}</span>${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt"></i> Buy online</span>' : ''}</div>`
+        : `<div class="product-card-image-shell"><div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div></div>`;
       const shopBadge = p.shop?.name
         ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>`
         : '';
-      const productShareUrl = `${window.location.origin}/product.html?id=${p.id}`;
-      const shareText = encodeURIComponent(`Check out this listing on IsokoHub: ${p.name} - ${formatPrice(p.price)}`);
-      const shareUrl = `https://wa.me/?text=${shareText}%0A${encodeURIComponent(productShareUrl)}`;
       return `
         <div class="product-card">
           <a href="product.html?id=${p.id}" style="display:block; color:inherit; text-decoration:none;">
@@ -190,13 +177,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="product-card-actions">
             <a href="chat.html?product=${encodeURIComponent(p.id)}" onclick="event.stopPropagation();" class="product-card-chat"><i class="fa-solid fa-comments"></i> Chat</a>
             ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='product.html?id=${p.id}&buy=1'" class="btn btn-primary btn-buy-online"><i class="fa-solid fa-bolt"></i> Buy now</button>` : '<span class="product-card-availability"><i class="fa-solid fa-circle-check"></i> Available</span>'}
-            <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(shareUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Share listing">
-              <i class="fa-solid fa-share-nodes"></i>
-            </button>
           </div>
         </div>
       `;
     }).join('');
+    enableProductImageRotation(productsContainer);
   }
 
   await renderProducts();
