@@ -36,8 +36,9 @@ CREATE INDEX IF NOT EXISTS marketplace_messages_conversation_idx
 ALTER TABLE public.marketplace_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.marketplace_messages ENABLE ROW LEVEL SECURITY;
 
--- Demo-name visitors are intentionally not authenticated. Conversation/message rows
--- are therefore readable to the public, while admins can review them in the inbox.
+-- Demo-name visitors are intentionally not authenticated, so conversation/message
+-- reads remain public for this product's current chat model. Writes are restricted
+-- to the expected visitor/seller roles and arbitrary conversation updates are removed.
 DROP POLICY IF EXISTS marketplace_conversations_public_read ON public.marketplace_conversations;
 CREATE POLICY marketplace_conversations_public_read
   ON public.marketplace_conversations FOR SELECT USING (true);
@@ -47,8 +48,6 @@ CREATE POLICY marketplace_conversations_public_insert
   ON public.marketplace_conversations FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS marketplace_conversations_public_update ON public.marketplace_conversations;
-CREATE POLICY marketplace_conversations_public_update
-  ON public.marketplace_conversations FOR UPDATE USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS marketplace_messages_public_read ON public.marketplace_messages;
 CREATE POLICY marketplace_messages_public_read
@@ -56,7 +55,33 @@ CREATE POLICY marketplace_messages_public_read
 
 DROP POLICY IF EXISTS marketplace_messages_public_insert ON public.marketplace_messages;
 CREATE POLICY marketplace_messages_public_insert
-  ON public.marketplace_messages FOR INSERT WITH CHECK (true);
+  ON public.marketplace_messages FOR INSERT
+  WITH CHECK (sender_role = 'visitor' AND sender_id IS NULL);
+
+DROP POLICY IF EXISTS marketplace_messages_seller_insert ON public.marketplace_messages;
+CREATE POLICY marketplace_messages_seller_insert
+  ON public.marketplace_messages FOR INSERT TO authenticated
+  WITH CHECK (sender_role = 'seller' AND sender_id = auth.uid());
+
+CREATE OR REPLACE FUNCTION public.update_marketplace_conversation_timestamp()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.marketplace_conversations
+  SET last_message_at = NEW.created_at
+  WHERE id = NEW.conversation_id;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS marketplace_message_timestamp ON public.marketplace_messages;
+CREATE TRIGGER marketplace_message_timestamp
+AFTER INSERT ON public.marketplace_messages
+FOR EACH ROW
+EXECUTE FUNCTION public.update_marketplace_conversation_timestamp();
 
 DO $$
 BEGIN

@@ -1695,6 +1695,7 @@ body.menu-open .menu-active-overlay {
 
 .amazon-product-track {
   display: flex;
+  align-items: stretch;
   width: max-content;
   gap: 0.85rem;
   will-change: transform;
@@ -1766,11 +1767,14 @@ body.menu-open .menu-active-overlay {
 
   .amazon-product-track.is-auto-scrolling {
     animation-duration: 24s;
+    animation-timing-function: steps(8, end);
   }
 
   .amazon-product-grid .product-card {
     flex-basis: calc(100vw - 2rem);
     min-width: calc(100vw - 2rem);
+    width: calc(100vw - 2rem);
+    max-width: calc(100vw - 2rem);
   }
 
   .amazon-product-grid .product-card-img,

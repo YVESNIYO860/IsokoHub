@@ -130,7 +130,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const senderRole = isSeller ? 'seller' : 'visitor';
     const result = await supabase.from('marketplace_messages').insert([{ conversation_id: activeConversation.id, sender_id: isSeller ? sellerId : null, sender_name: senderName, sender_role: senderRole, body }]);
     if (result.error) return setStatus('Message could not be sent. Please try again.', 'error');
-    await supabase.from('marketplace_conversations').update({ last_message_at: new Date().toISOString() }).eq('id', activeConversation.id);
     const deliveredMessage = Array.isArray(result.data) ? result.data[0] : result.data;
     if (deliveredMessage) renderMessages([...Array.from(messagesEl.querySelectorAll('[data-message-id]')).map((node) => ({ id: node.dataset.messageId, sender_name: node.dataset.senderName, sender_role: node.dataset.senderRole, body: node.dataset.body, created_at: node.dataset.createdAt })), { ...deliveredMessage, delivery_status: 'Delivered' }]);
     setStatus('Message delivered.', 'success');
