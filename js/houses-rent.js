@@ -187,34 +187,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     productsContainer.innerHTML = housingProducts.map((p) => {
-      const displayImg = normalizeProductImage(Array.isArray(p.image) ? p.image[0] : p.image);
+      const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
+      const displayImg = imageUrls[0] || '';
       const listingType = p.listingType || p.subcategory || 'Property';
       const imageMarkup = displayImg
-        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Property image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
-        : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
+        ? `<div class="product-card-image-shell house-card-image" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Property image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';"><span class="house-card-type">${escapeHtml(listingType)}</span><span class="house-card-gallery-count"><i class="fa-regular fa-images"></i> ${imageUrls.length}</span></div>`
+        : `<div class="product-card-image-shell house-card-image"><div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div><span class="house-card-type">${escapeHtml(listingType)}</span></div>`;
       // Use location/district as title when name is missing for Househub listings
       const displayTitle = (p.name && String(p.name).trim()) ? p.name : (p.district || p.location || `House in ${p.district || 'unknown location'}`);
       const displayDescription = p.description ? p.description.slice(0, 90) + (p.description.length > 90 ? '...' : '') : '';
       return `
-        <a href="product.html?id=${p.id}" class="product-card" style="border: 1px solid #dbeafe;">
-          ${imageMarkup}
+        <article class="product-card house-card">
+          <a href="product.html?id=${encodeURIComponent(p.id)}" class="house-card-link">
+            ${imageMarkup}
           <div class="product-card-content">
-            <div style="display:flex; align-items:center; gap: 0.5rem; flex-wrap: wrap;">
+            <div class="house-card-meta">
               <span class="product-category">${p.category}</span>
-              <span style="padding: 0.2rem 0.55rem; border-radius: 999px; background: #eff6ff; color: #2563eb; font-size: 0.7rem; font-weight: 700;">${listingType}</span>
+              <span class="house-card-status"><i class="fa-solid fa-circle-check"></i> Available</span>
             </div>
             <h3 class="product-title">${escapeHtml(displayTitle)}</h3>
-            <p style="font-size: 0.92rem; color: #64748b; margin-bottom: 0.9rem;">${escapeHtml(displayDescription)}</p>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto; gap: 0.75rem;">
-              <span class="product-price">${formatPrice(p.price)}</span>
-              <button onclick='event.preventDefault(); addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="btn btn-primary" style="padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; background: #febd69; color: #131921; border:none;">
-                <i class="fa-solid fa-cart-plus"></i>
-              </button>
-            </div>
+            <div class="house-card-location"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(p.district || p.location || 'Location not specified')}</div>
+            <p class="house-card-description">${escapeHtml(displayDescription || 'View property details, availability, and seller information.')}</p>
+            <div class="house-card-price-row"><span class="house-card-price-label">${String(listingType).toLowerCase().includes('rent') ? 'Monthly price' : 'Asking price'}</span><strong class="house-card-price">${formatPrice(p.price)}</strong></div>
           </div>
-        </a>
+          </a>
+          <div class="house-card-actions">
+            <a href="product.html?id=${encodeURIComponent(p.id)}" class="house-card-view">View details <i class="fa-solid fa-arrow-right"></i></a>
+            <button type="button" class="house-card-cart" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' aria-label="Add property to cart"><i class="fa-solid fa-cart-plus"></i></button>
+          </div>
+        </article>
       `;
     }).join('');
+    enableProductImageRotation(productsContainer);
   }
 
   await renderHousingProducts();

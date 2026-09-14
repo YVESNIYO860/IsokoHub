@@ -894,6 +894,160 @@ h3 { font-size: 1.5rem; }
   margin-left: 0;
 }
 
+/* HouseHub property listing cards */
+.house-card {
+  min-height: 0;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.house-card:hover {
+  border-color: #93c5fd;
+}
+
+.house-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.house-card-image {
+  min-height: 190px;
+  border-radius: 13px 13px 0 0;
+}
+
+.house-card-image .product-card-img {
+  height: 190px;
+}
+
+.house-card-type,
+.house-card-gallery-count {
+  position: absolute;
+  z-index: 2;
+  top: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.house-card-type {
+  left: 0.7rem;
+  background: #0f766e;
+  color: #fff;
+}
+
+.house-card-gallery-count {
+  right: 0.7rem;
+  background: rgba(15, 23, 42, 0.76);
+  color: #fff;
+}
+
+.house-card .product-card-content {
+  padding: 0.9rem 0.95rem 0.75rem;
+}
+
+.house-card-meta,
+.house-card-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.house-card-status {
+  color: #15803d;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.house-card-status i {
+  font-size: 0.55rem;
+}
+
+.house-card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+.house-card-location i {
+  color: #2563eb;
+}
+
+.house-card-description {
+  display: -webkit-box;
+  min-height: 2.65rem;
+  margin: 0.55rem 0 0.75rem;
+  overflow: hidden;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.house-card-price-row {
+  align-items: end;
+  padding-top: 0.65rem;
+  border-top: 1px solid #eef2f7;
+}
+
+.house-card-price-label {
+  color: #94a3b8;
+  font-size: 0.68rem;
+}
+
+.house-card-price {
+  color: #0f766e;
+  font-size: 1.05rem;
+}
+
+.house-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.95rem 0.9rem;
+}
+
+.house-card-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.house-card-view:hover {
+  text-decoration: underline;
+}
+
+.house-card-cart {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 8px;
+  background: #f59e0b;
+  color: #172033;
+  cursor: pointer;
+}
+
+.house-card-cart:hover {
+  background: #fbbf24;
+}
+
 .product-contact-btn {
   display: inline-flex;
   align-items: center;
@@ -5307,6 +5461,139 @@ body.high-contrast {
 
   .seller-profile-facts {
     padding: 0.85rem 1.35rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .chat-page,
+  .admin-chat-page,
+  .chat-inbox-page {
+    width: calc(100% - 1rem);
+    padding: 0.75rem 0 2rem;
+  }
+
+  .chat-shell {
+    min-height: calc(100dvh - 7rem);
+    border-radius: 14px;
+  }
+
+  .chat-context-panel {
+    padding: 1rem;
+  }
+
+  .chat-context-panel h1 {
+    margin-top: 0.65rem;
+    font-size: 1.45rem;
+  }
+
+  .chat-context-panel > p {
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .chat-product-card {
+    margin-top: 1rem;
+  }
+
+  .chat-privacy-note {
+    margin-top: 1rem;
+    font-size: 0.66rem;
+  }
+
+  .chat-status {
+    padding: 0.65rem 0.75rem 0;
+    font-size: 0.7rem;
+  }
+
+  .chat-identity-card,
+  .chat-compose {
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
+  }
+
+  .chat-identity-row {
+    align-items: stretch;
+  }
+
+  .chat-identity-row input {
+    width: 100%;
+  }
+
+  .chat-identity-row button {
+    flex: 0 0 auto;
+  }
+
+  .chat-conversation-picker {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .chat-conversation-picker button {
+    min-width: 132px;
+  }
+
+  .chat-messages {
+    min-height: 280px;
+    max-height: 48dvh;
+    padding: 0.75rem;
+  }
+
+  .chat-message {
+    max-width: 88%;
+    overflow-wrap: anywhere;
+  }
+
+  .chat-compose {
+    gap: 0.45rem;
+    padding-bottom: 0.8rem;
+  }
+
+  .chat-compose textarea {
+    min-height: 2.7rem;
+    font-size: 0.78rem;
+  }
+
+  .chat-send-btn {
+    flex: 0 0 2.7rem;
+  }
+
+  .chat-inbox-heading {
+    gap: 0.75rem;
+  }
+
+  .chat-inbox-heading h1 {
+    font-size: 1.55rem;
+  }
+
+  .chat-inbox-heading p {
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .chat-inbox-heading .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .admin-chat-heading h1 {
+    font-size: 1.45rem;
+  }
+
+  .admin-chat-layout {
+    min-height: calc(100dvh - 11rem);
+    border-radius: 14px;
+  }
+
+  .admin-chat-list {
+    max-height: 128px;
+  }
+
+  .admin-conversation-row {
+    min-width: 145px;
+    padding: 0.7rem;
+  }
+
+  .admin-chat-thread .chat-messages {
+    max-height: 52dvh;
   }
 }
 
