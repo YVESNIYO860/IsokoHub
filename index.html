@@ -639,35 +639,24 @@
 <body>
   <div id="site-header-root"></div>
   <main>
-    <section class="hero-command" id="home-slideshow">
-      <div class="hero-command-grid">
-        <div class="hero-command-copy">
-          <div class="hero-command-eyebrow"><span class="hero-command-pulse"></span> Rwanda's local marketplace</div>
-          <h1>Find what fits<br><em>your life.</em></h1>
-          <p>Browse real listings from people and shops around you, or turn something you own into your next opportunity.</p>
-          <form class="hero-command-search" action="products.html" method="get">
+    <section class="hero-retail" id="home-slideshow">
+      <div class="hero-retail-inner">
+        <div class="hero-retail-copy">
+          <div class="hero-retail-eyebrow"><i class="fa-solid fa-location-dot"></i> Shop local in Rwanda</div>
+          <h1>Everything you need.<br><span>Right nearby.</span></h1>
+          <p>Compare listings, contact sellers, and find everyday products from people and shops around you.</p>
+          <form class="hero-retail-search" action="products.html" method="get">
             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-            <input type="search" name="search" placeholder="Search products, homes, and more" aria-label="Search listings">
-            <button type="submit">Search <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
+            <input type="search" name="search" placeholder="Search IsokoHub" aria-label="Search listings">
+            <button type="submit" aria-label="Search listings"><i class="fa-solid fa-magnifying-glass"></i></button>
           </form>
-          <div class="hero-command-actions">
-            <a href="products.html" class="hero-command-primary"><i class="fa-solid fa-compass"></i> Explore listings</a>
-            <a href="sell.html" class="hero-command-secondary"><i class="fa-solid fa-plus"></i> Sell an item</a>
-          </div>
-          <div class="hero-command-metrics">
-            <div><strong id="stat-active-listings">0+</strong><span>active listings</span></div>
-            <div><strong><i class="fa-solid fa-location-dot"></i></strong><span>local discovery</span></div>
-            <div><strong><i class="fa-solid fa-shield-heart"></i></strong><span>admin reviewed</span></div>
-          </div>
+          <div class="hero-retail-links"><a href="products.html"><i class="fa-solid fa-tag"></i> Browse deals</a><a href="sell.html"><i class="fa-solid fa-plus"></i> Sell on IsokoHub</a><a href="houses-rent.html"><i class="fa-solid fa-house"></i> Find a home</a></div>
+          <div class="hero-retail-stats"><span><strong id="stat-active-listings">0+</strong> active listings</span><span><i class="fa-solid fa-shield-heart"></i> Local marketplace</span></div>
         </div>
-        <div class="hero-command-stage">
-          <div class="hero-command-panel">
-            <div class="hero-command-panel-top"><span><i class="fa-solid fa-chart-line"></i> Marketplace pulse</span><b><span></span> Live</b></div>
-            <div class="hero-command-video-wrap"><video class="hero-media-video" src="assets/hero.mp4" autoplay muted loop playsinline preload="metadata"></video><div class="hero-command-video-label"><i class="fa-solid fa-bolt"></i> Fresh finds, close to home</div></div>
-            <div class="hero-command-panel-bottom"><div><small>Discover today</small><strong>New things are waiting.</strong></div><a href="products.html" aria-label="Browse products"><i class="fa-solid fa-arrow-up-right-from-square"></i></a></div>
-          </div>
-          <div class="hero-command-float hero-command-float-top"><i class="fa-solid fa-bag-shopping"></i><span><strong>Shop local</strong><small>Buy from your community</small></span></div>
-          <div class="hero-command-float hero-command-float-bottom"><i class="fa-solid fa-house"></i><span><strong>HouseHub</strong><small>Find your next address</small></span></div>
+        <div class="hero-retail-promo">
+          <div class="hero-retail-promo-head"><strong>Discover something new</strong><span><i class="fa-solid fa-bolt"></i> Updated daily</span></div>
+          <div class="hero-retail-media"><video class="hero-media-video" src="assets/hero.mp4" autoplay muted loop playsinline preload="metadata"></video><div><strong>Fresh finds from nearby sellers</strong><small>Explore products, homes, fashion, and more.</small></div></div>
+          <div class="hero-retail-promo-foot"><span><i class="fa-solid fa-truck-fast"></i> Easy local discovery</span><a href="products.html">Shop now <i class="fa-solid fa-arrow-right"></i></a></div>
         </div>
       </div>
     </section>
