@@ -32,16 +32,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const content = document.getElementById('admin-content');
-  const countSpan = document.getElementById('pending-count');
-  const adCountSpan = document.getElementById('ad-request-count');
-  const approvedCountSpan = document.getElementById('approved-count');
-  const totalCountSpan = document.getElementById('total-count');
-  const userCountSpan = document.getElementById('user-count');
-  const visitorCountSpan = document.getElementById('visitor-count');
-  const visitorHourlySpan = document.getElementById('visitor-hourly-count');
-  const visitorDailySpan = document.getElementById('visitor-daily-count');
-  const visitorWeeklySpan = document.getElementById('visitor-weekly-count');
-  const visitorMonthlySpan = document.getElementById('visitor-monthly-count');
   const categorySelect = document.getElementById('admin-category-filter');
   const tabPending = document.getElementById('tab-pending');
   const tabAds = document.getElementById('tab-ads');
@@ -185,6 +175,60 @@ document.addEventListener('DOMContentLoaded', async () => {
       selectedCategory = categorySelect.value || 'all';
       renderAdmin();
     });
+
+    function renderAdminListingForm() {
+      content.innerHTML = `
+        <div class="admin-form-panel">
+          <div class="admin-section-heading">
+            <div><span class="admin-eyebrow">Inventory</span><h2>Add marketplace listing</h2><p class="text-muted">Create a listing for review. New records stay pending until an administrator approves them.</p></div>
+            <button type="button" id="cancel-admin-listing" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Back to inventory</button>
+          </div>
+          <form id="admin-listing-form" class="admin-form-grid">
+            <label>Listing name<input class="form-control" name="name" required maxlength="120" placeholder="e.g. Samsung Galaxy A54"></label>
+            <label>Category<input class="form-control" name="category" required maxlength="80" placeholder="e.g. Electronics"></label>
+            <label>Price (RWF)<input class="form-control" name="price" required type="number" min="0" step="1" placeholder="250000"></label>
+            <label>Condition<select class="form-control" name="condition"><option value="New">New</option><option value="Used">Used</option><option value="Refurbished">Refurbished</option></select></label>
+            <label>Seller email<input class="form-control" name="sellerEmail" type="email" value="${escapeHtml(user?.email || '')}" required></label>
+            <label>Seller phone<input class="form-control" name="sellerPhone" type="tel" placeholder="+250 788 000 000"></label>
+            <label>District<input class="form-control" name="district" placeholder="Kigali"></label>
+            <label>Image URL<input class="form-control" name="imageUrl" type="url" placeholder="https://..."></label>
+            <label class="admin-form-wide">Description<textarea class="form-control" name="description" rows="4" required placeholder="Describe the item clearly for shoppers."></textarea></label>
+            <div class="admin-form-wide admin-form-actions"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Create pending listing</button><span id="admin-listing-status" class="text-muted" role="status"></span></div>
+          </form>
+        </div>
+      `;
+
+      document.getElementById('cancel-admin-listing')?.addEventListener('click', renderAdmin);
+      document.getElementById('admin-listing-form')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const submitButton = form.querySelector('button[type="submit"]');
+        const status = document.getElementById('admin-listing-status');
+        const values = Object.fromEntries(new FormData(form).entries());
+        submitButton.disabled = true;
+        status.textContent = 'Saving listing...';
+        try {
+          await createProduct({
+            name: values.name.trim(),
+            category: values.category.trim(),
+            price: Number(values.price),
+            condition: values.condition,
+            description: values.description.trim(),
+            sellerEmail: values.sellerEmail.trim(),
+            sellerPhone: values.sellerPhone.trim(),
+            district: values.district.trim(),
+            image: values.imageUrl.trim() ? [values.imageUrl.trim()] : []
+          });
+          alert('Listing created and sent to Pending Review.');
+          activeTab = 'pending';
+          switchTab('pending');
+        } catch (error) {
+          console.error('Failed to create admin listing:', error);
+          status.textContent = error?.message || 'Unable to create listing.';
+          submitButton.disabled = false;
+        }
+      });
+    }
   }
 
   function getUniqueCategories(items = []) {
@@ -206,65 +250,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     categorySelect.value = currentValue;
   }
 
-  function buildTabOverview(activeTab, metrics) {
-    const { pendingCount, adRequestCount, approvedCount, totalCount, userCount, adminUserCount, sellerUserCount, buyerUserCount, shopCount, assignedProductCount, visitorMetrics, settings } = metrics;
+  function renderAdminStats(metrics) {
+    const statCards = document.getElementById('admin-stat-cards');
+    if (!statCards) return;
 
-    const stats = {
+    const { pendingCount, adRequestCount, approvedCount, totalCount, userCount } = metrics;
+    const cardsByTab = {
       pending: [
-        { label: 'Pending listings', value: pendingCount },
-        { label: 'Ad requests', value: adRequestCount },
-        { label: 'Approved listings', value: approvedCount },
-        { label: 'Total inventory', value: totalCount }
+        ['Pending approvals', pendingCount, 'Listings awaiting moderation', 'pending-count'],
+        ['Ad requests', adRequestCount, 'Requests waiting for review', 'ad-request-count']
       ],
       ads: [
-        { label: 'Ad requests', value: adRequestCount },
-        { label: 'Pending approvals', value: pendingCount },
-        { label: 'Live listings', value: approvedCount },
-        { label: 'Site visits last 24h', value: visitorMetrics?.daily ?? 0 }
+        ['Ad requests', adRequestCount, 'Promotions waiting for review', 'ad-request-count'],
+        ['Live listings', approvedCount, 'Approved marketplace items', 'approved-count']
       ],
       inventory: [
-        { label: 'Total listings', value: totalCount },
-        { label: 'Approved inventory', value: approvedCount },
-        { label: 'Pending review', value: pendingCount },
-        { label: 'Shops connected', value: shopCount }
+        ['Total inventory', totalCount, 'Listings in the database', 'total-count'],
+        ['Live inventory', approvedCount, 'Approved listings visible to shoppers', 'approved-count'],
+        ['Needs review', pendingCount, 'Listings waiting for approval', 'pending-count']
       ],
-      users: [
-        { label: 'Total users', value: userCount },
-        { label: 'Admins', value: adminUserCount },
-        { label: 'Sellers', value: sellerUserCount },
-        { label: 'Buyers', value: buyerUserCount }
-      ],
-      shops: [
-        { label: 'Shop count', value: shopCount },
-        { label: 'Assigned products', value: assignedProductCount },
-        { label: 'Total listings', value: totalCount },
-        { label: 'Live listings', value: approvedCount }
-      ],
-      settings: [
-        { label: 'Default view', value: settings?.dashboardView || 'pending' },
-        { label: 'Refresh interval', value: `${settings?.refreshInterval || 30}s` },
-        { label: 'Show promoted', value: settings?.showPromoted ? 'Yes' : 'No' },
-        { label: 'Maintenance mode', value: settings?.maintenanceMode ? 'Enabled' : 'Disabled' }
-      ]
+      users: [['Registered users', userCount, 'Profiles available to manage', 'user-count']]
     };
 
-    const items = stats[activeTab] || stats.pending;
-    return `
-      <div class="admin-tab-overview">
-        <div class="admin-tab-overview-header">
-          <h2>${activeTab === 'pending' ? 'Pending Review Analytics' : activeTab === 'ads' ? 'Ad Requests Analytics' : activeTab === 'inventory' ? 'Inventory Analytics' : activeTab === 'users' ? 'User Analytics' : activeTab === 'shops' ? 'Shop Analytics' : 'Settings Overview'}</h2>
-          <p class="text-muted">Live summary metrics for the currently selected admin section.</p>
-        </div>
-        <div class="admin-tab-overview-grid">
-          ${items.map((item) => `
-            <div class="admin-tab-overview-card">
-              <span class="stat-label">${item.label}</span>
-              <strong>${item.value ?? 0}</strong>
-            </div>
-          `).join('')}
-        </div>
+    const cards = cardsByTab[activeTab] || [];
+    statCards.innerHTML = cards.map(([label, value, description, id]) => `
+      <div class="admin-stat-card">
+        <span class="stat-label">${label}</span>
+        <strong id="${id}">${value ?? 0}</strong>
+        <p class="text-muted">${description}</p>
       </div>
-    `;
+    `).join('');
   }
 
   function loadAdminSettings() {
@@ -319,8 +334,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.handleReject = async function(id) {
     if (confirm('REJECT and DELETE this listing? This cannot be undone.')) {
-      await deleteProduct(id);
-      renderAdmin();
+      try {
+        await deleteProduct(id);
+        await renderAdmin();
+      } catch (error) {
+        console.error('Failed to delete listing:', error);
+        alert(error?.message || 'Unable to delete this listing. Check your database permissions.');
+      }
     }
   };
 
@@ -508,8 +528,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       approvedCount,
       totalCount,
       adRequestCount,
-      userCount,
-      visitorCount
+      userCount
     ] = await Promise.all([
       fetchPendingProducts(),
       fetchAdRequests(),
@@ -518,116 +537,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchProductCount({ status: 'approved' }),
       fetchProductCount(),
       fetchProductCount({ ad_requested: true }),
-      fetchUserCount(),
-      (typeof fetchSiteVisitMetrics === 'function' ? fetchSiteVisitMetrics() : fetchSiteVisitCount())
+      fetchUserCount()
     ]);
 
     const categories = getUniqueCategories([...pendingProducts, ...adRequests, ...allProducts]);
     updateCategoryFilterOptions(categories);
+    categorySelect?.closest('.admin-sidebar-section')?.classList.toggle('admin-filter-hidden', !['pending', 'ads', 'inventory'].includes(activeTab));
 
-    const shops = await loadShopSettings();
-    const shopCount = Array.isArray(shops) ? shops.length : 0;
-    const assignedProductCount = Array.isArray(shops)
-      ? shops.reduce((sum, shop) => sum + (Array.isArray(shop.products) ? shop.products.length : 0), 0)
-      : 0;
-    const users = await fetchUserProfiles();
-    const adminUserCount = Array.isArray(users) ? users.filter((user) => user.role === 'admin').length : 0;
-    const sellerUserCount = Array.isArray(users) ? users.filter((user) => user.role === 'seller').length : 0;
-    const buyerUserCount = Array.isArray(users) ? Math.max(0, users.length - adminUserCount - sellerUserCount) : 0;
-    const adminSettings = loadAdminSettings();
-    const visitorMetrics = typeof visitorCount === 'object' && visitorCount !== null ? visitorCount : { total: visitorCount, hourly: 0, daily: 0, weekly: 0, monthly: 0 };
-    const sectionSummaryHtml = buildTabOverview(activeTab, {
-      pendingCount,
-      adRequestCount,
-      approvedCount,
-      totalCount,
-      userCount,
-      adminUserCount,
-      sellerUserCount,
-      buyerUserCount,
-      shopCount,
-      assignedProductCount,
-      visitorMetrics,
-      settings: adminSettings
-    });
-
-    countSpan.textContent = pendingCount;
-    adCountSpan.textContent = adRequestCount;
-    approvedCountSpan.textContent = approvedCount;
-    totalCountSpan.textContent = totalCount;
-    userCountSpan.textContent = userCount;
-
-    if (visitorCountSpan) {
-      visitorCountSpan.textContent = visitorMetrics.total || 0;
-    }
-
-    if (visitorHourlySpan) {
-      visitorHourlySpan.textContent = visitorMetrics.hourly || 0;
-    }
-
-    if (visitorDailySpan) {
-      visitorDailySpan.textContent = visitorMetrics.daily || 0;
-    }
-
-    if (visitorWeeklySpan) {
-      visitorWeeklySpan.textContent = visitorMetrics.weekly || 0;
-    }
-
-    if (visitorMonthlySpan) {
-      visitorMonthlySpan.textContent = visitorMetrics.monthly || 0;
-    }
-
-    // Debug info for admin to diagnose empty queues and verify Supabase connectivity.
-    const supabaseStatus = (typeof supabase !== 'undefined' && supabase) ? 'initialized' : 'missing';
-    const existingSummary = document.getElementById('admin-tab-overview-block');
-    if (!existingSummary) {
-      const summaryWrapper = document.createElement('div');
-      summaryWrapper.id = 'admin-tab-overview-block';
-      summaryWrapper.innerHTML = sectionSummaryHtml;
-      content.parentNode.insertBefore(summaryWrapper, content);
-    } else {
-      existingSummary.innerHTML = sectionSummaryHtml;
-    }
-    const debugHtml = `
-      <div style="margin: 0.5rem 0 1rem; padding: 0.75rem; border-radius:8px; background:#0f172a; color:#fff; font-size:0.9rem;">
-        <strong>Debug:</strong>
-        <div>Supabase: ${supabaseStatus}</div>
-        <div>Pending fetched: ${pendingProducts.length}</div>
-        <div>Ad requests fetched: ${adRequests.length}</div>
-        <div>Total products fetched: ${allProducts.length}</div>
-        <div style="margin-top:0.5rem;"><button id="admin-debug-toggle" class="btn btn-secondary" style="border-radius:50px; padding:0.25rem 0.8rem; font-size:0.85rem;">Show raw fetch data</button></div>
-        <div id="admin-debug-json" style="display:none; margin-top:0.75rem; max-height:220px; overflow:auto; background:#fff; color:#111; padding:0.75rem; border-radius:6px;"></div>
-      </div>
-    `;
-
-    // Insert or replace debug block above content
-    const existingDebug = document.getElementById('admin-debug-block');
-    if (!existingDebug) {
-      const wrapper = document.createElement('div');
-      wrapper.id = 'admin-debug-block';
-      wrapper.innerHTML = debugHtml;
-      content.parentNode.insertBefore(wrapper, content);
-    } else {
-      existingDebug.innerHTML = debugHtml;
-    }
-
-    // Hook toggle button
-    setTimeout(() => {
-      const btn = document.getElementById('admin-debug-toggle');
-      const jsonDiv = document.getElementById('admin-debug-json');
-      if (!btn || !jsonDiv) return;
-      btn.onclick = () => {
-        if (jsonDiv.style.display === 'none') {
-          jsonDiv.style.display = 'block';
-          jsonDiv.textContent = 'Pending:\n' + JSON.stringify(pendingProducts.slice(0,10), null, 2) + '\n\nAd Requests:\n' + JSON.stringify(adRequests.slice(0,10), null, 2) + '\n\nAll Products:\n' + JSON.stringify(allProducts.slice(0,10), null, 2);
-          btn.textContent = 'Hide raw fetch data';
-        } else {
-          jsonDiv.style.display = 'none';
-          btn.textContent = 'Show raw fetch data';
-        }
-      };
-    }, 50);
-
+    renderAdminStats({ pendingCount, adRequestCount, approvedCount, totalCount, userCount });
     // If Users tab active, render users management and return
     if (activeTab === 'settings') {
       const settings = loadAdminSettings();
@@ -969,7 +886,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
 
-    if (items.length === 0 && promotedProducts.length === 0) {
+    if (items.length === 0 && promotedProducts.length === 0 && activeTab !== 'inventory') {
       content.innerHTML = `
         <div style="text-align:center; padding: 4rem 0;">
           <i class="fa-solid fa-circle-check fa-4x" style="color: #dcfce7; margin-bottom: 1rem;"></i>
@@ -982,8 +899,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (activeTab === 'inventory') {
       content.innerHTML = `
+        <div class="admin-section-heading admin-listing-toolbar">
+          <div><span class="admin-eyebrow">Inventory control</span><h2>Marketplace listings</h2><p class="text-muted">Review, update, or remove items currently stored in the marketplace database.</p></div>
+          <button type="button" id="admin-add-listing" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add listing</button>
+        </div>
         <div class="admin-item-grid">
-          ${items.map(p => {
+          ${items.length === 0 ? '<div class="admin-empty-state"><i class="fa-solid fa-box-open"></i><h3>No inventory items</h3><p class="text-muted">Add the first marketplace listing to begin managing inventory.</p></div>' : items.map(p => {
             const displayImg = Array.isArray(p.image) ? p.image[0] : p.image || 'https://via.placeholder.com/120';
             const isSold = p.sold === true;
             const statusBadge = isSold ? '<span class="admin-item-badge sold">Sold</span>' : '<span class="admin-item-badge active">Available</span>';
@@ -1016,6 +937,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }).join('')}
         </div>
       `;
+      document.getElementById('admin-add-listing')?.addEventListener('click', renderAdminListingForm);
       return;
     }
 

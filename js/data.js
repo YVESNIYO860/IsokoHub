@@ -895,6 +895,20 @@ async function deleteProduct(id) {
       await deleteFileFromBucket(product.video_url, 'house-videos');
     }
   }
+
+  try {
+    const { error: mirrorError } = await supabase
+      .from('househub_listings')
+      .delete()
+      .eq('product_id', id);
+    if (mirrorError && !/not found|does not exist|relation .* does not exist/i.test(mirrorError.message || '')) {
+      throw mirrorError;
+    }
+  } catch (error) {
+    if (!/not found|does not exist|relation .* does not exist/i.test(error?.message || '')) {
+      throw error;
+    }
+  }
   
   // Delete product record from database
   const { error } = await supabase
@@ -1191,10 +1205,10 @@ async function updateUserProfileRole(userId, newRole) {
  * Delete user profile record from `user_profiles` (does NOT delete auth user)
  */
 async function deleteUserProfile(userId) {
-  const profiles = getStoredUserProfiles().filter(item => item.id !== userId);
-  saveStoredUserProfiles(profiles);
-
-  if (!supabase) return true;
+  if (!supabase) {
+    saveStoredUserProfiles(getStoredUserProfiles().filter(item => item.id !== userId));
+    return true;
+  }
 
   try {
     const { error } = await supabase
@@ -1206,9 +1220,11 @@ async function deleteUserProfile(userId) {
       const isMissingTable = error?.status === 404 || error?.message?.includes('does not exist') || error?.message?.includes('not found') || error?.code === '42P01';
       if (!isMissingTable) throw error;
     }
+    saveStoredUserProfiles(getStoredUserProfiles().filter(item => item.id !== userId));
     return true;
   } catch (err) {
-    return true;
+    console.error('Error deleting user profile:', err?.message || err);
+    throw err;
   }
 }
 

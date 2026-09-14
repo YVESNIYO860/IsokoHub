@@ -481,9 +481,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       const isHousehub = isHousehubCheckbox ? Boolean(isHousehubCheckbox.checked) : false;
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
-      // For Houses category, photos are optional; otherwise require 3-6 images
-      if (!isHousing && !isEditing && files.length < 3) {
-        throw new Error('Please upload at least 3 product photos.');
+      // House listings may omit photos; ordinary listings need one to six.
+      if (!isHousing && !isEditing && files.length < 1) {
+        throw new Error('Please upload at least 1 product photo.');
       }
       if (files.length > 6) {
         throw new Error('You can upload a maximum of 6 product photos.');
@@ -500,8 +500,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         imageUrls = imageUrls.concat(uploadedUrls);
       }
 
-      if (!isHousing && imageUrls.length < 3) {
-        throw new Error('Please provide at least 3 product photos.');
+      if (!isHousing && imageUrls.length < 1) {
+        throw new Error('Please provide at least 1 product photo.');
       }
 
       // Validate price

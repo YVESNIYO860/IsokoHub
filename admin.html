@@ -388,42 +388,112 @@
       font-size: 0.95rem;
     }
   </style>
+  <style>
+    .admin-command-center {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .admin-shell-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .admin-eyebrow {
+      color: #0f766e;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 0.55rem;
+    }
+
+    .admin-shell-header h1 {
+      color: #102a43;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+
+    .admin-shell-header p {
+      color: #627d98;
+      margin-top: 0.55rem;
+      max-width: 620px;
+    }
+
+    .admin-header-actions { display: flex; gap: 0.7rem; align-items: center; }
+    .admin-header-actions .btn { border-radius: 10px; }
+    .admin-shell-grid { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+    .admin-sidebar { position: sticky; top: 1.25rem; border-radius: 14px; padding: 1rem; background: #102a43; border: 0; box-shadow: 0 18px 35px rgba(16, 42, 67, 0.18); }
+    .admin-sidebar h2 { color: #fff; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.5rem 0.7rem; }
+    .admin-menu { gap: 0.25rem; }
+    .admin-menu button { border: 0; border-radius: 9px; color: #bcccdc; padding: 0.72rem 0.75rem; font-size: 0.9rem; }
+    .admin-menu button.active, .admin-menu button:hover { background: #0f766e; color: #fff; }
+    .admin-sidebar-section { border-color: rgba(255,255,255,0.14); }
+    .admin-sidebar-section.admin-filter-hidden { display: none; }
+    .admin-sidebar-section h3, .admin-quick-actions h3 { color: #d9e2ec; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .admin-sidebar-section select { background: #243b53; border-color: #486581; color: #fff; }
+    .admin-quick-actions { color: #9fb3c8; font-size: 0.82rem; }
+    .admin-quick-actions ul { color: #9fb3c8; }
+    .admin-main { display: grid; gap: 1.25rem; }
+    .admin-stat-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; margin: 0; }
+    #admin-stat-cards:empty { display: none; }
+    .admin-stat-card { min-height: 128px; padding: 1.15rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(16, 42, 67, 0.06); }
+    .admin-stat-card strong { color: #102a43; font-size: 2rem; }
+    .admin-stat-card .stat-label { color: #627d98; font-size: 0.69rem; }
+    .admin-stat-card p { font-size: 0.78rem; }
+    .admin-stat-card:nth-child(1) { border-top: 3px solid #f59e0b; }
+    .admin-stat-card:nth-child(2) { border-top: 3px solid #3b82f6; }
+    .admin-stat-card:nth-child(3) { border-top: 3px solid #0f766e; }
+    .admin-stat-card:nth-child(4) { border-top: 3px solid #7c3aed; }
+    .dashboard-card { padding: 1.25rem; border-radius: 14px; box-shadow: 0 12px 30px rgba(16, 42, 67, 0.07); }
+    .admin-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+    .admin-section-heading h2 { color: #102a43; font-size: 1.35rem; margin: 0.15rem 0 0.35rem; }
+    .admin-section-heading p { margin: 0; }
+    .admin-listing-toolbar { padding-bottom: 1rem; border-bottom: 1px solid #d9e2ec; }
+    .admin-form-panel { display: grid; gap: 1.25rem; }
+    .admin-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .admin-form-grid label { display: grid; gap: 0.4rem; color: #243b53; font-size: 0.88rem; font-weight: 700; }
+    .admin-form-wide { grid-column: 1 / -1; }
+    .admin-form-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .admin-empty-state { grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; border: 1px dashed #bcccdc; border-radius: 12px; color: #627d98; }
+    .admin-empty-state i { display: block; font-size: 2rem; color: #0f766e; margin-bottom: 0.7rem; }
+    .admin-tabs { display: none; }
+    @media (max-width: 1050px) { .admin-stat-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 760px) { .admin-command-center { padding: 1.25rem 0.8rem 3rem; } .admin-shell-header { align-items: stretch; flex-direction: column; } .admin-shell-grid { grid-template-columns: 1fr; } .admin-sidebar { position: fixed; inset: 0 auto 0 0; width: min(290px, 86vw); z-index: 20; transform: translateX(-105%); transition: transform 0.2s ease; overflow-y: auto; } .admin-sidebar.open { transform: translateX(0); } .admin-header-actions { justify-content: space-between; } .admin-stat-cards { grid-template-columns: 1fr 1fr; } .admin-section-heading { flex-direction: column; } .admin-form-grid { grid-template-columns: 1fr; } .admin-form-wide { grid-column: auto; } }
+  </style>
 </head>
 <body>
   <div id="site-header-root"></div>
   <!-- Header injected by app.js -->
 
-  <main class="admin-container">
-    <div class="admin-page-header">
+  <main class="admin-command-center">
+    <div class="admin-shell-header">
       <div>
-        <h1 class="admin-title">
-          <i class="fa-solid fa-user-shield" style="color:#febd69;"></i>
-          Admin Control Center
-        </h1>
-        <p class="text-muted">Manage marketplace approvals, ad reviews, inventory, and users with live Supabase counts.</p>
-        <div class="admin-hero-meta">
-          <span>Auto-refresh every 30 seconds</span>
-          <span>Audit actions from one dashboard</span>
-        </div>
+        <div class="admin-eyebrow">IsokoHub operations</div>
+        <h1>Good morning, administrator.</h1>
+        <p>Keep the marketplace healthy from one focused workspace. Review what needs attention, then move on.</p>
       </div>
-      <div class="admin-page-actions">
-        <button id="admin-sidebar-toggle" class="btn btn-secondary admin-sidebar-toggle" aria-expanded="false" aria-controls="admin-sidebar">Menu</button>
-        <button id="refresh-admin-btn" class="btn btn-primary">Refresh dashboard</button>
+      <div class="admin-header-actions">
+        <button id="admin-sidebar-toggle" class="btn btn-secondary admin-sidebar-toggle" aria-expanded="false" aria-controls="admin-sidebar"><i class="fa-solid fa-bars"></i> Menu</button>
+        <button id="refresh-admin-btn" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Refresh</button>
       </div>
     </div>
 
-    <div class="admin-dashboard-grid">
+    <div class="admin-shell-grid">
       <aside id="admin-sidebar" class="admin-sidebar">
-        <h2>Quick Menu</h2>
+          <h2>Workspace</h2>
         <div class="admin-menu">
           <button type="button" class="active" data-tab="pending">Pending Review</button>
-          <button type="button" data-tab="ads">Ad Requests</button>
           <button type="button" data-tab="inventory">Inventory</button>
           <button type="button" data-tab="users">Users</button>
           <button type="button" data-tab="shops">Shop Management</button>
           <button type="button" data-tab="settings">Settings</button>
-          <a href="visitors.html" class="admin-visitor-link">Visitor Analytics</a>
-          <a href="admin-chat.html" class="admin-visitor-link"><i class="fa-solid fa-comments"></i> Conversation Inbox</a>
+          <a href="admin-chat.html" class="admin-secondary-link"><i class="fa-solid fa-comments"></i> Conversation Inbox</a>
         </div>
 
         <div class="admin-sidebar-section">
@@ -433,80 +503,11 @@
           </select>
         </div>
 
-        <div class="admin-quick-actions">
-          <h3>Admin insights</h3>
-          <p class="text-muted">This dashboard uses Supabase queries to load accurate counts and display current marketplace status.</p>
-          <ul>
-            <li>Review new listings</li>
-            <li>Approve or reject ad requests</li>
-            <li>Monitor inventory status</li>
-            <li>Manage user profiles</li>
-          </ul>
-        </div>
+        <div class="admin-quick-actions"><h3>Today</h3><p>Start with pending reviews. Keep response time low and the marketplace trustworthy.</p></div>
       </aside>
 
       <section class="admin-main">
-        <div class="admin-stat-cards">
-          <div class="admin-stat-card">
-            <span class="stat-label">Pending approvals</span>
-            <strong id="pending-count">0</strong>
-            <p class="text-muted">Listings awaiting moderation</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Ad requests</span>
-            <strong id="ad-request-count">0</strong>
-            <p class="text-muted">Requests pending ad review</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Approved listings</span>
-            <strong id="approved-count">0</strong>
-            <p class="text-muted">Items currently live</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Total listings</span>
-            <strong id="total-count">0</strong>
-            <p class="text-muted">All products in the database</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Users</span>
-            <strong id="user-count">0</strong>
-            <p class="text-muted">Registered marketplace accounts</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Site visits</span>
-            <strong id="visitor-count">0</strong>
-            <p class="text-muted">Total marketplace page views</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Hourly visits</span>
-            <strong id="visitor-hourly-count">0</strong>
-            <p class="text-muted">Last 60 minutes</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Daily visits</span>
-            <strong id="visitor-daily-count">0</strong>
-            <p class="text-muted">Last 24 hours</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Weekly visits</span>
-            <strong id="visitor-weekly-count">0</strong>
-            <p class="text-muted">Last 7 days</p>
-          </div>
-          <div class="admin-stat-card">
-            <span class="stat-label">Monthly visits</span>
-            <strong id="visitor-monthly-count">0</strong>
-            <p class="text-muted">Last 30 days</p>
-          </div>
-        </div>
-
-        <div class="admin-tabs" role="tablist" aria-label="Admin dashboard sections">
-          <button class="btn btn-secondary active-tab" id="tab-pending" role="tab" aria-selected="true">Pending Review</button>
-          <button class="btn btn-secondary" id="tab-ads" role="tab">Ad Requests</button>
-          <button class="btn btn-secondary" id="tab-inventory" role="tab">Inventory</button>
-          <button class="btn btn-secondary" id="tab-users" role="tab">Users</button>
-          <button class="btn btn-secondary" id="tab-shops" role="tab">Shop Management</button>
-          <button class="btn btn-secondary" id="tab-settings" role="tab">Settings</button>
-        </div>
+        <div id="admin-stat-cards" class="admin-stat-cards" aria-live="polite"></div>
 
         <div class="dashboard-card">
           <div id="admin-content">
