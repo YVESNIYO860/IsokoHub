@@ -15,7 +15,7 @@
    - Create a new OAuth 2.0 Web Application
    - Authorized redirect URIs: 
      ```
-     https://foxfyzytxcuxsncaawwb.supabase.co/auth/v1/callback
+       https://<project-ref>.supabase.co/auth/v1/callback
      ```
    - Copy **Client ID** and **Client Secret**
 4. Paste in Supabase Google provider settings
@@ -87,7 +87,7 @@ CREATE POLICY "Users can insert their own profile"
 ### "Google OAuth redirect mismatch"
 - Ensure redirect URL in Supabase matches exactly:
   ```
-  https://foxfyzytxcuxsncaawwb.supabase.co/auth/v1/callback
+  https://<project-ref>.supabase.co/auth/v1/callback
   ```
 
 ### "user_profiles table error"
