@@ -799,8 +799,6 @@ function renderNavbar() {
     ${isAdminPage ? '' : `
     <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
       <a href="index.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
-      <a href="#" class="mobile-bottom-nav-item cart-icon"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span><b class="cart-count">0</b></a>
-      <a href="houses-rent.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-building"></i><span>HouseHub</span></a>
       <a href="sell.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-tag"></i><span>Sell</span></a>
       <a href="chat-inbox.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-comments"></i><span>Messages</span></a>
       <a href="${accountHref}" class="mobile-bottom-nav-item" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}><i class="fa-solid fa-user"></i><span>Account</span></a>
