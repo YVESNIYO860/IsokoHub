@@ -750,7 +750,7 @@ function renderNavbar() {
           <img src="assets/logo.png" alt="IsokoHub" class="site-logo" loading="eager" onerror="this.style.display='none'">
           <span>IsokoHub</span>
         </a>
-        
+
         <form class="search-form" id="global-search-form" onsubmit="handleSearch(event)">
           <input type="text" class="search-input" id="global-search-input" placeholder="Search for products, brands and categories...">
           <button type="submit" class="search-btn">
@@ -1010,7 +1010,9 @@ function renderFooter() {
 
 function handleSearch(e) {
   e.preventDefault();
-  const query = document.getElementById('global-search-input').value.trim();
+  const searchInput = document.getElementById('global-search-input');
+  if (!searchInput) return;
+  const query = searchInput.value.trim();
   if (query) {
     window.location.href = `products.html?q=${encodeURIComponent(query)}`;
   }

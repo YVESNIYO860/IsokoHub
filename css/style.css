@@ -5132,13 +5132,6 @@ body.high-contrast {
 .hero-retail h1 span { color: #1d4ed8; }
 .hero-retail-copy > p { max-width: 590px; margin: 0 0 1.25rem; color: #475569; font-size: 0.98rem; line-height: 1.65; }
 
-.hero-retail-search { display: flex; align-items: center; gap: 0.7rem; width: min(100%, 650px); padding: 0.35rem 0.4rem 0.35rem 1rem; border: 2px solid #2563eb; border-radius: 8px; background: #fff; box-shadow: 0 5px 15px rgba(15, 23, 42, 0.08); }
-.hero-retail-search > i { color: #64748b; }
-.hero-retail-search input { min-width: 0; flex: 1; padding: 0.7rem 0; border: 0; outline: 0; color: #0f172a; background: transparent; font: inherit; }
-.hero-retail-search input::placeholder { color: #94a3b8; }
-.hero-retail-search button { display: grid; place-items: center; width: 3rem; height: 2.8rem; border: 0; border-radius: 5px; background: #f59e0b; color: #172033; cursor: pointer; }
-.hero-retail-search button:hover { background: #fbbf24; }
-
 .hero-retail-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
 .hero-retail-links a { display: inline-flex; align-items: center; gap: 0.35rem; color: #1d4ed8; font-size: 0.78rem; font-weight: 700; text-decoration: none; }
 .hero-retail-links a:hover { color: #f97316; text-decoration: underline; }
@@ -5175,9 +5168,6 @@ body.high-contrast {
   .hero-retail-inner { width: min(100% - 1rem, 1240px); padding: 1.8rem 0 2rem; }
   .hero-retail h1 { font-size: clamp(2.25rem, 12vw, 3.4rem); }
   .hero-retail-copy > p { font-size: 0.88rem; }
-  .hero-retail-search { gap: 0.45rem; padding-left: 0.75rem; }
-  .hero-retail-search input { font-size: 0.85rem; }
-  .hero-retail-search button { width: 2.7rem; height: 2.5rem; }
   .hero-retail-links { gap: 0.7rem; }
   .hero-retail-links a { font-size: 0.7rem; }
   .hero-retail-promo { padding: 0.65rem; }
