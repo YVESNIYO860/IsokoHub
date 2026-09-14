@@ -169,23 +169,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       return `
         <div class="product-card">
           <a href="product.html?id=${p.id}" style="display:block; color:inherit; text-decoration:none;">
-            ${imageMarkup}
+            <div class="product-card-image-shell">
+              ${imageMarkup}
+              <span class="product-card-image-condition">${escapeHtml(p.condition || 'Used')}</span>
+              ${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt"></i> Buy online</span>' : ''}
+            </div>
             <div class="product-card-content">
-              <div style="display:flex; align-items:center; gap: 0.5rem; justify-content:space-between; flex-wrap:wrap;">
+              <div class="product-card-meta-row">
                 <span class="product-category">${p.category}</span>
-                <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
               </div>
               <h3 class="product-title">${p.name}</h3>
               ${shopBadge}
-              <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
+              <div class="product-card-seller-line"><i class="fa-solid fa-location-dot"></i><span>${p.district || 'District not set'}</span><span class="product-card-dot">•</span><span>${p.seller_phone || p.seller_email ? 'Seller available' : 'Seller details pending'}</span></div>
               <div class="product-card-foot">
                 ${priceMarkup}
-                <span style="background:#ecfeff;color:#0f766e;border-radius:10px;padding:0.35rem 0.65rem;font-size:0.76rem;font-weight:700;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-phone"></i> Contact</span>
+                <span class="product-card-view-link">View details <i class="fa-solid fa-arrow-right"></i></span>
               </div>
             </div>
           </a>
-          <div style="padding: 0 1rem 1rem; display:flex; gap:0.5rem; align-items:center; justify-content:space-between;">
-            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='product.html?id=${p.id}&buy=1'" class="btn btn-primary btn-buy-online" style="padding:0.45rem 0.8rem; border-radius:12px;">Buy Online</button>` : '<span style="color:#64748b; font-size:0.8rem; font-weight:600;">Available</span>'}
+          <div class="product-card-actions">
+            <a href="chat.html?product=${encodeURIComponent(p.id)}" onclick="event.stopPropagation();" class="product-card-chat"><i class="fa-solid fa-comments"></i> Chat</a>
+            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='product.html?id=${p.id}&buy=1'" class="btn btn-primary btn-buy-online"><i class="fa-solid fa-bolt"></i> Buy now</button>` : '<span class="product-card-availability"><i class="fa-solid fa-circle-check"></i> Available</span>'}
             <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(shareUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="Share listing">
               <i class="fa-solid fa-share-nodes"></i>
             </button>
