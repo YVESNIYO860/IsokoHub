@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - IsokoHub</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
+</head>
+<body>
+  <div id="site-header-root"></div>
+  <main class="chat-page">
+    <section class="chat-shell" aria-label="Marketplace chat">
+      <aside class="chat-context-panel">
+        <span class="chat-kicker"><i class="fa-solid fa-comments"></i> IsokoHub chat</span>
+        <h1>Talk directly about the listing.</h1>
+        <p>Ask questions, confirm availability, and agree on the next step with the seller.</p>
+        <div id="chat-product-context" class="chat-product-context"></div>
+        <div class="chat-privacy-note"><i class="fa-solid fa-eye"></i><span>Chats are not end-to-end encrypted. IsokoHub administrators can review conversations for safety.</span></div>
+      </aside>
+      <section class="chat-panel">
+        <div id="chat-status" class="chat-status" role="status"></div>
+        <div id="chat-identity" class="chat-identity-card"></div>
+        <div id="chat-conversation-picker" class="chat-conversation-picker" hidden></div>
+        <div id="chat-messages" class="chat-messages" aria-live="polite"></div>
+        <form id="chat-form" class="chat-compose" hidden>
+          <label class="sr-only" for="chat-message">Your message</label>
+          <textarea id="chat-message" rows="2" maxlength="2000" placeholder="Write a message to the seller..."></textarea>
+          <button class="chat-send-btn" type="submit" aria-label="Send message"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+      </section>
+    </section>
+  </main>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>

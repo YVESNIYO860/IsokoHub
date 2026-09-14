@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages - IsokoHub</title>
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
+  <script src="js/supabase-config.js?v=2"></script>
+</head>
+<body>
+  <div id="site-header-root"></div>
+  <main class="chat-inbox-page">
+    <div class="chat-inbox-heading"><div><span class="chat-kicker">IsokoHub messages</span><h1>Your conversations</h1><p>Keep track of your questions and seller replies in one place.</p></div><a href="products.html" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Browse products</a></div>
+    <div id="chat-inbox-status" class="chat-status"></div>
+    <section id="chat-inbox-list" class="chat-inbox-list"></section>
+  </main>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/chat-inbox.js"></script>
+</body>
+</html>

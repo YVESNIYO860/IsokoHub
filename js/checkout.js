@@ -37,219 +37,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const itemsHtml = cart.map(item => `
-    <div style="display:flex; gap:1rem; align-items:center; padding:0.6rem 0; border-bottom:1px solid #eef2ff;" data-item-id="${item.id}">
-      <img src="${item.image}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;"/>
-      <div style="flex:1;min-width:0;">
-        <div style="font-weight:700">${item.name}</div>
-        <div style="color:#64748b">Qty: ${item.quantity} &middot; Price: ${formatPrice(item.price)}</div>
-        <div style="margin-top:6px; color:#0f172a; font-size:0.95rem;">Seller: ${item.seller_phone || item.seller_email || 'N/A'}</div>
-        <div id="delivery-for-${item.id}" style="margin-top:6px;">${item.free_delivery ? `<span style=\"color:#166534; font-weight:600;\">Free delivery</span>` : (item.delivery_cost ? `<span style=\"color:#64748b\">Delivery: ${formatPrice(item.delivery_cost)}</span>` : `<span style=\"color:#64748b\">Delivery: TBD</span>` )}</div>
+    <article class="checkout-item" data-item-id="${item.id}">
+      <img class="checkout-item-image" src="${item.image}" alt="${item.name}" onerror="this.style.visibility='hidden'"/>
+      <div class="checkout-item-details">
+        <h2 class="checkout-item-name">${item.name}</h2>
+        <div class="checkout-item-meta">Qty ${item.quantity} <span aria-hidden="true">&middot;</span> ${formatPrice(item.price)} each</div>
+        <div class="checkout-item-seller">Seller: ${item.seller_phone || item.seller_email || 'Contact unavailable'}</div>
+        <div class="checkout-item-delivery">${item.free_delivery ? '<span class="delivery-free">Free delivery</span>' : (item.delivery_cost ? `Delivery: ${formatPrice(item.delivery_cost)}` : 'Delivery: To be confirmed')}</div>
       </div>
-      <div style="font-weight:800">${formatPrice(item.price * item.quantity)}</div>
-    </div>
+      <strong class="checkout-item-total">${formatPrice(item.price * item.quantity)}</strong>
+    </article>
   `).join('');
 
   container.innerHTML = `
-    <div style="border:1px solid #e6eef8; border-radius:12px; padding:1rem; background:#fff;">
+    <section class="checkout-items-panel">
+      <div class="checkout-panel-heading"><span>Order items</span><span>${cart.length} item${cart.length === 1 ? '' : 's'}</span></div>
       ${itemsHtml}
-    </div>
+    </section>
   `;
 
   const subtotal = cart.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0);
   // initial delivery total (using explicit delivery_cost when present; others TBD until we locate user)
   const deliveryTotalInitial = cart.reduce((sum, it) => sum + (it.free_delivery ? 0 : (it.delivery_cost ? Number(it.delivery_cost) : 0)), 0);
-  let computedDeliveryTotal = deliveryTotalInitial;
-  let userLocation = null;
-
-  // compute initial total and render summary
-  const total = subtotal + computedDeliveryTotal;
+  const total = subtotal + deliveryTotalInitial;
 
   summary.innerHTML = `
-    <div style="border:1px solid #e6eef8; border-radius:12px; padding:1rem; background:#fff; display:grid; gap:0.75rem;">
-      <div style="display:flex; justify-content:space-between;"><div>Subtotal</div><div>${formatPrice(subtotal)}</div></div>
-      <div style="display:flex; justify-content:space-between;"><div>Delivery</div><div id="summary-delivery-amount">${formatPrice(computedDeliveryTotal)}</div></div>
-      <div style="display:flex; justify-content:space-between; font-weight:800; font-size:1.1rem;"><div>Total</div><div id="summary-total-amount">${formatPrice(total)}</div></div>
-
-      <label style="display:flex; flex-direction:column; gap:0.35rem;">
-        Your phone number (for MTN Mobile Money):
-        <input id="buyer-phone" class="form-control" placeholder="e.g. 250788123456" />
-      </label>
-
-      <div style="display:flex; flex-direction:column; gap:0.5rem;">
-        <button id="detect-location-btn" class="btn btn-secondary">Detect my location for delivery price</button>
-        <div id="location-status" style="color:#64748b; font-size:0.9rem;"></div>
-      </div>
-
-      <button id="pay-now" class="btn btn-primary">Pay with MTN Mobile Money</button>
-      <div id="checkout-feedback" style="display:none; padding:0.5rem; border-radius:6px;"></div>
-    </div>
+    <section class="checkout-summary-card">
+      <div class="checkout-summary-heading"><span>Order summary</span><i class="fa-solid fa-receipt" aria-hidden="true"></i></div>
+      <div class="checkout-summary-row"><span>Subtotal</span><strong>${formatPrice(subtotal)}</strong></div>
+      <div class="checkout-summary-row"><span>Delivery</span><strong>${formatPrice(deliveryTotalInitial)}</strong></div>
+      <div class="checkout-summary-total"><span>Total</span><strong>${formatPrice(total)}</strong></div>
+      <div class="checkout-next-step"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>Contact the seller to confirm availability, delivery, and payment details.</span></div>
+      <a href="products.html" class="btn btn-secondary checkout-continue-btn"><i class="fa-solid fa-arrow-left"></i> Continue shopping</a>
+    </section>
   `;
-
-  const payBtn = document.getElementById('pay-now');
-  const feedback = document.getElementById('checkout-feedback');
-
-  payBtn.addEventListener('click', async () => {
-    const phone = document.getElementById('buyer-phone').value.trim();
-    if (!phone) {
-      feedback.style.display = 'block';
-      feedback.style.color = '#b91c1c';
-      feedback.textContent = 'Please enter your phone number to proceed.';
-      return;
-    }
-
-    payBtn.disabled = true;
-    payBtn.textContent = 'Processing…';
-    feedback.style.display = 'none';
-
-    // Try to request buyer location (best-effort) to improve delivery pricing and include in payment payload
-    let buyerCoords = null;
-    try {
-      if (navigator.geolocation) {
-        feedback.style.display = 'block';
-        feedback.style.color = '#0f172a';
-        feedback.textContent = 'Requesting location permission to calculate delivery...';
-        buyerCoords = await new Promise((resolve, reject) => {
-          const timer = setTimeout(() => reject(new Error('Location timed out')), 7000);
-          navigator.geolocation.getCurrentPosition((pos) => { clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }); }, (err) => { clearTimeout(timer); reject(err); }, { enableHighAccuracy: true, timeout: 7000 });
-        });
-        // Recompute delivery totals using buyer location
-        try { await updateDeliveryCostsWithLocation(buyerCoords.lat, buyerCoords.lng); } catch (e) { /* ignore */ }
-        feedback.textContent = `Location captured: ${buyerCoords.lat.toFixed(5)}, ${buyerCoords.lng.toFixed(5)}`;
-      }
-    } catch (err) {
-      console.warn('Buyer location unavailable:', err);
-      feedback.style.display = 'block';
-      feedback.style.color = '#f59e0b';
-      feedback.textContent = 'Location unavailable; continuing without buyer coordinates.';
-      buyerCoords = null;
-    }
-
-    // Recalculate final total after any potential delivery recalculation
-    const finalTotal = subtotal + computedDeliveryTotal;
-
-    const proceed = window.confirm(`You will be charged ${formatPrice(finalTotal)}. Phone: ${phone}. Proceed to initiate MTN payment?`);
-    if (!proceed) {
-      payBtn.disabled = false;
-      payBtn.textContent = 'Pay with MTN Mobile Money';
-      return;
-    }
-
-    try {
-      const payload = {
-        amount: finalTotal,
-        currency: 'RWF',
-        phone,
-        items: cart.map(i => ({ id: i.id, name: i.name, qty: i.quantity, price: i.price, seller_phone: i.seller_phone })),
-        buyer_location: buyerCoords ? { lat: buyerCoords.lat, lng: buyerCoords.lng } : null
-      };
-
-      const resp = await fetch('/api/mtn/create-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!resp.ok) {
-        const text = await resp.text();
-        throw new Error(text || 'Payment initiation failed');
-      }
-
-      const data = await resp.json();
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
-        return;
-      }
-
-      feedback.style.display = 'block';
-      feedback.style.color = '#0b6c4a';
-      feedback.textContent = 'Payment initiated. Follow the instructions on your phone.';
-      localStorage.removeItem('isokoHubCart');
-      window.dispatchEvent(new CustomEvent('cartUpdated', { detail: { cart: [] } }));
-    } catch (err) {
-      console.error('Payment error:', err);
-      feedback.style.display = 'block';
-      feedback.style.color = '#b91c1c';
-      feedback.textContent = 'Payment failed: ' + (err.message || 'Unknown error');
-    } finally {
-      payBtn.disabled = false;
-      payBtn.textContent = 'Pay with MTN Mobile Money';
-    }
-  });
-
-  // --- Location & Delivery calculation helpers ---
-  function haversineKm(lat1, lon1, lat2, lon2) {
-    const toRad = x => x * Math.PI / 180;
-    const R = 6371; // km
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
-
-  function computeDeliveryFee(distanceKm) {
-    // Simple configurable rule for Rwanda: base 500 RWF for first 5km, then 100 RWF/km thereafter
-    const base = 500;
-    const perKm = 100;
-    if (distanceKm <= 5) return base;
-    return Math.round(base + Math.ceil(distanceKm - 5) * perKm);
-  }
-
-  async function updateDeliveryCostsWithLocation(lat, lng) {
-    userLocation = { lat, lng };
-    const status = document.getElementById('location-status');
-    status.textContent = 'Location detected — calculating delivery prices...';
-
-    let newDeliveryTotal = 0;
-    for (const it of cart) {
-      const el = document.getElementById('delivery-for-' + it.id);
-      if (it.free_delivery) {
-        if (el) el.innerHTML = `<span style="color:#166534; font-weight:600;">Free delivery</span>`;
-        continue;
-      }
-
-      // if explicit delivery_cost provided, keep it; otherwise compute from seller coords if available
-      if (it.delivery_cost) {
-        newDeliveryTotal += Number(it.delivery_cost) || 0;
-        if (el) el.innerHTML = `<span style="color:#64748b">Delivery: ${formatPrice(it.delivery_cost)}</span>`;
-        continue;
-      }
-
-      if (it.seller_lat && it.seller_lng) {
-        const d = haversineKm(lat, lng, Number(it.seller_lat), Number(it.seller_lng));
-        const fee = computeDeliveryFee(d);
-        newDeliveryTotal += fee;
-        if (el) el.innerHTML = `<span style="color:#64748b">Delivery: ${formatPrice(fee)} (${d.toFixed(1)} km)</span>`;
-      } else {
-        // unable to compute distance
-        if (el) el.innerHTML = `<span style="color:#f59e0b">Delivery: seller hasn't provided location</span>`;
-      }
-    }
-
-    computedDeliveryTotal = newDeliveryTotal + cart.reduce((sum, it) => sum + (it.delivery_cost ? 0 : 0), 0);
-    // update summary UI amounts
-    const deliveryNode = summary.querySelector('div:nth-child(2) div:last-child');
-    const totalNode = summary.querySelector('div:nth-child(3) div:last-child');
-    if (deliveryNode) deliveryNode.textContent = formatPrice(computedDeliveryTotal);
-    if (totalNode) totalNode.textContent = formatPrice(subtotal + computedDeliveryTotal);
-    status.textContent = 'Delivery prices updated';
-  }
-
-  document.getElementById('detect-location-btn').addEventListener('click', () => {
-    const status = document.getElementById('location-status');
-    if (!navigator.geolocation) {
-      status.textContent = 'Geolocation is not supported by your browser.';
-      return;
-    }
-    status.textContent = 'Requesting location permission...';
-    navigator.geolocation.getCurrentPosition((pos) => {
-      updateDeliveryCostsWithLocation(pos.coords.latitude, pos.coords.longitude).catch((e) => {
-        console.error('Failed to compute delivery prices', e);
-        status.textContent = 'Failed to compute delivery prices';
-      });
-    }, (err) => {
-      console.error('Geolocation error', err);
-      status.textContent = 'Location permission denied or unavailable.';
-    }, { enableHighAccuracy: true, timeout: 10000 });
-  });
 });

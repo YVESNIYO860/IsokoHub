@@ -74,9 +74,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     .map(normalizeProductImage)
     .filter(Boolean);
   const mainImage = images[0] || placeholderImage;
-  const reviewKey = `isoko-product-reviews-${productId}`;
-  const reviews = getStoredReviews(reviewKey);
-  const averageRating = reviews.length ? (reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviews.length).toFixed(1) : '0.0';
 
   const sellerPhone = product.seller_phone ? String(product.seller_phone).trim() : '';
   const sellerEmail = product.seller_email ? String(product.seller_email).trim() : (product.sellerEmail ? String(product.sellerEmail).trim() : '');
@@ -119,147 +116,99 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
 
       <div class="product-info-card" id="product-description-panel">
-        <div class="pd-header">
-          <div class="pd-category">${product.category}</div>
-          <span class="pd-badge ${product.condition === 'New' ? 'badge-new' : 'badge-used'}">${product.condition || 'Used'}</span>
-          <h1 class="pd-title">${product.name}</h1>
-          <div class="review-summary" id="review-summary">
-            <div class="review-summary-stars">${buildStarsMarkup(Number(averageRating))}</div>
-            <div class="review-summary-score">${averageRating} / 5</div>
-            <div class="review-summary-count">${reviews.length} review${reviews.length === 1 ? '' : 's'}</div>
-          </div>
-        </div>
- 
-        ${priceHtml}
-
-        <div class="pd-description" style="margin-top: 0.5rem;">
-          <strong>Location:</strong><br>
-          <i class="fa-solid fa-location-dot"></i> ${product.district || 'District not set'}
-        </div>
-
-        ${product.shop?.id ? `
-          <div class="pd-description">
-            <strong>Storefront:</strong><br>
-            <a href="shop.html?id=${encodeURIComponent(product.shop.id)}" class="shop-link-button">
-              <i class="fa-solid fa-store"></i> ${escapeHtml(product.shop.name || 'View storefront')}
-            </a>
-            ${product.shop.location ? `<div class="text-muted" style="margin-top:0.35rem;">${escapeHtml(product.shop.location)}</div>` : ''}
-          </div>
-        ` : ''}
-
-        <div class="pd-description">
-          <strong>Contact Seller:</strong><br>
-          ${sellerPhone ? `<div><i class="fa-solid fa-phone"></i> ${sellerPhone}</div>` : ''}
-          ${sellerEmail ? `<div><i class="fa-solid fa-envelope"></i> ${sellerEmail}</div>` : '<div class="text-muted">Seller contact details will be added soon.</div>'}
-        </div>
-
-        <div class="pd-description">
-          <strong>Delivery:</strong><br>
-          ${product.free_delivery === true || product.freeDelivery === true ? `<div style="color:#166534; font-weight:700;">Free delivery available</div>` : ''}
-          ${product.delivery_cost || product.deliveryCost ? `<div style="color:#475569;">Delivery cost: ${formatPrice(product.delivery_cost || product.deliveryCost)}</div>` : (product.free_delivery || product.freeDelivery ? '' : '<div class="text-muted">Delivery details not specified</div>')}
-        </div>
-
-        ${product.buy_online ? `<div style="margin-top:12px;"><button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button></div>` : ''}
-
-        <div class="pd-description">
-          <strong>About this item:</strong><br>
-          ${escapeHtml(product.description || '').replace(/\n/g, '<br>')}
-        </div>
-
-        <div class="product-actions" style="display:flex; flex-direction:column; gap:0.75rem;">
-          <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-            <a href="${sellerPhone ? `https://wa.me/${sellerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${product.name}`)}` : '#'}" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #16a34a; color: white; border: 1px solid #16a34a; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem; ${sellerPhone ? '' : 'opacity:0.6; pointer-events:none;'}">
-              <i class="fa-brands fa-whatsapp" style="font-size: 1.1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">WhatsApp</span>
-            </a>
-            <a href="${sellerEmail ? `mailto:${sellerEmail}?subject=${encodeURIComponent(`Question about ${product.name}`)}` : '#'}" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #2563eb; color: white; border: 1px solid #2563eb; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.25rem; padding:0.8rem 0.6rem; ${sellerEmail ? '' : 'opacity:0.6; pointer-events:none;'}">
-              <i class="fa-solid fa-envelope" style="font-size: 1.1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">Email</span>
-            </a>
-          </div>
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-top:1rem;">
-          <div style="font-size:0.82rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#374151;">Share</div>
-          <div style="font-size:0.8rem; color:#6b7280;">Share this listing, not seller chat.</div>
-        </div>
-        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.5rem;">
-            <a id="whatsapp-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #25d366; color: white; border: 1px solid #25d366; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
-              <i class="fa-brands fa-whatsapp" style="font-size: 1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">WhatsApp</span>
-            </a>
-            <a id="facebook-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #1877f2; color: white; border: 1px solid #1877f2; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
-              <i class="fa-brands fa-facebook-f" style="font-size: 1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">Facebook</span>
-            </a>
-            <a id="twitter-share-btn" href="#" target="_blank" rel="noopener" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #1da1f2; color: white; border: 1px solid #1da1f2; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
-              <i class="fa-brands fa-twitter" style="font-size: 1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">Twitter</span>
-            </a>
-            <button id="copy-link-btn" type="button" class="btn btn-block" style="flex:1; min-width: 120px; border-radius: 999px; background: #0f172a; color: white; border: 1px solid #0f172a; display:flex; align-items:center; justify-content:center; gap:0.4rem; padding:0.8rem 0.6rem;">
-              <i class="fa-solid fa-link" style="font-size: 1rem;"></i>
-              <span style="font-size:0.82rem; font-weight:700;">Copy Link</span>
-            </button>
-          </div>
-          <div style="margin-top:0.35rem; color:#475569; font-size:0.9rem;">
-            Shares the currently selected product image and link.
-          </div>
-          <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px; margin-top:0.5rem;">
-            <i class="fa-solid fa-cart-plus"></i> Add to Cart
-          </button>
-          ${getCurrentUser && getCurrentUser() && (getCurrentUser().id === product.seller_id || getCurrentUser().id === product.sellerId) ? `<a href="sell.html?editId=${product.id}" class="btn btn-secondary btn-block" style="border-radius:999px;">Edit this listing</a>` : ''}
-        </div>
-
-        <div class="review-card">
-          <div class="review-card-header">
-            <h3>Ratings & Reviews</h3>
-            <p>Share your experience after adding your email.</p>
-          </div>
-
-          <form id="review-form" class="review-form">
-            <label class="form-label" for="review-email">Your email</label>
-            <input id="review-email" type="email" class="form-control" placeholder="name@example.com" required>
-
-            <label class="form-label">Your rating</label>
-            <div class="rating-picker" id="rating-picker">
-              ${[1, 2, 3, 4, 5].map((value) => `<button type="button" class="rating-star" data-value="${value}" aria-label="Rate ${value} star${value > 1 ? 's' : ''}"><i class="fa-solid fa-star"></i></button>`).join('')}
+        <div class="detail-stack">
+          <div class="detail-card detail-header-card">
+            <div class="pd-header">
+              <div class="pd-category">${product.category}</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; margin-top:0.6rem;">
+                <h1 class="pd-title" style="margin:0;">${product.name}</h1>
+                <span class="pd-badge ${product.condition === 'New' ? 'badge-new' : 'badge-used'}">${product.condition || 'Used'}</span>
+              </div>
             </div>
-
-            <label class="form-label" for="review-comment">Your comment</label>
-            <textarea id="review-comment" class="form-control review-textarea" rows="4" placeholder="Tell others what you liked or disliked..." required></textarea>
-
-            <div id="review-submit-feedback" class="review-submit-feedback" role="status" aria-live="polite"></div>
-            <button type="submit" class="btn btn-primary btn-block">Submit review</button>
-          </form>
-
-          <div class="review-list" id="review-list">
-            ${renderReviewList(reviews)}
           </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">Price</div>
+            <div class="detail-card-value">${priceHtml}</div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">Location</div>
+            <div class="detail-card-value"><i class="fa-solid fa-location-dot"></i> ${product.district || 'District not set'}${product.latitude || product.seller_lat ? ` • ${product.latitude ?? product.seller_lat}, ${product.longitude ?? product.seller_lng}` : ''}</div>
+          </div>
+
+          ${product.shop?.id ? `
+            <div class="detail-card">
+              <div class="detail-card-title">Storefront</div>
+              <div class="detail-card-value">
+                <a href="shop.html?id=${encodeURIComponent(product.shop.id)}" class="shop-link-button">
+                  <i class="fa-solid fa-store"></i> ${escapeHtml(product.shop.name || 'View storefront')}
+                </a>
+                ${product.shop.location ? `<div class="text-muted" style="margin-top:0.35rem;">${escapeHtml(product.shop.location)}</div>` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="detail-card">
+            <div class="detail-card-title">Contact Seller</div>
+            <div class="detail-card-value">
+              ${sellerPhone ? `<div><i class="fa-solid fa-phone"></i> ${sellerPhone}</div>` : ''}
+              ${sellerEmail ? `<div><i class="fa-solid fa-envelope"></i> ${sellerEmail}</div>` : '<div class="text-muted">Seller contact details will be added soon.</div>'}
+              ${product.seller_id || product.sellerId ? `<a href="seller-profile.html?id=${encodeURIComponent(product.seller_id || product.sellerId)}" class="seller-profile-inline-link"><i class="fa-solid fa-user"></i> View seller profile</a>` : ''}
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">Delivery</div>
+            <div class="detail-card-value">
+              ${product.free_delivery === true || product.freeDelivery === true ? `<div style="color:#166534; font-weight:700;">Free delivery available</div>` : ''}
+              ${product.delivery_cost || product.deliveryCost ? `<div style="color:#475569;">Delivery cost: ${formatPrice(product.delivery_cost || product.deliveryCost)}</div>` : (product.free_delivery || product.freeDelivery ? '' : '<div class="text-muted">Delivery details not specified</div>')}
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">About this item</div>
+            <div class="detail-card-value">${escapeHtml(product.description || '').replace(/\n/g, '<br>')}</div>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-card-title">Quick actions</div>
+            <div class="product-actions">
+              <div class="contact-actions">
+                <a href="chat.html?product=${encodeURIComponent(product.id)}" class="contact-action contact-action-chat">
+                  <span class="contact-action-icon"><i class="fa-solid fa-comments"></i></span>
+                  <span class="contact-action-copy"><strong>Chat online</strong><small>Talk about this item</small></span>
+                </a>
+                <a href="${sellerPhone ? `https://wa.me/${sellerPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${product.name}`)}` : '#'}" target="_blank" rel="noopener" class="contact-action contact-action-whatsapp ${sellerPhone ? '' : 'is-disabled'}">
+                  <span class="contact-action-icon"><i class="fa-brands fa-whatsapp"></i></span>
+                  <span class="contact-action-copy"><strong>WhatsApp</strong><small>Message seller</small></span>
+                </a>
+                <a href="${sellerEmail ? `mailto:${sellerEmail}?subject=${encodeURIComponent(`Question about ${product.name}`)}` : '#'}" class="contact-action contact-action-email ${sellerEmail ? '' : 'is-disabled'}">
+                  <span class="contact-action-icon"><i class="fa-solid fa-envelope"></i></span>
+                  <span class="contact-action-copy"><strong>Email</strong><small>Ask a question</small></span>
+                </a>
+              </div>
+              ${product.buy_online ? `<button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button>` : ''}
+              <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
+                <i class="fa-solid fa-cart-plus"></i> Add to Cart
+              </button>
+              ${getCurrentUser && getCurrentUser() && (getCurrentUser().id === product.seller_id || getCurrentUser().id === product.sellerId) ? `<a href="sell.html?editId=${product.id}" class="btn btn-secondary btn-block" style="border-radius:999px;">Edit this listing</a>` : ''}
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
 
-    <div class="pd-details-section">
-      <h3 class="pd-section-title">Product Specifications</h3>
-      <div class="pd-specs-grid">
-        <div class="spec-label">Brand</div><div class="spec-value">Authentic ${product.category} Brand</div>
-        <div class="spec-label">Model Name</div><div class="spec-value">${product.name}</div>
-        <div class="spec-label">Condition</div><div class="spec-value">${product.condition || 'Standard Working'}</div>
-        <div class="spec-label">Availability</div><div class="spec-value">In Stock</div>
+    <div class="related-products-section">
+      <div class="related-products-header">
+        <div>
+          <span class="related-products-kicker">Recommended</span>
+          <h3>More items you may like</h3>
+        </div>
+        <a href="products.html" class="related-products-link">Browse all products</a>
       </div>
-    </div>
-
-    <div class="pd-details-section">
-      <h3 class="pd-section-title">Verification Summary</h3>
-      <div id="product-summary" class="pd-summary-card">Generating summary for verification...</div>
-    </div>
-
-    <div class="pd-details-section">
-      <h3 class="pd-section-title">Key Features</h3>
-      <ul class="feature-list">
-        <li>Premium quality materials ensuring durability and long-term use.</li>
-        <li>Rigorous quality check performed by our expert team.</li>
-        <li>Exceptional value for money compared to standard market rates.</li>
-        <li>Fast delivery options available across the region.</li>
-      </ul>
+      <div id="related-products-grid" class="related-products-grid"></div>
     </div>
 
     <div class="gallery-modal" id="gallery-modal" aria-hidden="true">
@@ -279,7 +228,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   `;
 
   let activeImageIndex = 0;
-  let selectedRating = 0;
   let zoomLevel = 1;
   let panX = 0;
   let panY = 0;
@@ -291,7 +239,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const mainImageEl = document.getElementById('main-product-image');
   const modal = document.getElementById('gallery-modal');
   const modalImage = document.getElementById('gallery-modal-image');
-  const reviewForm = document.getElementById('review-form');
 
   const attachPlaceholderOnError = (img) => {
     if (!img) return;
@@ -303,25 +250,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   [mainImageEl, modalImage].forEach(attachPlaceholderOnError);
   wrapper.querySelectorAll('.gallery-thumb img').forEach(attachPlaceholderOnError);
-  const reviewList = document.getElementById('review-list');
-  const ratingPicker = document.getElementById('rating-picker');
-  const reviewFeedbackEl = document.getElementById('review-submit-feedback');
-  const productSummaryEl = document.getElementById('product-summary');
+
+  const updateGalleryAspectRatio = () => {
+    if (!mainImageEl?.naturalWidth || !mainImageEl.naturalHeight) return;
+    const galleryMain = document.querySelector('.gallery-main');
+    if (!galleryMain) return;
+    const naturalRatio = mainImageEl.naturalWidth / mainImageEl.naturalHeight;
+    const boundedRatio = Math.max(0.65, Math.min(1.65, naturalRatio));
+    galleryMain.style.aspectRatio = `${boundedRatio} / 1`;
+  };
+
+  mainImageEl?.addEventListener('load', updateGalleryAspectRatio);
+  if (mainImageEl?.complete) updateGalleryAspectRatio();
+
+  const relatedProducts = pickRelatedProducts(await fetchProducts(true), product, 4);
+  const relatedProductsGrid = document.getElementById('related-products-grid');
+
+  if (relatedProductsGrid) {
+    relatedProductsGrid.innerHTML = relatedProducts.length
+      ? relatedProducts.map((relatedProduct) => buildRelatedProductCard(relatedProduct)).join('')
+      : '<div class="text-muted">No related products available right now.</div>';
+  }
 
   const aiQuestionInput = document.getElementById('ai-question-input');
   const aiQuestionBtn = document.getElementById('ai-question-btn');
   const aiResponseEl = document.getElementById('ai-response');
-
-  if (productSummaryEl) {
-    fetchProductSummary(product)
-      .then((summary) => {
-        productSummaryEl.textContent = summary;
-      })
-      .catch((err) => {
-        console.error('Summary generation error:', err);
-        productSummaryEl.textContent = 'Summary unavailable. Start the local Claude proxy with "npm run claude-proxy" and ensure it is reachable on port 3001.';
-      });
-  }
 
   // AI assistant functionality removed/disabled for now.
 
@@ -350,7 +303,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateActiveImage(index) {
     activeImageIndex = index;
     const safeIndex = (index + images.length) % images.length;
-    if (mainImageEl) mainImageEl.src = images[safeIndex];
+    if (mainImageEl) {
+      mainImageEl.onload = updateGalleryAspectRatio;
+      mainImageEl.src = images[safeIndex];
+    }
     if (modalImage) modalImage.src = images[safeIndex];
 
     document.querySelectorAll('.gallery-thumb').forEach((thumb, thumbIndex) => {
@@ -439,29 +395,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function setSelectedRating(value) {
-    selectedRating = value;
-    ratingPicker?.querySelectorAll('.rating-star').forEach((star) => {
-      star.classList.toggle('active', Number(star.dataset.value) <= value);
-    });
-  }
-
-  function renderReviews(reviewsToRender) {
-    const average = reviewsToRender.length ? (reviewsToRender.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviewsToRender.length).toFixed(1) : '0.0';
-    const reviewSummary = document.getElementById('review-summary');
-    if (reviewSummary) {
-      reviewSummary.innerHTML = `
-        <div class="review-summary-stars">${buildStarsMarkup(Number(average))}</div>
-        <div class="review-summary-score">${average} / 5</div>
-        <div class="review-summary-count">${reviewsToRender.length} review${reviewsToRender.length === 1 ? '' : 's'}</div>
-      `;
-    }
-
-    if (reviewList) {
-      reviewList.innerHTML = renderReviewList(reviewsToRender);
-    }
-  }
-
   document.querySelectorAll('.gallery-thumb').forEach((thumb) => {
     thumb.addEventListener('click', () => {
       openGalleryModal(Number(thumb.dataset.index));
@@ -501,43 +434,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (modal && modal.hidden === false && event.key === 'Escape') {
       closeGalleryModal();
     }
-  });
-
-  ratingPicker?.querySelectorAll('.rating-star').forEach((star) => {
-    star.addEventListener('click', () => {
-      setSelectedRating(Number(star.dataset.value));
-    });
-  });
-
-  reviewForm?.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const emailInput = reviewForm.querySelector('#review-email');
-    const commentInput = reviewForm.querySelector('#review-comment');
-    const email = emailInput?.value.trim() || '';
-    const comment = commentInput?.value.trim() || '';
-
-    if (!email || !comment || selectedRating === 0) {
-      reviewFeedbackEl.classList.remove('show');
-      reviewFeedbackEl.textContent = 'Please add your email, choose a rating, and leave a comment.';
-      reviewFeedbackEl.classList.add('show');
-      return;
-    }
-
-    const review = {
-      id: Date.now(),
-      email,
-      rating: selectedRating,
-      comment,
-      createdAt: new Date().toISOString()
-    };
-
-    const updatedReviews = [...getStoredReviews(reviewKey), review];
-    localStorage.setItem(reviewKey, JSON.stringify(updatedReviews));
-    reviewForm.reset();
-    setSelectedRating(0);
-    renderReviews(updatedReviews);
-    reviewFeedbackEl.textContent = 'Thanks! Your review has been saved on this device.';
-    reviewFeedbackEl.classList.add('show');
   });
 
   const updateShareLinks = () => {
@@ -584,16 +480,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
-function getStoredReviews(key) {
-  try {
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.warn('Unable to read reviews from storage:', error);
-    return [];
-  }
-}
-
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -603,26 +489,24 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;');
 }
 
-function buildStarsMarkup(rating) {
-  const rounded = Math.round(rating);
-  return Array.from({ length: 5 }, (_, idx) => {
-    const active = idx < rounded;
-    return `<i class="fa-solid fa-star ${active ? 'review-star-active' : 'review-star-inactive'}"></i>`;
-  }).join('');
-}
+function buildRelatedProductCard(product) {
+  const imageList = Array.isArray(product.image) ? product.image : [product.image];
+  const firstImage = imageList.find((img) => typeof img === 'string' && img.trim()) || '';
+  const displayImage = firstImage || 'assets/logo.png';
+  const price = typeof product.price !== 'undefined' ? formatPrice(Number(product.price)) : 'Price unavailable';
+  const district = product.district || 'District not set';
 
-function renderReviewList(reviews) {
-  if (!reviews.length) {
-    return `<div class="review-empty">No reviews yet. Be the first to share your experience.</div>`;
-  }
-
-  return reviews.slice().reverse().map((review) => `
-    <div class="review-item">
-      <div class="review-item-top">
-        <div class="review-author">${escapeHtml(review.email || 'Anonymous')}</div>
-        <div class="review-rating">${buildStarsMarkup(Number(review.rating || 0))}</div>
+  return `
+    <a href="product.html?id=${encodeURIComponent(product.id)}" class="related-product-card">
+      <img src="${escapeHtml(displayImage)}" alt="${escapeHtml(product.name || 'Related product')}" class="related-product-image" onerror="this.onerror=null;this.src='assets/logo.png';">
+      <div class="related-product-body">
+        <div class="related-product-category">${escapeHtml(product.category || 'Product')}</div>
+        <h4 class="related-product-title">${escapeHtml(product.name || 'Product')}</h4>
+        <div class="related-product-location"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(district)}</div>
+        <div class="related-product-meta">
+          <span class="related-product-price">${price}</span>
+        </div>
       </div>
-      <p class="review-comment">${escapeHtml(review.comment || '')}</p>
-    </div>
-  `).join('');
+    </a>
+  `;
 }

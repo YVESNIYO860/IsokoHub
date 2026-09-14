@@ -539,6 +539,64 @@ async function fetchProducts(approvedOnly = true, sellerId = null, includeHouseh
   }
 }
 
+function pickRelatedProducts(products = [], currentProduct = null, limit = 4) {
+  const allProducts = Array.isArray(products) ? products.filter(Boolean) : [];
+  if (!allProducts.length) return [];
+
+  const currentId = currentProduct?.id || currentProduct?.product_id;
+  const currentCategory = String(currentProduct?.category || currentProduct?.subcategory || '').trim().toLowerCase();
+  const currentName = String(currentProduct?.name || '').trim().toLowerCase();
+  const currentDistrict = String(currentProduct?.district || '').trim().toLowerCase();
+
+  const ranked = allProducts
+    .filter((product) => {
+      if (!product || String(product.id) === String(currentId)) return false;
+      if (product.status && product.status !== 'approved') return false;
+      return true;
+    })
+    .map((product) => {
+      const productCategory = String(product.category || product.subcategory || '').trim().toLowerCase();
+      const productName = String(product.name || '').trim().toLowerCase();
+      const productDistrict = String(product.district || '').trim().toLowerCase();
+
+      let score = 0;
+      if (currentCategory && productCategory && productCategory === currentCategory) score += 40;
+      if (currentCategory && productCategory && productCategory.includes(currentCategory)) score += 8;
+      if (currentName) {
+        const currentTokens = currentName.split(/\s+/).filter(Boolean);
+        score += currentTokens.reduce((total, token) => total + (productName.includes(token) ? 6 : 0), 0);
+      }
+      if (currentDistrict && productDistrict && productDistrict === currentDistrict) score += 5;
+      if (Number(product.price || 0) > 0 && Number(currentProduct?.price || 0) > 0) {
+        score += 2;
+      }
+
+      return { ...product, _score: score };
+    })
+    .sort((a, b) => (b._score || 0) - (a._score || 0) || Number(b.price || 0) - Number(a.price || 0));
+
+  if (!ranked.length) return [];
+
+  const seen = new Set();
+  const selected = [];
+  const categoryMatches = ranked.filter((product) => {
+    const productCategory = String(product.category || product.subcategory || '').trim().toLowerCase();
+    return currentCategory && productCategory && productCategory === currentCategory;
+  });
+
+  const prioritized = [...categoryMatches, ...ranked.filter((product) => !categoryMatches.includes(product))];
+
+  for (const product of prioritized) {
+    const key = product.id || product.product_id || JSON.stringify(product);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    selected.push(product);
+    if (selected.length >= limit) break;
+  }
+
+  return selected;
+}
+
 /**
  * Fetch all pending products (Admin only)
  */

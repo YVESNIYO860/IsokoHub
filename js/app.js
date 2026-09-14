@@ -764,6 +764,11 @@ function renderNavbar() {
             <strong>Account</strong>
           </a>
 
+          <a href="chat-inbox.html" class="nav-action-item messages-nav-item">
+            <i class="fa-solid fa-comments"></i>
+            <strong>Messages</strong>
+          </a>
+
           ${isAdminPage ? '' : `
           ${showInstallAction ? `
           <button type="button" class="nav-action-item install-nav-btn" onclick="showInstallPrompt()">
@@ -797,6 +802,7 @@ function renderNavbar() {
       <a href="#" class="mobile-bottom-nav-item cart-icon"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span><b class="cart-count">0</b></a>
       <a href="houses-rent.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-building"></i><span>HouseHub</span></a>
       <a href="sell.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-tag"></i><span>Sell</span></a>
+      <a href="chat-inbox.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-comments"></i><span>Messages</span></a>
       <a href="${accountHref}" class="mobile-bottom-nav-item" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}><i class="fa-solid fa-user"></i><span>Account</span></a>
     </nav>
     `}
@@ -1145,10 +1151,10 @@ function renderCartContent() {
   
   if (cart.length === 0) {
     container.innerHTML = `
-      <div style="text-align:center; padding: 4rem 2rem;">
-        <i class="fa-solid fa-cart-shopping" style="font-size: 3rem; color: #cbd5e1; margin-bottom: 1.5rem;"></i>
-        <h3 style="color: #64748b; margin-bottom: 1rem;">Your cart is empty</h3>
-        <p style="font-size: 0.9rem; color: #94a3b8; margin-bottom: 2rem;">Looks like you haven't added anything to your cart yet.</p>
+      <div class="cart-empty-state">
+        <span class="cart-empty-icon"><i class="fa-solid fa-bag-shopping"></i></span>
+        <h3>Your cart is empty</h3>
+        <p>Save products here while you compare your options.</p>
         <button onclick="document.getElementById('close-cart').click()" class="btn btn-primary btn-block">Start Shopping</button>
       </div>
     `;
@@ -1161,7 +1167,7 @@ function renderCartContent() {
       <img src="${item.image}" alt="${item.name}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"80\" viewBox=\"0 0 80 80\"><rect width=\"80\" height=\"80\" fill=\"%23f8fbff\"/><rect x=\"8\" y=\"8\" width=\"64\" height=\"64\" rx=\"12\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"40\" cy=\"34\" r=\"14\" fill=\"%23e0f2fe\"/><path d=\"M24 60c8-14 16-14 32 0\" fill=\"%23bfdbfe\"/></svg>'">
       <div class="cart-item-details">
         <div class="cart-item-title">${item.name}</div>
-        <div class="cart-item-price">${formatPrice(item.price)}</div>
+        <div class="cart-item-price">${formatPrice(item.price)} <span>each</span></div>
         <div class="cart-item-actions">
           <div class="quantity-control">
             <button onclick="updateQuantity('${item.id}', -1)">-</button>
@@ -1184,27 +1190,25 @@ renderNavbar = function() {
   
   const cartDrawerHTML = `
     <div class="side-drawer cart-drawer" id="cart-drawer">
-      <div class="side-drawer-header">
+      <div class="side-drawer-header cart-drawer-header">
         <i class="fa-solid fa-cart-shopping"></i>
-        <span>Your Shopping Cart</span>
-        <button class="close-drawer" id="close-cart">&times;</button>
+        <div><strong>Your cart</strong><small>Review your saved items</small></div>
+        <button class="close-drawer" id="close-cart" aria-label="Close cart"><i class="fa-solid fa-xmark"></i></button>
       </div>
-      <div class="side-drawer-content" style="flex:1; display:flex; flex-direction:column;">
-        <div id="cart-items-container" style="flex:1; overflow-y:auto; padding: 1rem;">
+      <div class="side-drawer-content cart-drawer-content">
+        <div id="cart-items-container" class="cart-items-container">
           <!-- Items injected via JS -->
         </div>
         
-        <div class="cart-footer" style="padding: 1.5rem; border-top: 1px solid var(--border-color); background: #f8fafc;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
-            <strong style="font-size: 1.1rem;">Subtotal</strong>
-            <strong id="cart-subtotal" style="font-size: 1.25rem; color: var(--text-dark);">0 RWF</strong>
+        <div class="cart-footer">
+          <div class="cart-subtotal-row">
+            <span>Subtotal</span>
+            <strong id="cart-subtotal">0 RWF</strong>
           </div>
-          <a href="checkout.html" class="btn btn-primary btn-block" style="padding: 1rem; border-radius: 8px; text-align:center; display:inline-block; text-decoration:none; color:#fff;">
-            Proceed to Checkout
+          <a href="checkout.html" class="btn btn-primary btn-block cart-checkout-btn">
+            View checkout <i class="fa-solid fa-arrow-right"></i>
           </a>
-          <p style="text-align:center; font-size: 0.8rem; color: #64748b; margin-top: 0.8rem;">
-            Shipping and taxes calculated at checkout.
-          </p>
+          <p class="cart-footer-note">Delivery details are confirmed with the seller.</p>
         </div>
       </div>
     </div>
