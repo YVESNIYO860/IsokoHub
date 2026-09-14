@@ -799,7 +799,7 @@ function renderNavbar() {
     ${isAdminPage ? '' : `
     <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
       <a href="index.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
-      <a href="sell.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-tag"></i><span>Sell</span></a>
+      <a href="#" class="mobile-bottom-nav-item cart-icon"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span><b class="cart-count">0</b></a>
       <a href="chat-inbox.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-comments"></i><span>Messages</span></a>
       <a href="${accountHref}" class="mobile-bottom-nav-item" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}><i class="fa-solid fa-user"></i><span>Account</span></a>
     </nav>
@@ -1059,7 +1059,33 @@ function enableProductImageRotation(root = document) {
 function startHomepageShelfScroll() {
   const shelf = document.getElementById('homepage-product-shelf');
   if (!shelf) return;
-  shelf.querySelector('.amazon-product-track')?.classList.add('is-auto-scrolling');
+  const track = shelf.querySelector('.amazon-product-track');
+  if (!track) return;
+  track.classList.add('is-auto-scrolling');
+
+  if (!window.matchMedia('(max-width: 560px)').matches || shelf.dataset.mobileSlideshowReady === 'true') return;
+  const cards = Array.from(track.querySelectorAll('.product-card'));
+  const uniqueCardCount = Math.floor(cards.length / 2);
+  if (uniqueCardCount < 2) return;
+
+  shelf.dataset.mobileSlideshowReady = 'true';
+  let currentIndex = 0;
+  const getStepWidth = () => {
+    const card = cards[0];
+    if (!card) return 0;
+    const gap = Number.parseFloat(getComputedStyle(track).gap) || 0;
+    return card.getBoundingClientRect().width + gap;
+  };
+
+  window.setInterval(() => {
+    currentIndex += 1;
+    if (currentIndex >= uniqueCardCount) {
+      currentIndex = 0;
+      shelf.scrollTo({ left: 0, behavior: 'auto' });
+      return;
+    }
+    shelf.scrollTo({ left: currentIndex * getStepWidth(), behavior: 'smooth' });
+  }, 3000);
 }
 
 async function handleLogout(e) {

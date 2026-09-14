@@ -1766,8 +1766,13 @@ body.menu-open .menu-active-overlay {
   }
 
   .amazon-product-track.is-auto-scrolling {
-    animation-duration: 24s;
-    animation-timing-function: steps(8, end);
+    animation: none;
+    transform: none;
+  }
+
+  .amazon-product-grid {
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 0.1rem;
   }
 
   .amazon-product-grid .product-card {
@@ -1775,6 +1780,7 @@ body.menu-open .menu-active-overlay {
     min-width: calc(100vw - 2rem);
     width: calc(100vw - 2rem);
     max-width: calc(100vw - 2rem);
+    scroll-snap-align: start;
   }
 
   .amazon-product-grid .product-card-img,
@@ -1891,6 +1897,19 @@ body.menu-open .menu-active-overlay {
   .mobile-bottom-nav-item:focus-visible i { color: #fb923c; }
   .mobile-bottom-nav-item:first-child { color: #f8fafc; }
   .mobile-bottom-nav-item:first-child i { color: #5eead4; }
+  .mobile-bottom-nav-item .cart-count {
+    position: absolute;
+    top: 0.05rem;
+    right: calc(50% - 1.15rem);
+    min-width: 1rem;
+    padding: 0 0.22rem;
+    border: 2px solid #0f172a;
+    border-radius: 999px;
+    color: #fff;
+    background: #f97316;
+    font-size: 0.58rem;
+    line-height: 1.1rem;
+  }
 }
 
 @media (max-width: 480px) {
