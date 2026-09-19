@@ -4,6 +4,21 @@ const SITE_VISITS_TABLE = 'site_visits';
 const SITE_VISIT_STORAGE_KEY = 'isokoHubSiteVisitHistory';
 const SITE_VISITOR_ID_KEY = 'isokoHubVisitorId';
 const PRODUCT_LISTING_HISTORY_KEY = 'isokoHubProductListingCount';
+const PUBLIC_DATA_CACHE_TTL = 30000;
+const publicDataCache = new Map();
+let shopsRequestCache = null;
+let househubProductIdsRequestCache = null;
+
+function cacheIsFresh(entry) {
+  return entry && (Date.now() - entry.createdAt) < PUBLIC_DATA_CACHE_TTL;
+}
+
+function trackDataRequest(request) {
+  window.__isokoPendingDataRequests = (window.__isokoPendingDataRequests || 0) + 1;
+  return Promise.resolve(request).finally(() => {
+    window.__isokoPendingDataRequests = Math.max(0, (window.__isokoPendingDataRequests || 1) - 1);
+  });
+}
 const RWANDA_DISTRICTS = [
   'Bugesera', 'Burera', 'Gakenke', 'Gasabo', 'Gatsibo', 'Gicumbi', 'Gisagara', 'Huye',
   'Kamonyi', 'Karongi', 'Kayonza', 'Kicukiro', 'Kirehe', 'Muhanga', 'Musanze', 'Ngoma',
@@ -36,19 +51,23 @@ function normalizeShopRecord(record = {}) {
   };
 }
 
-async function fetchShops() {
-  if (!supabase) return [];
-  try {
-    const { data, error } = await supabase.from('shops').select('*').order('created_at', { ascending: false });
-    if (error) {
-      console.warn('Unable to fetch shops from Supabase:', error);
+function fetchShops() {
+  if (shopsRequestCache) return shopsRequestCache;
+  shopsRequestCache = trackDataRequest((async () => {
+    if (!supabase) return [];
+    try {
+      const { data, error } = await supabase.from('shops').select('*').order('created_at', { ascending: false });
+      if (error) {
+        console.warn('Unable to fetch shops from Supabase:', error);
+        return [];
+      }
+      return (Array.isArray(data) ? data : []).map(normalizeShopRecord);
+    } catch (err) {
+      console.warn('Unable to load shops from Supabase:', err);
       return [];
     }
-    return (Array.isArray(data) ? data : []).map(normalizeShopRecord);
-  } catch (err) {
-    console.warn('Unable to load shops from Supabase:', err);
-    return [];
-  }
+  })());
+  return shopsRequestCache;
 }
 
 async function readStoredShops() {
@@ -105,32 +124,33 @@ function formatHeroResponseTime(minutes) {
 }
 
 async function fetchHeroStats() {
-  const localListingCount = getStoredProductListingCount();
-  if (!supabase) {
-    return { productCount: localListingCount, responseMinutes: 15 };
-  }
+  const cached = publicDataCache.get('hero-stats');
+  if (cacheIsFresh(cached)) return cached.value;
 
-  try {
-    const { count, error } = await supabase
-      .from('products')
-      .select('id', { count: 'exact', head: true });
-
-    if (error) {
-      throw error;
+  const request = trackDataRequest((async () => {
+    const localListingCount = getStoredProductListingCount();
+    if (!supabase) {
+      return { productCount: localListingCount, responseMinutes: 15 };
     }
 
-    const dbCount = Number.isFinite(count) ? count : 0;
-    const productCount = Math.max(localListingCount, dbCount);
-    if (dbCount > localListingCount) {
-      saveStoredProductListingCount(dbCount);
-    }
+    try {
+      const { count, error } = await supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true });
 
-    const responseMinutes = 15;
-    return { productCount, responseMinutes };
-  } catch (err) {
-    console.error('Error fetching hero stats:', err?.message || err);
-    return { productCount: localListingCount, responseMinutes: 15 };
-  }
+      if (error) throw error;
+
+      const dbCount = Number.isFinite(count) ? count : 0;
+      const productCount = Math.max(localListingCount, dbCount);
+      if (dbCount > localListingCount) saveStoredProductListingCount(dbCount);
+      return { productCount, responseMinutes: 15 };
+    } catch (err) {
+      console.error('Error fetching hero stats:', err?.message || err);
+      return { productCount: localListingCount, responseMinutes: 15 };
+    }
+  })());
+  publicDataCache.set('hero-stats', { createdAt: Date.now(), value: request });
+  return request;
 }
 
 async function fetchProductCount(filters = {}) {
@@ -497,46 +517,49 @@ async function fetchVerifiedSellerCount() {
  */
 async function fetchProducts(approvedOnly = true, sellerId = null, includeHousehub = false) {
   if (!supabase) return [];
-  showAppLoader('Loading marketplace items...');
-  try {
-    // Basic query without server-side exclude filters to avoid REST 400 errors
-    let query = supabase.from('products').select('*');
-    if (approvedOnly) query = query.eq('status', 'approved');
-    if (sellerId) query = query.eq('seller_id', sellerId);
-    const { data, error } = await query.order('created_at', { ascending: false });
-    hideAppLoader();
-    if (error) {
-      console.warn('fetchProducts error from Supabase:', error?.message || error);
-      return [];
-    }
+  const cacheKey = `${approvedOnly ? 'approved' : 'all'}:${sellerId || ''}:${includeHousehub ? 'househub' : 'marketplace'}`;
+  const cached = publicDataCache.get(cacheKey);
+  if (cacheIsFresh(cached)) return cached.value;
 
-    // If caller does not want Househub items, filter them client-side.
-    const rows = Array.isArray(data) ? data : [];
-    if (!includeHousehub) {
-      // Try to fetch mirror `househub_listings` product ids and filter them out.
-      try {
-        const { data: hhData, error: hhErr } = await supabase
-          .from('househub_listings')
-          .select('product_id');
-        if (!hhErr && Array.isArray(hhData)) {
-          const hhSet = new Set(hhData.map(x => String(x.product_id)));
-          return rows.filter((r) => {
-            if (!r || !r.id) return false;
-            if (hhSet.has(String(r.id))) return false;
-            return !(r && (r.exclude_from_browse === true || r.excludeFromBrowse === true));
-          });
-        }
-      } catch (e) {
-        // If mirror table not available, fall back to column-based filter
+  const request = trackDataRequest((async () => {
+    showAppLoader('Loading marketplace items...');
+    try {
+      let query = supabase.from('products').select('*');
+      if (approvedOnly) query = query.eq('status', 'approved');
+      if (sellerId) query = query.eq('seller_id', sellerId);
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (error) {
+        console.warn('fetchProducts error from Supabase:', error?.message || error);
+        return [];
       }
-      return rows.filter((r) => !(r && (r.exclude_from_browse === true || r.excludeFromBrowse === true)));
+
+      const rows = Array.isArray(data) ? data : [];
+      if (!includeHousehub) {
+        if (!househubProductIdsRequestCache) {
+          househubProductIdsRequestCache = supabase
+            .from('househub_listings')
+            .select('product_id')
+            .then(({ data: hhData, error: hhErr }) => (!hhErr && Array.isArray(hhData)
+              ? new Set(hhData.map((item) => String(item.product_id)))
+              : null))
+            .catch(() => null);
+        }
+        const househubIds = await househubProductIdsRequestCache;
+        return rows.filter((row) => row && row.id
+          && !(househubIds && househubIds.has(String(row.id)))
+          && row.exclude_from_browse !== true
+          && row.excludeFromBrowse !== true);
+      }
+      return rows;
+    } catch (err) {
+      console.error('Error fetching products:', err?.message || err);
+      return [];
+    } finally {
+      hideAppLoader();
     }
-    return rows;
-  } catch (err) {
-    hideAppLoader();
-    console.error('Error fetching products:', err?.message || err);
-    return [];
-  }
+  })());
+  publicDataCache.set(cacheKey, { createdAt: Date.now(), value: request });
+  return request;
 }
 
 function pickRelatedProducts(products = [], currentProduct = null, limit = 4) {
@@ -622,19 +645,27 @@ async function fetchPendingProducts() {
 
 async function fetchProductById(id) {
   if (!supabase) return null;
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
-  } catch (err) {
-    console.error("Error fetching product by ID:", err);
-    return null;
-  }
+  const cacheKey = `product:${id}`;
+  const cached = publicDataCache.get(cacheKey);
+  if (cacheIsFresh(cached)) return cached.value;
+
+  const request = trackDataRequest((async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error("Error fetching product by ID:", err);
+      return null;
+    }
+  })());
+  publicDataCache.set(cacheKey, { createdAt: Date.now(), value: request });
+  return request;
 }
 
 /**

@@ -49,14 +49,68 @@ async function renderHomepageProductShelf() {
     while (shelfProducts.length < 8 && picks.length > 1) {
       shelfProducts.push(...picks);
     }
-    const cards = shelfProducts.map(createFeaturedProductCard).join('');
-    track.innerHTML = `${cards}${cards}`;
+    const cards = shelfProducts.map((product) => createFeaturedProductCard(product, true)).join('');
+    track.innerHTML = `${cards}${cards}${cards}${cards}${cards}`;
     enableProductImageRotation(track);
     startHomepageShelfScroll();
   } catch (error) {
     console.warn('Unable to render homepage product shelf:', error);
     track.innerHTML = '<div class="amazon-shelf-loading">Products are temporarily unavailable.</div>';
   }
+}
+
+function startHomepageShelfScroll() {
+  const shelf = document.getElementById('homepage-product-shelf');
+  const viewport = shelf?.querySelector('.amazon-product-viewport');
+  const track = shelf?.querySelector('.amazon-product-track');
+  const previousButton = shelf?.querySelector('.amazon-shelf-arrow-prev');
+  const nextButton = shelf?.querySelector('.amazon-shelf-arrow-next');
+  if (!shelf || !viewport || !track || !previousButton || !nextButton) return;
+
+  const mobileCards = Array.from(track.querySelectorAll('.product-card'));
+  const cycleLength = Math.floor(mobileCards.length / 5);
+  let mobileCardIndex = cycleLength * 2;
+  let wrapTimer = null;
+  if (cycleLength) {
+    viewport.scrollLeft = mobileCards[mobileCardIndex].offsetLeft;
+  }
+
+  const moveShelf = (direction) => {
+    if (!cycleLength || !Number.isFinite(direction) || wrapTimer) return;
+    mobileCardIndex -= direction;
+
+    const movingNext = direction < 0;
+    const crossedForwardBoundary = movingNext && mobileCardIndex >= cycleLength * 4;
+    const crossedBackwardBoundary = !movingNext && mobileCardIndex < cycleLength;
+    if (crossedForwardBoundary) mobileCardIndex = cycleLength * 4;
+    if (crossedBackwardBoundary) mobileCardIndex = cycleLength - 1;
+
+    const targetCard = mobileCards[mobileCardIndex];
+    if (!targetCard) {
+      mobileCardIndex = cycleLength;
+      return;
+    }
+
+    viewport.scrollTo({
+      left: targetCard.offsetLeft,
+      behavior: 'smooth'
+    });
+
+    if (wrapTimer) window.clearTimeout(wrapTimer);
+    if (crossedForwardBoundary || crossedBackwardBoundary) {
+      wrapTimer = window.setTimeout(() => {
+        mobileCardIndex = crossedForwardBoundary ? cycleLength * 2 : cycleLength * 3 - 1;
+        const resetCard = mobileCards[mobileCardIndex];
+        if (resetCard) {
+          viewport.scrollTo({ left: resetCard.offsetLeft, behavior: 'auto' });
+        }
+        wrapTimer = null;
+      }, 450);
+    }
+  };
+
+  previousButton.onclick = () => moveShelf(1);
+  nextButton.onclick = () => moveShelf(-1);
 }
 
 function initHomepageAdPopup() {
@@ -190,11 +244,14 @@ let featuredProductsObserver = null;
 let featuredProductsScrollListener = null;
 let featuredProductsLoading = false;
 
-function createFeaturedProductCard(p) {
+function createFeaturedProductCard(p, useHeroImageTreatment = false) {
   const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
   const displayImg = imageUrls[0] || '';
+  const backdropMarkup = useHeroImageTreatment
+    ? `<img src="${escapeHtml(displayImg)}" alt="" aria-hidden="true" class="hero-product-card-backdrop" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';">`
+    : '';
   const imageMarkup = displayImg
-    ? `<div class="product-card-image-shell" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);" style="object-fit: cover;"><span class="product-card-image-condition">Featured</span></div>`
+    ? `<div class="product-card-image-shell${useHeroImageTreatment ? ' hero-image-shell' : ''}" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}">${backdropMarkup}<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);" style="object-fit: contain;"></div>`
     : `<div class="product-card-image-shell"><div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div></div>`;
   const phone = p.seller_phone ? String(p.seller_phone).trim() : '';
   const email = p.seller_email ? String(p.seller_email).trim() : (p.sellerEmail ? String(p.sellerEmail).trim() : '');
@@ -204,27 +261,35 @@ function createFeaturedProductCard(p) {
   const contactUrl = whatsappUrl || emailUrl || `product.html?id=${encodeURIComponent(p.id)}`;
   const contactIcon = whatsappUrl ? 'fa-solid fa-phone' : 'fa-solid fa-envelope';
   const contactTitle = whatsappUrl ? 'Contact seller' : 'Email seller';
+  const productUrl = `product.html?id=${encodeURIComponent(p.id)}`;
+  const productName = escapeHtml(p.name || 'Untitled listing');
+  const productCategory = escapeHtml(p.category || 'Marketplace');
+  const productCondition = escapeHtml(p.condition || 'Used');
+  const productDistrict = escapeHtml(p.district || 'Location not set');
 
   return `
-        <div class="product-card" role="button" tabindex="0" onclick="window.location.href='product.html?id=${p.id}'" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); window.location.href='product.html?id=${p.id}'; }">
-          <div class="product-card-badge">Featured</div>
+        <article class="product-card${useHeroImageTreatment ? ' hero-product-card blurred-product-card' : ''}">
+          <a class="hero-product-card-link" href="${productUrl}" aria-label="View ${productName}">
+            <div class="product-card-badge">Featured</div>
           ${imageMarkup}
+          </a>
           <div class="product-card-content">
             <div class="product-card-meta-row">
-              <span class="product-category">${p.category}</span>
-              <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${p.condition}</span>
+              <span class="product-category">${productCategory}</span>
+              <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${productCondition}</span>
             </div>
-            <h3 class="product-title">${p.name}</h3>
+            <h3 class="product-title"><a href="${productUrl}">${productName}</a></h3>
             ${shopBadge}
-            <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${p.district || 'District not set'}</div>
+            <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${productDistrict}</div>
             <div class="product-card-foot">
               <span class="product-price">${formatPrice(p.price)}</span>
-              <button type="button" onclick='event.preventDefault(); event.stopPropagation(); window.open(${JSON.stringify(contactUrl)}, "_blank", "noopener,noreferrer")' class="product-contact-btn" title="${contactTitle}">
-                <i class="${contactIcon}"></i>
-              </button>
+              <div class="hero-product-card-actions">
+                <a href="${productUrl}" class="hero-product-card-view">View listing</a>
+                <a href="${escapeHtml(contactUrl)}" class="product-contact-btn" title="${contactTitle}" aria-label="${contactTitle}" target="_blank" rel="noopener noreferrer"><i class="${contactIcon}"></i></a>
+              </div>
             </div>
           </div>
-        </div>
+        </article>
       `;
 }
 
@@ -296,7 +361,7 @@ function renderFeaturedProductsPage() {
   const nextProducts = featuredProducts.slice(featuredRenderedCount, nextCount);
   if (!nextProducts.length) return;
 
-  container.insertAdjacentHTML('beforeend', nextProducts.map(createFeaturedProductCard).join(''));
+  container.insertAdjacentHTML('beforeend', nextProducts.map((product) => createFeaturedProductCard(product, true)).join(''));
   featuredRenderedCount = nextCount;
 
   if (featuredRenderedCount >= featuredProducts.length) {

@@ -645,16 +645,22 @@ function setupStickyHeader() {
 }
 
 function setupLoaderLogic() {
-  const navEntry = performance.getEntriesByType("navigation")[0];
-  const isReload = navEntry && navEntry.type === "reload";
-  const hasSeenLoader = sessionStorage.getItem('loaderSeen');
+  document.body.classList.remove('app-ready');
+  renderStartupLoader();
 
-  // Keep the normal app shell responsive on first load, but do not show a
-  // splash-style intro animation before the site becomes usable.
-  if (!hasSeenLoader || isReload) {
-    sessionStorage.setItem('loaderSeen', 'true');
-    hideStartupLoader();
-  }
+  const startedAt = Date.now();
+  const waitForInitialData = () => {
+    const pendingRequests = window.__isokoPendingDataRequests || 0;
+    const isSettled = pendingRequests === 0 && Date.now() - startedAt >= 250;
+    if (isSettled || Date.now() - startedAt >= 15000) {
+      document.body.classList.add('app-ready');
+      hideStartupLoader();
+      return;
+    }
+    window.setTimeout(waitForInitialData, 50);
+  };
+
+  window.setTimeout(waitForInitialData, 50);
 }
 
 function showAppLoader(message = 'Loading IsokoHub...') {

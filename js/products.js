@@ -148,13 +148,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
       const displayImg = imageUrls[0] || '';
       const imageMarkup = displayImg
-        ? `<div class="product-card-image-shell" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"><span class="product-card-image-condition">${escapeHtml(p.condition || 'Used')}</span>${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt"></i> Buy online</span>' : ''}</div>`
+        ? `<div class="product-card-image-shell" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="" aria-hidden="true" class="product-card-backdrop" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"><span class="product-card-image-condition">${escapeHtml(p.condition || 'Used')}</span>${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt"></i> Buy online</span>' : ''}</div>`
         : `<div class="product-card-image-shell"><div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div></div>`;
       const shopBadge = p.shop?.name
         ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>`
         : '';
       return `
-        <div class="product-card">
+        <div class="product-card blurred-product-card">
           <a href="product.html?id=${p.id}" style="display:block; color:inherit; text-decoration:none;">
             <div class="product-card-image-shell">
               ${imageMarkup}

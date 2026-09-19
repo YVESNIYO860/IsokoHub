@@ -30,6 +30,89 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function removeImageBackground(file) {
+    return new Promise(function(resolve, reject) {
+      var objectUrl = URL.createObjectURL(file);
+      var image = new Image();
+      image.onload = function() {
+        URL.revokeObjectURL(objectUrl);
+        var scale = Math.min(1, 1600 / Math.max(image.naturalWidth, image.naturalHeight));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        var context = canvas.getContext('2d', { willReadFrequently: true });
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        var imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        var pixels = imageData.data;
+        var width = canvas.width;
+        var height = canvas.height;
+        var visited = new Uint8Array(width * height);
+        var queue = [];
+        var background = [0, 0, 0];
+        var samples = [[0, 0], [width - 1, 0], [0, height - 1], [width - 1, height - 1]];
+        samples.forEach(function(point) {
+          var sampleIndex = (point[1] * width + point[0]) * 4;
+          background[0] += pixels[sampleIndex];
+          background[1] += pixels[sampleIndex + 1];
+          background[2] += pixels[sampleIndex + 2];
+        });
+        background = background.map(function(value) { return value / samples.length; });
+
+        function addPixel(x, y) {
+          if (x < 0 || y < 0 || x >= width || y >= height) return;
+          var position = y * width + x;
+          if (visited[position]) return;
+          var pixelIndex = position * 4;
+          var distance = Math.sqrt(
+            Math.pow(pixels[pixelIndex] - background[0], 2)
+            + Math.pow(pixels[pixelIndex + 1] - background[1], 2)
+            + Math.pow(pixels[pixelIndex + 2] - background[2], 2)
+          );
+          if (distance > 58 || pixels[pixelIndex + 3] === 0) return;
+          visited[position] = 1;
+          queue.push(position);
+        }
+
+        for (var x = 0; x < width; x += 1) {
+          addPixel(x, 0);
+          addPixel(x, height - 1);
+        }
+        for (var y = 1; y < height - 1; y += 1) {
+          addPixel(0, y);
+          addPixel(width - 1, y);
+        }
+
+        for (var cursor = 0; cursor < queue.length; cursor += 1) {
+          var position = queue[cursor];
+          var pixelIndex = position * 4;
+          pixels[pixelIndex + 3] = 0;
+          var currentX = position % width;
+          var currentY = Math.floor(position / width);
+          addPixel(currentX - 1, currentY);
+          addPixel(currentX + 1, currentY);
+          addPixel(currentX, currentY - 1);
+          addPixel(currentX, currentY + 1);
+        }
+
+        context.putImageData(imageData, 0, 0);
+        canvas.toBlob(function(blob) {
+          if (!blob) {
+            reject(new Error('Unable to create a transparent image.'));
+            return;
+          }
+          var baseName = file.name.replace(/\.[^.]+$/, '');
+          resolve(new File([blob], baseName + '-no-background.png', { type: 'image/png', lastModified: Date.now() }));
+        }, 'image/png');
+      };
+      image.onerror = function() {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Unable to read this image.'));
+      };
+      image.src = objectUrl;
+    });
+  }
+
   /* ── Render thumbnail grid ── */
   function renderImagePreviews() {
     imagePreviewGrid.innerHTML = '';
@@ -83,6 +166,29 @@ document.addEventListener('DOMContentLoaded', () => {
         renderImagePreviews();
         updateCountBadge();
       });
+
+      if (itemData.type === 'new') {
+        var backgroundBtn = document.createElement('button');
+        backgroundBtn.type = 'button';
+        backgroundBtn.className = 'preview-background-btn';
+        backgroundBtn.textContent = 'Remove background';
+        backgroundBtn.title = 'Remove the connected background from this image';
+        backgroundBtn.addEventListener('click', async function(e) {
+          e.stopPropagation();
+          var newIndex = index - existingImages.length;
+          backgroundBtn.disabled = true;
+          backgroundBtn.textContent = 'Processing…';
+          try {
+            window._sellImages[newIndex] = await removeImageBackground(window._sellImages[newIndex]);
+            renderImagePreviews();
+          } catch (error) {
+            backgroundBtn.disabled = false;
+            backgroundBtn.textContent = 'Try again';
+            console.warn('Unable to remove image background:', error);
+          }
+        });
+        item.appendChild(backgroundBtn);
+      }
 
       item.appendChild(img);
       item.appendChild(numBadge);

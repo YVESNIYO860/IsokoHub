@@ -124,6 +124,32 @@
       z-index: 3;
       transition: background 0.15s, transform 0.1s;
     }
+
+    .preview-background-btn {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      left: 4px;
+      z-index: 3;
+      padding: 0.3rem 0.2rem;
+      border: 0;
+      border-radius: 6px;
+      color: #ffffff;
+      background: rgba(15, 118, 110, 0.92);
+      font-size: 0.62rem;
+      font-weight: 700;
+      line-height: 1.2;
+      cursor: pointer;
+    }
+
+    .preview-background-btn:hover {
+      background: #0f766e;
+    }
+
+    .preview-background-btn:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
     .preview-remove-btn:hover {
       background: #dc2626;
       transform: scale(1.15);
@@ -292,7 +318,7 @@
               <div class="upload-progress-status" id="upload-progress-status">0 of 0 uploaded</div>
             </div>
 
-            <small class="text-muted d-block mt-1">Each new selection adds to the list. Click a photo in the preview to zoom in, or the ✕ button to remove it.</small>
+            <small class="text-muted d-block mt-1">Each new selection adds to the list. Use Remove background on a photo before posting when its background is plain or connected to the image edges.</small>
           </div>
 
           <div id="upload-overlay" class="upload-overlay">

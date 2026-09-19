@@ -650,9 +650,13 @@
           <a href="products.html" class="amazon-shelf-link">See all products <i class="fa-solid fa-arrow-right"></i></a>
         </div>
         <div id="homepage-product-shelf" class="amazon-product-grid" aria-live="polite">
-          <div class="amazon-product-track">
-            <div class="amazon-shelf-loading">Loading products...</div>
+          <button type="button" class="amazon-shelf-arrow amazon-shelf-arrow-prev" aria-label="Previous products" title="Previous products"><span aria-hidden="true">&lt;</span></button>
+          <div class="amazon-product-viewport">
+            <div class="amazon-product-track">
+              <div class="amazon-shelf-loading">Loading products...</div>
+            </div>
           </div>
+          <button type="button" class="amazon-shelf-arrow amazon-shelf-arrow-next" aria-label="Next products" title="Next products"><span aria-hidden="true">&gt;</span></button>
         </div>
       </div>
     </section>
