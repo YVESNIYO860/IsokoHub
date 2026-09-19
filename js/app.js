@@ -801,6 +801,7 @@ function renderNavbar() {
       ${isAdminPage ? '' : `
       <div class="navbar-bottom">
         <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">HOUSEHUB</a>
+        <a href="image-studio.html" style="color: #0f766e; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
         <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on IsokoHub</a>
       </div>
       `}
@@ -874,6 +875,11 @@ function renderNavbar() {
               ${isAdmin ? `<li><a href="admin.html"><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem; opacity:0.7;"></i> Admin Dashboard <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>` : ''}
             </ul>
           </div>
+        </div>
+
+        <div class="drawer-section drawer-form-section">
+          <h3><i class="fa-solid fa-wand-magic-sparkles" style="color:#0f766e"></i> <a href="image-studio.html" style="color:inherit; text-decoration:none;">Image Studio</a></h3>
+          <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 1rem;">Edit and prepare product photos before you list them.</p>
         </div>
 
         <div class="drawer-section drawer-form-section">
