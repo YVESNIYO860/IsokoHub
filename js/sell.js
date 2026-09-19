@@ -113,6 +113,171 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  var editorState = null;
+
+  function createImageEditor() {
+    var modal = document.createElement('div');
+    modal.className = 'image-editor-modal';
+    modal.innerHTML = `
+      <div class="image-editor-panel" role="dialog" aria-modal="true" aria-labelledby="image-editor-title">
+        <div class="image-editor-header">
+          <strong id="image-editor-title">Edit image</strong>
+          <button type="button" class="image-editor-close" aria-label="Close image editor">&times;</button>
+        </div>
+        <div class="image-editor-stage"><canvas class="image-editor-canvas"></canvas></div>
+        <div class="image-editor-controls">
+          <label>Crop
+            <select class="image-editor-ratio">
+              <option value="original">Original</option>
+              <option value="1">Square</option>
+              <option value="0.8">Portrait</option>
+              <option value="1.7778">Landscape</option>
+            </select>
+          </label>
+          <label>Contrast <output class="image-editor-contrast-value">100%</output>
+            <input class="image-editor-contrast" type="range" min="70" max="140" value="100">
+          </label>
+          <label>Brightness <output class="image-editor-brightness-value">100%</output>
+            <input class="image-editor-brightness" type="range" min="70" max="130" value="100">
+          </label>
+          <label>Saturation <output class="image-editor-saturation-value">100%</output>
+            <input class="image-editor-saturation" type="range" min="0" max="160" value="100">
+          </label>
+          <label>Zoom <output class="image-editor-zoom-value">100%</output>
+            <input class="image-editor-zoom" type="range" min="100" max="180" value="100">
+          </label>
+        </div>
+        <div class="image-editor-tools">
+          <button type="button" class="image-editor-rotate"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Rotate</button>
+          <button type="button" class="image-editor-flip"><i class="fa-solid fa-arrows-left-right" aria-hidden="true"></i> Flip</button>
+          <button type="button" class="image-editor-reset">Reset edits</button>
+        </div>
+        <div class="image-editor-actions">
+          <button type="button" class="image-editor-remove-bg">Remove background</button>
+          <button type="button" class="image-editor-cancel">Cancel</button>
+          <button type="button" class="image-editor-apply">Apply changes</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    var canvas = modal.querySelector('.image-editor-canvas');
+    var image = new Image();
+    var ratioSelect = modal.querySelector('.image-editor-ratio');
+    var contrastInput = modal.querySelector('.image-editor-contrast');
+    var contrastValue = modal.querySelector('.image-editor-contrast-value');
+    var brightnessInput = modal.querySelector('.image-editor-brightness');
+    var brightnessValue = modal.querySelector('.image-editor-brightness-value');
+    var saturationInput = modal.querySelector('.image-editor-saturation');
+    var saturationValue = modal.querySelector('.image-editor-saturation-value');
+    var zoomInput = modal.querySelector('.image-editor-zoom');
+    var zoomValue = modal.querySelector('.image-editor-zoom-value');
+    var rotation = 0;
+    var flipped = false;
+
+    function draw() {
+      if (!image.naturalWidth) return;
+      var sourceWidth = image.naturalWidth;
+      var sourceHeight = image.naturalHeight;
+      var ratio = ratioSelect.value === 'original' ? sourceWidth / sourceHeight : Number(ratioSelect.value);
+      var cropWidth = sourceWidth;
+      var cropHeight = sourceHeight;
+      if (sourceWidth / sourceHeight > ratio) cropWidth = sourceHeight * ratio;
+      else cropHeight = sourceWidth / ratio;
+      var zoom = Number(zoomInput.value) / 100;
+      cropWidth /= zoom;
+      cropHeight /= zoom;
+      var outputWidth = Math.min(1000, Math.round(cropWidth));
+      var outputHeight = Math.max(1, Math.round(outputWidth / ratio));
+      var quarterTurn = Math.abs(rotation % 180) === 90;
+      canvas.width = quarterTurn ? outputHeight : outputWidth;
+      canvas.height = quarterTurn ? outputWidth : outputHeight;
+      var context = canvas.getContext('2d');
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.filter = `brightness(${brightnessInput.value}%) contrast(${contrastInput.value}%) saturate(${saturationInput.value}%)`;
+      context.save();
+      context.translate(canvas.width / 2, canvas.height / 2);
+      context.rotate(rotation * Math.PI / 180);
+      context.scale(flipped ? -1 : 1, 1);
+      context.drawImage(image, (sourceWidth - cropWidth) / 2, (sourceHeight - cropHeight) / 2, cropWidth, cropHeight, -outputWidth / 2, -outputHeight / 2, outputWidth, outputHeight);
+      context.restore();
+      context.filter = 'none';
+      contrastValue.textContent = `${contrastInput.value}%`;
+      brightnessValue.textContent = `${brightnessInput.value}%`;
+      saturationValue.textContent = `${saturationInput.value}%`;
+      zoomValue.textContent = `${zoomInput.value}%`;
+    }
+
+    function close() {
+      modal.remove();
+      editorState = null;
+    }
+
+    modal.querySelector('.image-editor-close').addEventListener('click', close);
+    modal.querySelector('.image-editor-cancel').addEventListener('click', close);
+    modal.addEventListener('click', function(event) { if (event.target === modal) close(); });
+    ratioSelect.addEventListener('change', draw);
+    contrastInput.addEventListener('input', draw);
+    brightnessInput.addEventListener('input', draw);
+    saturationInput.addEventListener('input', draw);
+    zoomInput.addEventListener('input', draw);
+    modal.querySelector('.image-editor-rotate').addEventListener('click', function() {
+      rotation = (rotation + 90) % 360;
+      draw();
+    });
+    modal.querySelector('.image-editor-flip').addEventListener('click', function() {
+      flipped = !flipped;
+      draw();
+    });
+    modal.querySelector('.image-editor-reset').addEventListener('click', function() {
+      ratioSelect.value = 'original';
+      contrastInput.value = '100';
+      brightnessInput.value = '100';
+      saturationInput.value = '100';
+      zoomInput.value = '100';
+      rotation = 0;
+      flipped = false;
+      draw();
+    });
+
+    modal.querySelector('.image-editor-remove-bg').addEventListener('click', async function(event) {
+      var button = event.currentTarget;
+      button.disabled = true;
+      button.textContent = 'Processing…';
+      try {
+        editorState.file = await removeImageBackground(editorState.file);
+        image.onload = draw;
+        image.src = URL.createObjectURL(editorState.file);
+      } catch (error) {
+        button.textContent = 'Try again';
+        button.disabled = false;
+        return;
+      }
+      button.textContent = 'Background removed';
+      button.disabled = false;
+    });
+
+    modal.querySelector('.image-editor-apply').addEventListener('click', function() {
+      canvas.toBlob(function(blob) {
+        if (!blob || !editorState) return;
+        var baseName = editorState.file.name.replace(/\.[^.]+$/, '');
+        window._sellImages[editorState.index] = new File([blob], baseName + '-edited.png', { type: 'image/png', lastModified: Date.now() });
+        renderImagePreviews();
+        close();
+      }, 'image/png');
+    });
+
+    return { modal: modal, image: image, draw: draw };
+  }
+
+  function openImageEditor(index) {
+    if (!window._sellImages[index]) return;
+    editorState = { index: index, file: window._sellImages[index] };
+    var editor = createImageEditor();
+    editor.image.onload = editor.draw;
+    editor.image.src = URL.createObjectURL(editorState.file);
+  }
+
   /* ── Render thumbnail grid ── */
   function renderImagePreviews() {
     imagePreviewGrid.innerHTML = '';
@@ -168,6 +333,17 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (itemData.type === 'new') {
+        var editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'preview-edit-btn';
+        editBtn.textContent = 'Edit';
+        editBtn.title = 'Crop, adjust contrast, or remove background';
+        editBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openImageEditor(index - existingImages.length);
+        });
+        item.appendChild(editBtn);
+
         var backgroundBtn = document.createElement('button');
         backgroundBtn.type = 'button';
         backgroundBtn.className = 'preview-background-btn';

@@ -735,6 +735,10 @@ function renderDataLoader(message = 'Loading IsokoHub...') {
 }
 
 function renderNavbar() {
+  document.querySelectorAll('.navbar, .mobile-bottom-nav, #side-drawer-overlay, #side-drawer').forEach((element) => {
+    element.remove();
+  });
+
   const user = getCurrentUser();
   const showInstallAction = !isInStandaloneMode();
   const isAdmin = isAdminUser(user);

@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const categorySelect = document.getElementById('category-filter-select');
   const conditionSelect = document.getElementById('condition-filter-select');
   const districtSelect = document.getElementById('district-filter-select');
+  const filterToggle = document.getElementById('products-filter-toggle');
+  const filterPanel = document.getElementById('products-filter-panel');
+  const filterClose = document.getElementById('products-filter-close');
+  const filterReset = document.getElementById('products-filter-reset');
+  const filterCount = document.getElementById('products-filter-count');
   const productsContainer = document.getElementById('products-container');
   const summaryEl = document.getElementById('search-summary');
   
@@ -32,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const searchQuery = urlParams.get('q');
   const queryCat = urlParams.get('category');
+  const queryCondition = urlParams.get('condition');
   const queryDistrict = urlParams.get('district');
   const queryBuyOnline = urlParams.get('buy_online') || urlParams.get('buyonline') || null;
   
@@ -40,6 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   if (queryDistrict) {
     currentDistrict = queryDistrict;
+  }
+  if (queryCondition) {
+    currentCondition = queryCondition;
   }
 
   CATEGORIES.forEach(cat => {
@@ -60,18 +69,46 @@ document.addEventListener('DOMContentLoaded', async () => {
   conditionSelect.value = currentCondition;
   districtSelect.value = currentDistrict;
 
+  function updateFilterCount() {
+    const activeCount = [currentCategory, currentCondition, currentDistrict].filter(value => value !== 'all').length;
+    filterCount.textContent = String(activeCount);
+    filterToggle.setAttribute('aria-label', `${activeCount} active filters`);
+  }
+
+  function setFilterPanel(open) {
+    filterPanel.hidden = !open;
+    filterToggle.setAttribute('aria-expanded', String(open));
+  }
+
+  updateFilterCount();
+  filterToggle.addEventListener('click', () => setFilterPanel(filterPanel.hidden));
+  filterClose.addEventListener('click', () => setFilterPanel(false));
+  filterReset.addEventListener('click', () => {
+    currentCategory = 'all';
+    currentCondition = 'all';
+    currentDistrict = 'all';
+    categorySelect.value = currentCategory;
+    conditionSelect.value = currentCondition;
+    districtSelect.value = currentDistrict;
+    updateUrlAndRender();
+    setFilterPanel(false);
+  });
+
   categorySelect.addEventListener('change', () => {
     currentCategory = categorySelect.value;
+    updateFilterCount();
     updateUrlAndRender();
   });
 
   conditionSelect.addEventListener('change', () => {
     currentCondition = conditionSelect.value;
+    updateFilterCount();
     updateUrlAndRender();
   });
 
   districtSelect.addEventListener('change', () => {
     currentDistrict = districtSelect.value;
+    updateFilterCount();
     updateUrlAndRender();
   });
 
@@ -79,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams();
     if (searchQuery) params.set('q', searchQuery);
     if (currentCategory !== 'all') params.set('category', currentCategory);
+    if (currentCondition !== 'all') params.set('condition', currentCondition);
     if (currentDistrict !== 'all') params.set('district', currentDistrict);
     const newUrl = `products.html${params.toString() ? '?' + params.toString() : ''}`;
     window.history.pushState({}, '', newUrl);

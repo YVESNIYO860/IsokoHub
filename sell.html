@@ -150,6 +150,68 @@
       cursor: wait;
       opacity: 0.7;
     }
+
+    .preview-edit-btn {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      z-index: 3;
+      padding: 0.25rem 0.45rem;
+      border: 0;
+      border-radius: 6px;
+      color: #ffffff;
+      background: rgba(37, 99, 235, 0.92);
+      font-size: 0.62rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .preview-edit-btn:hover { background: #1d4ed8; }
+
+    .image-editor-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: grid;
+      place-items: center;
+      padding: 1rem;
+      background: rgba(15, 23, 42, 0.72);
+    }
+
+    .image-editor-panel {
+      width: min(100%, 620px);
+      max-height: min(92vh, 760px);
+      overflow: auto;
+      padding: 1rem;
+      border: 1px solid #dbe4ef;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 24px 70px rgba(2, 6, 23, 0.32);
+    }
+
+    .image-editor-header,
+    .image-editor-actions,
+    .image-editor-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .image-editor-header { justify-content: space-between; margin-bottom: 0.8rem; }
+    .image-editor-close { border: 0; background: transparent; color: #64748b; font-size: 1.5rem; cursor: pointer; }
+    .image-editor-stage { display: grid; min-height: 240px; place-items: center; padding: 0.7rem; border-radius: 10px; background: #e2e8f0; }
+    .image-editor-canvas { display: block; max-width: 100%; max-height: 52vh; object-fit: contain; background: repeating-conic-gradient(#f8fafc 0 25%, #e2e8f0 0 50%) 50% / 20px 20px; }
+    .image-editor-controls { align-items: flex-end; flex-wrap: wrap; margin-top: 0.85rem; }
+    .image-editor-controls label { display: grid; gap: 0.3rem; flex: 1; min-width: 150px; color: #475569; font-size: 0.76rem; font-weight: 700; }
+    .image-editor-controls select { padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 7px; background: #ffffff; color: #0f172a; }
+    .image-editor-controls input { width: 100%; accent-color: #2563eb; }
+    .image-editor-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+    .image-editor-tools button { padding: 0.5rem 0.65rem; border: 1px solid #cbd5e1; border-radius: 7px; color: #334155; background: #f8fafc; font: inherit; font-size: 0.76rem; font-weight: 750; cursor: pointer; }
+    .image-editor-tools button:hover { border-color: #2563eb; color: #1d4ed8; background: #eff6ff; }
+    .image-editor-actions { justify-content: flex-end; flex-wrap: wrap; margin-top: 1rem; }
+    .image-editor-actions button { padding: 0.6rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 7px; background: #ffffff; color: #0f172a; font: inherit; font-size: 0.78rem; font-weight: 750; cursor: pointer; }
+    .image-editor-actions .image-editor-remove-bg { margin-right: auto; color: #0f766e; border-color: #99f6e4; background: #f0fdfa; }
+    .image-editor-actions .image-editor-apply { border-color: #1d4ed8; color: #ffffff; background: #1d4ed8; }
     .preview-remove-btn:hover {
       background: #dc2626;
       transform: scale(1.15);
@@ -318,7 +380,7 @@
               <div class="upload-progress-status" id="upload-progress-status">0 of 0 uploaded</div>
             </div>
 
-            <small class="text-muted d-block mt-1">Each new selection adds to the list. Use Remove background on a photo before posting when its background is plain or connected to the image edges.</small>
+            <small class="text-muted d-block mt-1">Each new selection adds to the list. Use Edit to crop, zoom, adjust light and color, rotate, flip, or remove the background before posting.</small>
           </div>
 
           <div id="upload-overlay" class="upload-overlay">
