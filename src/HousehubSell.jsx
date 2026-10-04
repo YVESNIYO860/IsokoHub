@@ -1,0 +1,97 @@
+import { useEffect } from 'react';
+
+const houseFormStyles = `
+  :root { --house-ink:#102a43; --house-teal:#1d4ed8; --house-mint:#eff6ff; --house-line:#d9e2ec; }
+  .house-form-page { max-width: 1080px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  .house-form-hero { display:flex; justify-content:space-between; gap:1.5rem; align-items:flex-end; margin-bottom:1.5rem; }
+  .house-kicker { color:var(--house-teal); font-size:.72rem; font-weight:800; letter-spacing:.15em; text-transform:uppercase; }
+  .house-form-hero h1 { color:var(--house-ink); font-size:clamp(2rem,5vw,3.4rem); letter-spacing:-.04em; margin:.4rem 0 .6rem; }
+  .house-form-hero p { color:#627d98; max-width:650px; margin:0; }
+  .house-form-actions { display:flex; gap:.6rem; flex-wrap:wrap; }
+  .house-form-actions .btn { border-radius:10px; white-space:nowrap; }
+  .house-form-shell { display:grid; grid-template-columns:minmax(0,1fr) 280px; gap:1.25rem; align-items:start; }
+  .house-form-card, .house-form-aside { background:#fff; border:1px solid var(--house-line); border-radius:16px; box-shadow:0 14px 35px rgba(16,42,67,.07); }
+  .house-form-card { padding:1.4rem; }
+  .house-form-aside { padding:1.2rem; background:var(--house-mint); border-color:#b7e1dc; position:sticky; top:1rem; }
+  .house-form-aside h2 { color:var(--house-ink); font-size:1rem; margin:0 0 .8rem; }
+  .house-form-aside ol { padding-left:1.2rem; color:#486581; display:grid; gap:.7rem; font-size:.9rem; }
+  .house-form-section { border-top:1px solid #e8eef3; padding-top:1.25rem; margin-top:1.25rem; }
+  .house-form-section:first-child { border-top:0; padding-top:0; margin-top:0; }
+  .house-form-section h2 { color:var(--house-ink); font-size:1.15rem; margin:0 0 .9rem; }
+  .house-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+  .house-form-grid label { display:grid; gap:.35rem; color:#243b53; font-size:.88rem; font-weight:700; }
+  .house-form-wide { grid-column:1/-1; }
+  .house-choice-row { display:flex; flex-wrap:wrap; gap:.6rem; }
+  .house-choice { display:flex; align-items:center; gap:.45rem; border:1px solid var(--house-line); border-radius:10px; padding:.7rem .8rem; font-weight:700; color:#243b53; background:#f8fafc; }
+  .house-media-zone { border:1px dashed #9fb3c8; border-radius:12px; padding:1rem; background:#f8fafc; }
+  .house-media-zone input { width:100%; }
+  .house-media-help { color:#627d98; font-size:.8rem; margin:.5rem 0 0; }
+  .house-status { min-height:1.4rem; color:var(--house-teal); font-size:.9rem; font-weight:700; }
+  .house-submit { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:1.25rem; }
+  @media (max-width:760px) { .house-form-page { padding:1.25rem .75rem 3rem; } .house-form-hero { align-items:stretch; flex-direction:column; } .house-form-shell { grid-template-columns:1fr; } .house-form-aside { position:static; order:-1; } .house-form-grid { grid-template-columns:1fr; } .house-form-wide { grid-column:auto; } .house-form-card { padding:1rem; } }
+`;
+
+export default function HousehubSell() {
+  useEffect(() => {
+    document.title = 'Post a HouseHub Listing - IsokoHub';
+  }, []);
+
+  return (
+    <>
+      <style>{houseFormStyles}</style>
+      <main className="house-form-page">
+        <header className="house-form-hero">
+          <div><div className="house-kicker">HouseHub listings</div><h1>Put your property in the right place.</h1><p>Create a dedicated home, room, land, or rental listing with the details serious buyers and tenants need.</p></div>
+          <div className="house-form-actions"><a href="houses-rent.html" className="btn btn-secondary"><i className="fa-solid fa-arrow-left"></i> Browse HouseHub</a></div>
+        </header>
+        <div className="house-form-shell">
+          <section className="house-form-card">
+            <form id="househub-form">
+              <div className="house-form-section">
+                <h2>Property basics</h2>
+                <div className="house-form-grid">
+                  <label className="house-form-wide">Listing title<input className="form-control" name="name" required maxLength="120" placeholder="e.g. Modern 3-bedroom home in Kimihurura" /></label>
+                  <label>Property type<select className="form-control" name="propertyType" required><option value="">Choose type</option><option>House</option><option>Apartment</option><option>Room</option><option>Land</option><option>Office</option><option>Commercial space</option></select></label>
+                  <label>Listing purpose<select className="form-control" name="listingType" required><option value="">Choose purpose</option><option value="Rent">For rent</option><option value="Sale">For sale</option></select></label>
+                  <label>Price in RWF<input className="form-control" name="price" type="number" min="100" step="1" required placeholder="350000" /></label>
+                  <label>Payment period<select className="form-control" name="period" required><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Daily">Daily</option><option value="Yearly">Yearly</option><option value="One-time">One-time sale</option></select></label>
+                  <label>Bedrooms<input className="form-control" name="bedrooms" type="number" min="0" max="100" placeholder="3" /></label>
+                  <label>Bathrooms<input className="form-control" name="bathrooms" type="number" min="0" max="100" placeholder="2" /></label>
+                  <label>Furnishing<select className="form-control" name="furnished"><option>Unfurnished</option><option>Partly furnished</option><option>Furnished</option></select></label>
+                </div>
+              </div>
+              <div className="house-form-section">
+                <h2>Location and property details</h2>
+                <div className="house-form-grid">
+                  <label>District<input className="form-control" name="district" required placeholder="Gasabo" /></label>
+                  <label>Neighbourhood / landmark<input className="form-control" name="location" required placeholder="Near Kigali Heights" /></label>
+                  <label className="house-form-wide">Amenities<input className="form-control" name="amenities" placeholder="Parking, garden, water, security" /></label>
+                  <label className="house-form-wide">Description<textarea className="form-control" name="description" rows="5" required placeholder="Describe access, utilities, rooms, rules, and what makes this property valuable."></textarea></label>
+                </div>
+              </div>
+              <div className="house-form-section">
+                <h2>Media</h2>
+                <div className="house-media-zone"><label>Property photos <input id="house-images" type="file" accept="image/*" multiple required /></label><p className="house-media-help">Add 1 to 6 clear photos. The first photo becomes the cover.</p><div id="house-image-status" className="house-status"></div></div>
+                <div className="house-media-zone" style={{ marginTop: '.8rem' }}>
+                  <label>Property video <span style={{ fontWeight: 400, color: '#627d98' }}>(optional)</span></label>
+                  <div className="house-choice-row" style={{ margin: '.6rem 0' }}>
+                    <label className="house-choice"><input type="radio" name="videoSource" value="local" defaultChecked /> Upload video</label>
+                    <label className="house-choice"><input type="radio" name="videoSource" value="url" /> Use video URL</label>
+                  </div>
+                  <div id="house-local-video-field"><input id="house-video" type="file" accept="video/*" /><p className="house-media-help">Maximum 20 MB. A walkthrough video helps people understand the property.</p></div>
+                  <div id="house-url-video-field" hidden><input id="house-video-url" className="form-control" type="url" placeholder="https://youtube.com/... or https://example.com/video.mp4" /><p className="house-media-help">Use a YouTube, Vimeo, or direct video URL.</p></div>
+                </div>
+              </div>
+              <div className="house-form-section">
+                <h2>Contact</h2>
+                <div className="house-form-grid"><label>Email<input className="form-control" name="sellerEmail" type="email" required placeholder="name@example.com" /></label><label>WhatsApp / phone<input className="form-control" name="sellerPhone" type="tel" required placeholder="+250 788 000 000" /></label></div>
+              </div>
+              <div className="house-submit"><button className="btn btn-primary" type="submit"><i className="fa-solid fa-house-circle-check"></i> Submit HouseHub listing</button><span id="house-form-status" className="house-status" role="status"></span></div>
+            </form>
+          </section>
+          <aside className="house-form-aside"><h2>What happens next?</h2><ol><li>Your property is saved as a HouseHub listing.</li><li>An administrator reviews the details and media.</li><li>Once approved, it appears in HouseHub search.</li></ol></aside>
+        </div>
+      </main>
+    </>
+  );
+}

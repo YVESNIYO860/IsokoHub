@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "live-server --port=3000",
+    "dev": "node scripts/dev-server.js",
+    "build": "vite build",
+    "preview": "vite preview --port=3000",
     "emulators:start": "npx firebase emulators:start --only auth,firestore",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,11 +16,14 @@
   "type": "commonjs",
   "devDependencies": {
     "firebase-tools": "^15.22.4",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "vite": "^6.0.0"
   }
   ,
   "dependencies": {
     "nodemailer": "^6.9.1",
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }

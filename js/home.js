@@ -19,7 +19,7 @@ function normalizeProductImage(value) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // The homepage uses the static hero markup from index.html.
+  // The homepage markup is mounted from Home.jsx.
   // No slideshow or intro video is rendered on app open.
   updateInlineStats();
   renderCategories();
@@ -420,7 +420,7 @@ function renderCategories() {
 }
 
 async function renderHeroSection() {
-  // The hero section is kept as static HTML in index.html.
+  // The hero section is rendered by Home.jsx.
   // No slideshow or intro video is rendered here.
   return;
 }

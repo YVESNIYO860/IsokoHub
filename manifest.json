@@ -3,13 +3,13 @@
   "short_name": "IsokoHub",
   "description": "Buy, sell, and rent locally with IsokoHub.",
   "id": "./",
-  "start_url": "./index.html",
+  "start_url": "./home",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "browser"],
   "orientation": "portrait",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#10213f",
+  "theme_color": "#10213f",
   "categories": ["shopping", "business"],
   "icons": [
     {

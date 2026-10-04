@@ -1,0 +1,91 @@
+import { useEffect } from 'react';
+
+const housesStyles = `
+  .navbar-bottom { display: none !important; }
+  .houses-hero { padding: 2rem 0; }
+  .househub-panel { max-width: 980px; margin: 0 auto; padding: 1.75rem 1.5rem; border-radius: 24px; background: #f8fafc; border: 1px solid rgba(15, 23, 42, 0.08); box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05); }
+  .househub-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .househub-cta { display: inline-flex; gap: 0.5rem; align-items: center; }
+  .househub-home-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1rem; border-radius: 999px; border: 1px solid rgba(15, 23, 42, 0.1); background: #ffffff; color: #0f172a; font-weight: 700; font-size: 0.95rem; text-decoration: none; }
+  .househub-tag { padding: 0.55rem 0.9rem; border-radius: 999px; border: 1px solid rgba(15, 23, 42, 0.12); background: rgba(255, 255, 255, 0.9); color: #334155; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; }
+  .househub-copy h1 { margin: 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.05; color: #0f172a; }
+  .househub-copy p { margin: 1rem 0 0; max-width: 720px; color: #475569; font-size: 1rem; }
+  .househub-meta { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.25rem; }
+  .househub-keyword, .househub-note { padding: 0.75rem 1rem; border-radius: 999px; border: 1px solid rgba(15, 23, 42, 0.08); background: #ffffff; color: #475569; font-size: 0.9rem; font-weight: 600; }
+  .products-layout { display: grid; grid-template-columns: 280px 1fr; gap: 1.5rem; margin-top: 1.75rem; align-items: start; }
+  .filters-sidebar { background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); border-radius: 24px; padding: 1.25rem; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05); position: sticky; top: 100px; align-self: start; }
+  .filters-sidebar h3 { font-size: 1rem; margin-bottom: 0.9rem; color: #0f172a; letter-spacing: 0.01em; }
+  .filter-item { display: inline-flex; align-items: center; justify-content: center; padding: 0.8rem 1rem; margin: 0 0.45rem 0.65rem 0; border-radius: 999px; border: 1px solid rgba(56, 189, 248, 0.2); background: rgba(255, 255, 255, 0.82); color: #0f172a; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.9), 0 10px 25px rgba(56, 189, 248, 0.08); backdrop-filter: blur(10px); position: relative; overflow: hidden; }
+  .filter-item::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 45%); opacity: 0.55; border-radius: 999px; pointer-events: none; transition: opacity 0.2s ease; }
+  .filter-item:hover { transform: translateY(-1px); box-shadow: inset 0 0 0 1px rgba(255,255,255,1), 0 14px 32px rgba(56, 189, 248, 0.16); border-color: rgba(56, 189, 248, 0.35); }
+  .filter-item.active { background: rgba(56, 189, 248, 0.18); border-color: rgba(56, 189, 248, 0.4); color: #0369a1; }
+  .filter-item.active::before { content: '∨'; margin-right: 0.35rem; opacity: 0.85; color: #0369a1; position: relative; top: 0; }
+  .range-select { width: 100%; margin-top: 0.5rem; padding: 0.85rem 1rem; border-radius: 999px; border: 1px solid rgba(15, 23, 42, 0.12); background: rgba(255, 255, 255, 0.92); color: #0f172a; font-size: 0.95rem; outline: none; appearance: none; box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04); }
+  .range-select::placeholder { color: rgba(15, 23, 42, 0.45); }
+  .products-main { width: 100%; }
+  .search-summary { padding: 1rem 1rem; border-radius: 20px; background: #ffffff; border: 1px solid rgba(15, 23, 42, 0.08); margin-bottom: 1rem; }
+  .search-summary h2 { margin: 0; font-size: 1.35rem; color: #0f172a; }
+  @media (max-width: 960px) { .products-layout { grid-template-columns: 1fr; } .filters-sidebar { position: static; top: auto; } }
+  @media (max-width: 720px) { .filters-sidebar { display: none; } .househub-panel { max-width: 100%; padding: 1rem; border-radius: 12px; } .houses-hero { padding: 1rem 0; } }
+`;
+
+export default function HousesRent() {
+  useEffect(() => {
+    document.title = 'HOUSEHUB - IsokoHub';
+  }, []);
+
+  return (
+    <>
+      <style>{housesStyles}</style>
+      <main>
+        <div className="container">
+          <section className="houses-hero">
+            <div className="househub-panel">
+              <div className="househub-header">
+                <div><span className="househub-tag">HOUSEHUB</span></div>
+                <div className="househub-cta">
+                  <a href="househub-sell.html" className="btn btn-primary" style={{ padding: '0.6rem 0.9rem', borderRadius: '999px', fontWeight: 700 }}><i className="fa-solid fa-house-circle-check"></i> Post a Listing</a>
+                  <a href="/home" className="househub-home-btn">Back to IsokoHub</a>
+                </div>
+              </div>
+              <div className="househub-copy">
+                <h1>Search homes and rentals across Rwanda</h1>
+                <p style={{ marginTop: '0.9rem', color: '#475569', fontSize: '0.95rem' }}>Minimal housing search with district, location, and rent/sale filters.</p>
+              </div>
+            </div>
+          </section>
+
+          <div className="products-layout">
+            <aside className="filters-sidebar">
+              <h3>House zones</h3>
+              <select id="housing-category-select" className="range-select">
+                <option value="all">All Houses</option><option value="ghetto">Ghetoo</option><option value="chambolette">Chambolette</option><option value="apartment">Apartment</option><option value="villa">Villa</option>
+              </select>
+              <h3 style={{ marginTop: '1.25rem' }}>Rent / Sell</h3>
+              <select id="housing-listing-select" className="range-select"><option value="all">All</option><option value="rent">Rent</option><option value="sell">Sell</option></select>
+              <h3 style={{ marginTop: '1.25rem' }}>Wanted</h3>
+              <select id="housing-wanted-select" className="range-select"><option value="all">All</option><option value="budget">Budget</option><option value="comfort">Comfort</option><option value="safe">Safe</option><option value="modern">Modern</option></select>
+              <h3 style={{ marginTop: '1.25rem' }}>District</h3>
+              <select id="housing-district-select" className="range-select"><option value="all">All districts</option></select>
+              <h3 style={{ marginTop: '1.25rem' }}>Optional place</h3>
+              <input id="housing-location-input" className="range-select" type="text" placeholder="Town, street or sector" />
+              <h3 style={{ marginTop: '1.25rem' }}>Monthly fee</h3>
+              <select id="rent-range-select" className="range-select">
+                <option value="all">All rent fees</option><option value="10000-15000">10,000 - 15,000</option><option value="15000-20000">15,000 - 20,000</option><option value="20000-25000">20,000 - 25,000</option><option value="25000-30000">25,000 - 30,000</option><option value="30000-40000">30,000 - 40,000</option><option value="40000-50000">40,000 - 50,000</option><option value="50000-75000">50,000 - 75,000</option><option value="75000-100000">75,000 - 100,000</option>
+              </select>
+              <h3 style={{ marginTop: '1.25rem' }}>Sale price range</h3>
+              <select id="sale-range-select" className="range-select">
+                <option value="all">All sale prices</option><option value="100000-200000">100,000 - 200,000</option><option value="200000-300000">200,000 - 300,000</option><option value="300000-400000">300,000 - 400,000</option><option value="400000-500000">400,000 - 500,000</option><option value="500000-700000">500,000 - 700,000</option><option value="700000-1000000">700,000 - 1,000,000</option><option value="1000000-99999999">1,000,000+</option>
+              </select>
+            </aside>
+
+            <div className="products-main">
+              <div className="search-summary" id="housing-summary"><h2>Housing &amp; Rental Listings</h2></div>
+              <div className="product-grid" id="housing-products"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}

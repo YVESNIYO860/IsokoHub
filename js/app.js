@@ -49,6 +49,19 @@ function saveDrawerUiSettings(settings) {
   applyDrawerUiSettings(settings);
 }
 
+function rewriteHtmlRouteLinks() {
+  if (!document || !document.querySelectorAll) return;
+  document.querySelectorAll('a[href]').forEach((link) => {
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+    if (typeof window.normalizeAbsoluteUrl !== 'function') return;
+    const normalizedHref = window.normalizeAbsoluteUrl(href, window.location.href);
+    if (normalizedHref && normalizedHref !== href) {
+      link.setAttribute('href', normalizedHref);
+    }
+  });
+}
+
 // Immediate offline guard: show an overlay as early as possible when offline
 (function () {
   try {
@@ -117,6 +130,20 @@ function saveDrawerUiSettings(settings) {
 })();
 
 document.addEventListener('DOMContentLoaded', () => {
+  if (typeof window.normalizeAbsoluteUrl === 'function') {
+    const currentPageUrl = window.normalizeAbsoluteUrl(window.location.href, window.location.href);
+    if (currentPageUrl && currentPageUrl !== window.location.href) {
+      window.history.replaceState({}, '', currentPageUrl);
+    }
+  }
+
+  rewriteHtmlRouteLinks();
+
+  const routeObserver = new MutationObserver(() => rewriteHtmlRouteLinks());
+  if (document.body) {
+    routeObserver.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] });
+  }
+
   setupConsoleFilter();
   // If offline, show offline UI and skip normal initialization
   if (typeof navigator !== 'undefined' && navigator && navigator.onLine === false) {
@@ -751,19 +778,20 @@ function renderNavbar() {
     <nav class="navbar">
       <!-- Top Tier: Branding, Search, Actions -->
       <div class="navbar-top">
-        <div class="menu-trigger" id="side-menu-trigger">
+        <button type="button" class="menu-trigger" id="side-menu-trigger" aria-label="Open marketplace menu" aria-expanded="false" aria-controls="side-drawer">
           <i class="fa-solid fa-bars"></i>
           <span>All</span>
-        </div>
+        </button>
         
-        <a href="index.html" class="navbar-brand">
+        <a href="/home" class="navbar-brand">
           <img src="assets/logo.png" alt="IsokoHub" class="site-logo" loading="eager" onerror="this.style.display='none'">
           <span>IsokoHub</span>
         </a>
 
         <form class="search-form" id="global-search-form" onsubmit="handleSearch(event)">
-          <input type="text" class="search-input" id="global-search-input" placeholder="Search for products, brands and categories...">
-          <button type="submit" class="search-btn">
+          <label class="sr-only" for="global-search-input">Search marketplace</label>
+          <input type="search" class="search-input" id="global-search-input" placeholder="Search products, brands and categories">
+          <button type="submit" class="search-btn" aria-label="Search">
             <i class="fa-solid fa-magnifying-glass"></i>
           </button>
         </form>
@@ -800,16 +828,16 @@ function renderNavbar() {
 
       ${isAdminPage ? '' : `
       <div class="navbar-bottom">
-        <a href="houses-rent.html" target="_blank" rel="noopener" style="color: #b45309; font-weight: 700; background: #fff7ed; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px solid #fdba74;">HOUSEHUB</a>
-        <a href="image-studio.html" style="color: #0f766e; font-weight: 700;"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
-        <a href="sell.html" style="color: #febd69; font-weight: 700;">Sell on IsokoHub</a>
+        <a href="houses-rent.html" class="navbar-featured-link">HouseHub</a>
+        <a href="image-studio.html" class="navbar-featured-link"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
+        <a href="sell.html" class="navbar-featured-link">Sell on IsokoHub</a>
       </div>
       `}
     </nav>
 
     ${isAdminPage ? '' : `
     <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-      <a href="index.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+      <a href="/home" class="mobile-bottom-nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
       <a href="#" class="mobile-bottom-nav-item cart-icon"><i class="fa-solid fa-cart-shopping"></i><span>Cart</span><b class="cart-count">0</b></a>
       <a href="chat-inbox.html" class="mobile-bottom-nav-item"><i class="fa-solid fa-comments"></i><span>Messages</span></a>
       <a href="${accountHref}" class="mobile-bottom-nav-item" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}><i class="fa-solid fa-user"></i><span>Account</span></a>
@@ -926,12 +954,14 @@ function renderNavbar() {
     sideTrigger.addEventListener('click', () => {
       sideDrawer.classList.add('active');
       drawerOverlay.classList.add('active');
+      sideTrigger.setAttribute('aria-expanded', 'true');
       document.body.style.overflow = 'hidden';
     });
 
     const closeMenu = () => {
       sideDrawer.classList.remove('active');
       drawerOverlay.classList.remove('active');
+      sideTrigger.setAttribute('aria-expanded', 'false');
       document.body.style.overflow = 'auto';
     };
 
@@ -964,58 +994,54 @@ function renderNavbar() {
 function renderFooter() {
   const footerHTML = `
     <div id="site-footer-root"></div>
-    <footer class="footer">
+    <footer class="footer" aria-label="Site footer">
       <div class="container footer-grid">
         <div class="footer-col">
-          <h4>Get to Know Us</h4>
+          <h4>Marketplace</h4>
           <ul>
-            <li><a href="about.html#careers">Careers</a></li>
-            <li><a href="about.html#blog">Blog</a></li>
-            <li><a href="about.html#about">About IsokoHub</a></li>
-            <li><a href="admin-profile.html">About Admin</a></li>
-            <li><a href="about.html#investor">Investor Relations</a></li>
-            <li><a href="about.html#help">Help Center</a></li>
-            <li><a href="terms.html">Terms &amp; Conditions</a></li>
-            <li><a href="privacy.html">Privacy Policy</a></li>
-            <li><a href="about.html#contact">Contact Us</a></li>
+            <li><a href="products.html">Browse listings</a></li>
+            <li><a href="houses-rent.html">Homes &amp; rentals</a></li>
+            <li><a href="image-studio.html">Image Studio</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Make Money with Us</h4>
+          <h4>For Sellers</h4>
           <ul>
             <li><a href="sell.html">Sell on IsokoHub</a></li>
-            <li><a href="#">Sell on IsokoHub Business</a></li>
-            <li><a href="#">Apps on IsokoHub</a></li>
-            <li><a href="#">Become an Affiliate</a></li>
-            <li><a href="#">Advertise Your Products</a></li>
+            <li><a href="househub-sell.html">List a home</a></li>
+            <li><a href="dashboard.html">Seller dashboard</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Let Us Help You</h4>
+          <h4>Company</h4>
           <ul>
-            <li><a href="dashboard.html">Your Account</a></li>
-            <li><a href="products.html">Your Orders</a></li>
-            <li><a href="about.html#help">Help Center</a></li>
-            <li><a href="mailto:yvesniyonkuru2022@gmail.com">
-              <i class="fa-solid fa-envelope"></i> Email Support
-            </a></li>
+            <li><a href="about.html">About IsokoHub</a></li>
+            <li><a href="admin-profile.html">About the founder</a></li>
+            <li><a href="about.html#careers">Careers</a></li>
+            <li><a href="about.html#blog">Blog</a></li>
+            <li><a href="about.html#investor">Investor relations</a></li>
+            <li><a href="support.html">Support</a></li>
+            <li><a href="about.html#contact">Contact us</a></li>
+            <li><a href="privacy.html">Privacy</a></li>
+            <li><a href="terms.html">Terms</a></li>
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Follow Us</h4>
-          <ul class="footer-socials" style="display:flex; gap:1rem; list-style:none; padding:0; margin-top:1rem; font-size:1.2rem;">
-            <li><a href="https://www.facebook.com/profile.php?id=100073494818427&sk=friends" target="_blank" style="color:#1877f2;"><i class="fa-brands fa-facebook"></i></a></li>
-            <li><a href="https://www.instagram.com/maverix_001/" target="_blank" style="color:#e4405f;"><i class="fa-brands fa-instagram"></i></a></li>
-            <li><a href="https://x.com/best_shineboy" target="_blank" style="color:#ffffff;"><i class="fa-brands fa-x-twitter"></i></a></li>
-            <li><a href="https://www.youtube.com/@Maverix1" target="_blank" style="color:#ff0000;"><i class="fa-brands fa-youtube"></i></a></li>
-            <li><a href="https://www.linkedin.com/in/best-shineboy-3aa183383/" target="_blank" style="color:#0077b5;"><i class="fa-brands fa-linkedin"></i></a></li>
+          <h4>Connect</h4>
+          <ul class="footer-socials">
+            <li><a href="https://www.facebook.com/profile.php?id=100073494818427&amp;sk=friends" target="_blank" rel="noreferrer" aria-label="IsokoHub on Facebook"><i class="fa-brands fa-facebook"></i></a></li>
+            <li><a href="https://www.instagram.com/maverix_001/" target="_blank" rel="noreferrer" aria-label="IsokoHub on Instagram"><i class="fa-brands fa-instagram"></i></a></li>
+            <li><a href="https://x.com/best_shineboy" target="_blank" rel="noreferrer" aria-label="IsokoHub on X"><i class="fa-brands fa-x-twitter"></i></a></li>
+            <li><a href="https://www.youtube.com/@Maverix1" target="_blank" rel="noreferrer" aria-label="IsokoHub on YouTube"><i class="fa-brands fa-youtube"></i></a></li>
+            <li><a href="https://www.linkedin.com/in/best-shineboy-3aa183383/" target="_blank" rel="noreferrer" aria-label="IsokoHub on LinkedIn"><i class="fa-brands fa-linkedin"></i></a></li>
+            <li><a href="mailto:yvesniyonkuru2022@gmail.com" aria-label="Email IsokoHub"><i class="fa-solid fa-envelope"></i></a></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
         <div class="container">
           <div class="footer-logo">Isoko<span>Hub</span></div>
-          <p>&copy; ${new Date().getFullYear()} IsokoHub Marketplace. All rights reserved. <span style="opacity: 0.2; font-weight: 700; margin-left: 8px;">DESIGNED BY NIYONKURU YVES</span></p>
+          <p>&copy; ${new Date().getFullYear()} IsokoHub Marketplace. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -1129,7 +1155,7 @@ async function handleLogout(e) {
     localStorage.removeItem(CART_KEY);
     sessionStorage.clear();
     // Force reload to ensure UI updates
-    window.location.href = 'index.html';
+    window.location.href = '/home';
   } catch (err) {
     console.error('Logout failed:', err);
     btn.textContent = originalText;
@@ -1143,7 +1169,7 @@ function getQueryParam(name) {
   return urlParams.get(name);
 }
 
-// (Hero video injection removed — hero video is embedded directly in `index.html`)
+// (Hero video injection removed; homepage hero is rendered by Home.jsx.)
 
 // ---- Shopping Cart Logic ----
 const CART_KEY = 'isokoHubCart';

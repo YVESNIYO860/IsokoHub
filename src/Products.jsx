@@ -1,0 +1,83 @@
+import { useEffect } from 'react';
+
+const productsStyles = `
+  .products-layout { display: flex; gap: 1rem; margin-top: 1rem; }
+  .filters-sidebar { width: min(100%, 420px); background: white; padding: 1rem; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); margin-bottom: 1rem; }
+  .filters-sidebar h3 { font-size: 1rem; margin-bottom: 0.7rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.35rem; }
+  .filter-select { width: 100%; padding: 0.6rem 0.7rem; border: 1px solid var(--border-color); border-radius: 8px; background: white; color: var(--text-dark); font-size: 0.9rem; margin-bottom: 0.8rem; }
+  .products-main { flex: 1; }
+  .products-filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.8rem; }
+  .products-filter-toggle, .products-filter-close, .products-filter-reset { display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.65rem 0.85rem; color: #0f172a; background: #ffffff; font: inherit; font-size: 0.82rem; font-weight: 750; cursor: pointer; }
+  .products-filter-toggle:hover, .products-filter-close:hover, .products-filter-reset:hover { border-color: #2563eb; color: #1d4ed8; }
+  .products-filter-toggle { border-color: #1d4ed8; color: #1d4ed8; background: #eff6ff; }
+  .products-filter-count { display: inline-grid; min-width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 999px; color: #ffffff; background: #1d4ed8; font-size: 0.7rem; }
+  .products-filter-panel { position: relative; }
+  .products-filter-panel-header, .products-filter-panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .products-filter-panel-header { margin-bottom: 0.9rem; }
+  .products-filter-panel-header strong { color: #0f172a; font-size: 0.95rem; }
+  .products-filter-close { padding: 0.4rem 0.55rem; border: 0; font-size: 1.1rem; }
+  .products-filter-panel-footer { justify-content: flex-end; margin-top: 0.2rem; }
+  .products-filter-reset { padding: 0.45rem 0.65rem; border: 0; color: #64748b; background: transparent; }
+  .search-summary { font-size: 1rem; margin-bottom: 0.8rem; padding: 0.2rem 0; }
+  .search-summary h2 { margin: 0; font-size: 1.5rem; line-height: 1.2; word-break: break-word; }
+  .search-summary p { margin: 0.35rem 0 0; font-size: 0.9rem; }
+  @media (max-width: 768px) {
+    .products-layout { flex-direction: column; gap: 0.75rem; margin-top: 0.75rem; }
+    .filters-sidebar { width: 100%; padding: 0.9rem; }
+    .products-main { width: 100%; }
+    .search-summary { margin-bottom: 0.6rem; }
+    .search-summary h2 { font-size: 1.25rem; }
+  }
+`;
+
+export default function Products() {
+  useEffect(() => {
+    document.title = 'All Products - IsokoHub';
+  }, []);
+
+  return (
+    <>
+      <style>{productsStyles}</style>
+      <main>
+        <div className="container">
+          <div className="products-layout">
+            <div className="products-main" style={{ marginBottom: '4rem' }}>
+              <div className="products-filter-bar">
+                <button type="button" className="products-filter-toggle" id="products-filter-toggle" aria-expanded="false" aria-controls="products-filter-panel">
+                  <i className="fa-solid fa-sliders" aria-hidden="true"></i>
+                  <span>Filters</span>
+                  <span className="products-filter-count" id="products-filter-count">0</span>
+                </button>
+                <button type="button" className="products-filter-reset" id="products-filter-reset">Clear filters</button>
+              </div>
+              <aside className="filters-sidebar products-filter-panel" id="products-filter-panel" hidden>
+                <div className="products-filter-panel-header">
+                  <strong>Refine products</strong>
+                  <button type="button" className="products-filter-close" id="products-filter-close" aria-label="Close filters">&times;</button>
+                </div>
+                <h3>Category</h3>
+                <select id="category-filter-select" className="filter-select" aria-label="Filter by category">
+                  <option value="all">All categories</option>
+                </select>
+                <h3>Condition</h3>
+                <select id="condition-filter-select" className="filter-select" aria-label="Filter by condition">
+                  <option value="all">All conditions</option>
+                  <option value="New">New</option>
+                  <option value="Used">Used</option>
+                </select>
+                <h3>District</h3>
+                <select id="district-filter-select" className="filter-select" aria-label="Filter by district">
+                  <option value="all">All districts</option>
+                </select>
+              </aside>
+              <div className="search-summary" id="search-summary">
+                <h2>All Products</h2>
+              </div>
+              <div className="product-grid" id="products-container" style={{ marginTop: 0 }}></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}

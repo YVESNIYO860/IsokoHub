@@ -1,7 +1,7 @@
 const CACHE_NAME = 'isokohub-pwa-v2';
 const ASSETS_TO_CACHE = [
   './',
-  './index.html',
+  './home',
   './manifest.json',
   './css/style.css',
   './js/app.js',
@@ -37,13 +37,13 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request)
       .then((networkResponse) => {
         if (!networkResponse.ok && shouldFallbackToAppShell) {
-          return caches.match('./index.html');
+          return caches.match('./home');
         }
         return networkResponse;
       })
       .catch(() => {
         if (shouldFallbackToAppShell) {
-          return caches.match('./index.html');
+          return caches.match('./home');
         }
         return caches.match(event.request);
       })

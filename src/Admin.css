@@ -1,18 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Approval Panel - IsokoHub</title>
-  <link rel="icon" href="assets/logo.png" type="image/png">
-  <link rel="stylesheet" href="css/style.css">
-  <!-- Firebase SDK -->
-  <!-- Supabase SDK (Auth, User Management) -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1.35.7/dist/umd/supabase.min.js"></script>
-  <script src="js/supabase-config.js?v=2"></script>
-  <!-- Firebase SDK (Firestore for product database) -->
 
-  <style>
     .admin-container {
       width: min(100%, 1200px);
       max-width: 1200px;
@@ -387,8 +373,7 @@
       color: var(--text-muted);
       font-size: 0.95rem;
     }
-  </style>
-  <style>
+
     .admin-command-center {
       width: min(1440px, 100%);
       margin: 0 auto;
@@ -404,7 +389,7 @@
     }
 
     .admin-eyebrow {
-      color: #0f766e;
+      color: #2563eb;
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.14em;
@@ -432,7 +417,7 @@
     .admin-sidebar h2 { color: #fff; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.5rem 0.7rem; }
     .admin-menu { gap: 0.25rem; }
     .admin-menu button { border: 0; border-radius: 9px; color: #bcccdc; padding: 0.72rem 0.75rem; font-size: 0.9rem; }
-    .admin-menu button.active, .admin-menu button:hover { background: #0f766e; color: #fff; }
+    .admin-menu button.active, .admin-menu button:hover { background: #2563eb; color: #fff; }
     .admin-sidebar-section { border-color: rgba(255,255,255,0.14); }
     .admin-sidebar-section.admin-filter-hidden { display: none; }
     .admin-sidebar-section h3, .admin-quick-actions h3 { color: #d9e2ec; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -448,7 +433,7 @@
     .admin-stat-card p { font-size: 0.78rem; }
     .admin-stat-card:nth-child(1) { border-top: 3px solid #f59e0b; }
     .admin-stat-card:nth-child(2) { border-top: 3px solid #3b82f6; }
-    .admin-stat-card:nth-child(3) { border-top: 3px solid #0f766e; }
+    .admin-stat-card:nth-child(3) { border-top: 3px solid #2563eb; }
     .admin-stat-card:nth-child(4) { border-top: 3px solid #7c3aed; }
     .dashboard-card { padding: 1.25rem; border-radius: 14px; box-shadow: 0 12px 30px rgba(16, 42, 67, 0.07); min-width: 0; overflow-x: auto; }
     .dashboard-card table { min-width: 680px; }
@@ -462,74 +447,59 @@
     .admin-form-wide { grid-column: 1 / -1; }
     .admin-form-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
     .admin-empty-state { grid-column: 1 / -1; text-align: center; padding: 3rem 1rem; border: 1px dashed #bcccdc; border-radius: 12px; color: #627d98; }
-    .admin-empty-state i { display: block; font-size: 2rem; color: #0f766e; margin-bottom: 0.7rem; }
+    .admin-empty-state i { display: block; font-size: 2rem; color: #2563eb; margin-bottom: 0.7rem; }
     .admin-tabs { display: none; }
     @media (max-width: 1050px) { .admin-stat-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     @media (max-width: 960px) { .admin-shell-grid { grid-template-columns: 1fr; } .admin-sidebar { position: fixed; inset: 0 auto 0 0; left: 0; width: min(320px, 88vw); height: 100vh; z-index: 1001; transform: translateX(-105%); transition: transform 0.2s ease; overflow-y: auto; } .admin-sidebar.open { left: 0; transform: translateX(0); } }
     @media (max-width: 760px) { .admin-command-center { padding: 1.25rem 0.8rem 3rem; } .admin-shell-header { align-items: stretch; flex-direction: column; } .admin-header-actions { justify-content: space-between; } .admin-stat-cards { grid-template-columns: 1fr 1fr; } .admin-item-grid { grid-template-columns: minmax(0, 1fr); } .admin-item-card { min-width: 0; } .admin-section-heading { flex-direction: column; } .admin-form-grid { grid-template-columns: 1fr; } .admin-form-wide { grid-column: auto; } .dashboard-card { padding: 0.9rem; } .dashboard-card table { min-width: 620px; } .admin-item-actions { grid-template-columns: 1fr 1fr; } .admin-item-actions .btn { min-height: 44px; } }
     @media (max-width: 420px) { .admin-command-center { padding-inline: 0.6rem; } .admin-stat-cards { grid-template-columns: 1fr; } .admin-header-actions { flex-wrap: wrap; } .admin-header-actions .btn { flex: 1 1 140px; justify-content: center; } .admin-item-actions { grid-template-columns: 1fr; } .admin-shell-header h1 { font-size: 1.8rem; } }
-  </style>
-</head>
-<body>
-  <div id="site-header-root"></div>
-  <!-- Header injected by app.js -->
 
-  <main class="admin-command-center">
-    <div class="admin-shell-header">
-      <div>
-        <div class="admin-eyebrow">IsokoHub operations</div>
-        <h1>Good morning, administrator.</h1>
-        <p>Keep the marketplace healthy from one focused workspace. Review what needs attention, then move on.</p>
-      </div>
-      <div class="admin-header-actions">
-        <button id="admin-sidebar-toggle" class="btn btn-secondary admin-sidebar-toggle" aria-expanded="false" aria-controls="admin-sidebar"><i class="fa-solid fa-bars"></i> Menu</button>
-        <button id="refresh-admin-btn" class="btn btn-primary"><i class="fa-solid fa-rotate"></i> Refresh</button>
-      </div>
-    </div>
+    .admin-command-center {
+      color: var(--text-dark);
+    }
 
-    <div class="admin-shell-grid">
-      <aside id="admin-sidebar" class="admin-sidebar">
-          <h2>Workspace</h2>
-        <div class="admin-menu">
-          <button type="button" class="active" data-tab="pending">Pending Review</button>
-          <button type="button" data-tab="inventory">Inventory</button>
-          <button type="button" data-tab="users">Users</button>
-          <button type="button" data-tab="shops">Shop Management</button>
-          <button type="button" data-tab="settings">Settings</button>
-          <a href="admin-chat.html" class="admin-secondary-link"><i class="fa-solid fa-comments"></i> Conversation Inbox</a>
-        </div>
+    .admin-shell-header h1,
+    .admin-section-heading h2 {
+      color: var(--text-dark);
+      letter-spacing: 0;
+    }
 
-        <div class="admin-sidebar-section">
-          <h3>Filter by category</h3>
-          <select id="admin-category-filter">
-            <option value="all">All categories</option>
-          </select>
-        </div>
+    .admin-shell-header p {
+      color: var(--text-muted);
+    }
 
-        <div class="admin-quick-actions"><h3>Today</h3><p>Start with pending reviews. Keep response time low and the marketplace trustworthy.</p></div>
-      </aside>
+    .admin-sidebar {
+      background: #10213f;
+      border: 1px solid #1e3a66;
+      box-shadow: var(--shadow-md);
+    }
 
-      <section class="admin-main">
-        <div id="admin-stat-cards" class="admin-stat-cards" aria-live="polite"></div>
+    .admin-sidebar-section select {
+      background: #ffffff;
+      border-color: rgba(191, 219, 254, 0.55);
+      color: var(--text-dark);
+    }
 
-        <div class="dashboard-card">
-          <div id="admin-content">
-            <div style="text-align:center; padding: 3rem;">
-              <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
-              <p class="mt-1">Loading dashboard data...</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  </main>
+    .admin-stat-card,
+    .dashboard-card {
+      border-color: var(--border-color);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
 
-  <!-- Footer injected by app.js -->
+    .admin-stat-card strong {
+      color: var(--text-dark);
+    }
 
-  <script src="js/data.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/claude.js"></script>
-  <script src="js/admin.js"></script>
-</body>
-</html>
+    .admin-stat-card:nth-child(1),
+    .admin-stat-card:nth-child(2),
+    .admin-stat-card:nth-child(3),
+    .admin-stat-card:nth-child(4) {
+      border-top-color: #3b82f6;
+    }
+
+    .admin-form-grid label {
+      color: var(--text-dark);
+    }
+
+    }

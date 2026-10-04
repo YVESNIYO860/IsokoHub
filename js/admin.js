@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Final fallback: Check email if DB check failed or document missing
   if (!isAdminUser) {
     alert('Access Denied: Administrative privileges required.');
-    window.location.href = 'index.html';
+    window.location.href = '/home';
     return;
   }
 

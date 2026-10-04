@@ -3,6 +3,7 @@ function formatPageLabel(pagePath = '') {
   const pageNames = {
     '': 'Homepage',
     '/': 'Homepage',
+    '/home': 'Homepage',
     '/index.html': 'Homepage',
     '/sell.html': 'Sell page',
     '/houses-rent.html': 'Househub',
