@@ -15,6 +15,47 @@ function isAdminUser(user = getCurrentUser()) {
   return Boolean(user?.role === 'admin' || email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
 }
 
+function getCurrentUserCapabilities(user = getCurrentUser()) {
+  if (window.isokoCore && typeof window.isokoCore.resolveCapabilitiesForUser === 'function') {
+    return window.isokoCore.resolveCapabilitiesForUser(user);
+  }
+
+  const fallback = user || {};
+  const candidates = [];
+  const primaryRole = fallback.role || fallback.account_role || fallback.primary_role || 'customer';
+  const roles = Array.isArray(fallback.roles) ? fallback.roles : [];
+  const capabilities = Array.isArray(fallback.capabilities) ? fallback.capabilities : [];
+
+  candidates.push(primaryRole);
+  roles.forEach((entry) => candidates.push(entry));
+  capabilities.forEach((entry) => candidates.push(entry));
+
+  const normalized = candidates
+    .map((value) => String(value || '').trim().toLowerCase())
+    .filter(Boolean)
+    .filter((entry, index, list) => list.indexOf(entry) === index);
+
+  return normalized.length ? normalized : ['customer'];
+}
+
+function hasCapability(capability, user = getCurrentUser()) {
+  const target = String(capability || '').trim().toLowerCase();
+  if (!target) return false;
+
+  const capabilities = getCurrentUserCapabilities(user);
+  return capabilities.includes(target) || (capabilities.includes('seller') && target === 'customer');
+}
+
+function getAvailableIsokoModules() {
+  if (window.isokoCore && typeof window.isokoCore.getAvailableModules === 'function') {
+    return window.isokoCore.getAvailableModules();
+  }
+
+  return [
+    { key: 'market', enabled: true, label: 'Market', route: '/products' }
+  ];
+}
+
 function getDrawerUiSettings() {
   try {
     const stored = JSON.parse(localStorage.getItem(DRAWER_SETTINGS_KEY) || '{}');
@@ -827,10 +868,14 @@ function renderNavbar() {
       </div>
 
       ${isAdminPage ? '' : `
-      <div class="navbar-bottom">
-        <a href="houses-rent.html" class="navbar-featured-link">HouseHub</a>
-        <a href="image-studio.html" class="navbar-featured-link"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
-        <a href="sell.html" class="navbar-featured-link">Sell on IsokoHub</a>
+      <div class="navbar-bottom" aria-label="Marketplace shortcuts">
+        <a href="houses-rent.html" class="navbar-featured-link" aria-label="Browse HouseHub listings">HouseHub</a>
+        <a href="products.html?category=Properties" class="navbar-featured-link" aria-label="Browse property listings">Properties</a>
+        <a href="products.html?category=Services" class="navbar-featured-link" aria-label="Browse service listings">Services</a>
+        <a href="products.html?category=Businesses" class="navbar-featured-link" aria-label="Browse businesses">Businesses</a>
+        <a href="products.html?category=Jobs" class="navbar-featured-link" aria-label="Browse jobs and opportunities">Jobs</a>
+        <a href="image-studio.html" class="navbar-featured-link" aria-label="Open Image Studio"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
+        <a href="sell.html" class="navbar-featured-link" aria-label="Sell on IsokoHub">Sell on IsokoHub</a>
       </div>
       `}
     </nav>

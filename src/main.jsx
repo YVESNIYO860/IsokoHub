@@ -31,7 +31,7 @@ function normalizeRoutePath(pathname = window.location.pathname) {
   return cleaned.endsWith('.html') ? cleaned.slice(0, -5) || '/' : cleaned;
 }
 
-const sharedScripts = ['js/route-utils.js', 'js/data.js', 'js/app.js'];
+const sharedScripts = ['js/route-utils.js', 'js/data.js', 'js/core/isoko-core.js', 'js/core/user-capabilities.js', 'js/core/profile-service.js', 'js/core/module-registry.js', 'js/core/search-architecture.js', 'js/core/ecosystem-discovery.js', 'js/core/isokolink-service.js', 'js/core/module-access-policy.js', 'js/core/service-module.js', 'js/core/property-module.js', 'js/app.js'];
 const routeDefinitions = {
   '/': { component: Home, styles: () => import('./Home.css'), scripts: [...sharedScripts, 'js/home.js'] },
   '/home': { component: Home, styles: () => import('./Home.css'), scripts: [...sharedScripts, 'js/home.js'] },
