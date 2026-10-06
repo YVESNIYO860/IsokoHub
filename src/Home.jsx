@@ -22,7 +22,7 @@ export default function Home() {
               <img src="/assets/hero-image.png" alt="A collection of electronics and household products" width="534" height="374" fetchPriority="high" decoding="async" />
               <span className="marketplace-hero-image-label">Electronics <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
             </a>
-            <a className="marketplace-hero-image-link marketplace-hero-image-link--bikes" href="/products?q=bicycle" aria-label="Browse bicycle listings">
+            <a className="marketplace-hero-image-link marketplace-hero-image-link--bikes" href="/products?q=others" aria-label="Browse bicycle listings">
               <img src="/assets/hero2.jpg" alt="Bicycles on display at a local shop" width="547" height="365" loading="lazy" decoding="async" />
               <span className="marketplace-hero-image-label">Bicycles <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
             </a>

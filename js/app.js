@@ -869,11 +869,12 @@ function renderNavbar() {
 
       ${isAdminPage ? '' : `
       <div class="navbar-bottom" aria-label="Marketplace shortcuts">
-        <a href="houses-rent.html" class="navbar-featured-link" aria-label="Browse HouseHub listings">HouseHub</a>
-        <a href="products.html?category=Properties" class="navbar-featured-link" aria-label="Browse property listings">Properties</a>
-        <a href="products.html?category=Services" class="navbar-featured-link" aria-label="Browse service listings">Services</a>
-        <a href="products.html?category=Businesses" class="navbar-featured-link" aria-label="Browse businesses">Businesses</a>
-        <a href="products.html?category=Jobs" class="navbar-featured-link" aria-label="Browse jobs and opportunities">Jobs</a>
+        <a href="products.html?category=Electronics" class="navbar-featured-link" aria-label="Browse electronics listings">Electronics</a>
+        <a href="products.html?category=Fashion" class="navbar-featured-link" aria-label="Browse fashion listings">Fashion</a>
+        <a href="products.html?category=Phones" class="navbar-featured-link" aria-label="Browse phone listings">Phones</a>
+        <a href="products.html?category=Cars" class="navbar-featured-link" aria-label="Browse vehicle listings">Cars</a>
+        <a href="products.html?category=Houses%20%26%20Rents" class="navbar-featured-link" aria-label="Browse homes and rentals">Homes &amp; rentals</a>
+        <a href="products.html?category=Others" class="navbar-featured-link" aria-label="Browse other listings">Others</a>
         <a href="image-studio.html" class="navbar-featured-link" aria-label="Open Image Studio"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
         <a href="sell.html" class="navbar-featured-link" aria-label="Sell on IsokoHub">Sell on IsokoHub</a>
       </div>
@@ -907,33 +908,16 @@ function renderNavbar() {
       </div>
       <div class="side-drawer-content">
         <div class="drawer-section drawer-dropdown">
-          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-fire" style="color:#f97316"></i> Trending</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
+          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-grid" style="color:#3b82f6"></i> Browse listings</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
           <div class="drawer-hidden">
             <ul>
-              <li><a href="products.html">Best Sellers <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-              <li><a href="products.html">New Releases <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-              <li><a href="products.html">Movers & Shakers <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            </ul>
-          </div>
-        </div>
-        
-        <div class="drawer-section drawer-dropdown">
-          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-microchip" style="color:#3b82f6"></i> High-Tech & Auto</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
-          <div class="drawer-hidden">
-            <ul>
-              <li><a href="products.html?category=Electronics">Computers & Audio <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-              <li><a href="products.html?category=Phones">Smartphones <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-              <li><a href="products.html?category=Cars">Cars & Vehicles <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-            </ul>
-          </div>
-        </div>
-        
-        <div class="drawer-section drawer-dropdown">
-          <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-house-chimney" style="color:#10b981"></i> Real Estate</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
-          <div class="drawer-hidden">
-            <ul>
-              <li><a href="products.html?category=Houses%20%26%20Rents">Houses for Sale <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
-              <li><a href="products.html?category=Houses%20%26%20Rents">Apartments & Rents <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Electronics">Electronics <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Fashion">Fashion <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Shoes">Shoes <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Phones">Phones <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Cars">Cars &amp; vehicles <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Houses%20%26%20Rents">Homes &amp; rentals <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Others">Others <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
             </ul>
           </div>
         </div>
@@ -1076,7 +1060,7 @@ function renderFooter() {
           <ul class="footer-socials">
             <li><a href="https://www.facebook.com/profile.php?id=100073494818427&amp;sk=friends" target="_blank" rel="noreferrer" aria-label="IsokoHub on Facebook"><i class="fa-brands fa-facebook"></i></a></li>
             <li><a href="https://www.instagram.com/maverix_001/" target="_blank" rel="noreferrer" aria-label="IsokoHub on Instagram"><i class="fa-brands fa-instagram"></i></a></li>
-            <li><a href="https://x.com/best_shineboy" target="_blank" rel="noreferrer" aria-label="IsokoHub on X"><i class="fa-brands fa-x-twitter"></i></a></li>
+            <li><a href="https://x.com/best_shineboy" target="_blank" rel="noreferrer" aria-label="IsokoHub on X"><span class="footer-social-x" aria-hidden="true">X</span></a></li>
             <li><a href="https://www.youtube.com/@Maverix1" target="_blank" rel="noreferrer" aria-label="IsokoHub on YouTube"><i class="fa-brands fa-youtube"></i></a></li>
             <li><a href="https://www.linkedin.com/in/best-shineboy-3aa183383/" target="_blank" rel="noreferrer" aria-label="IsokoHub on LinkedIn"><i class="fa-brands fa-linkedin"></i></a></li>
             <li><a href="mailto:yvesniyonkuru2022@gmail.com" aria-label="Email IsokoHub"><i class="fa-solid fa-envelope"></i></a></li>
