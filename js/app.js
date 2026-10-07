@@ -683,10 +683,9 @@ function setupStickyHeader() {
       mobileBottomNav.classList.toggle('is-hidden', isMobile && shouldHide && !shouldShow);
     }
 
-    const isSmall = window.innerWidth <= 480;
-    const isTablet = window.innerWidth <= 768;
-    const baseOffset = isSmall ? 92 : isTablet ? 96 : 100;
-    const scrolledOffset = isSmall ? 72 : isTablet ? 76 : 80;
+    const measuredHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
+    const baseOffset = measuredHeaderHeight;
+    const scrolledOffset = Math.max(64, Math.min(96, measuredHeaderHeight - 56));
     const nextOffset = shouldScroll ? scrolledOffset : baseOffset;
 
     document.documentElement.style.setProperty('--header-offset', `${nextOffset}px`);
@@ -869,14 +868,43 @@ function renderNavbar() {
 
       ${isAdminPage ? '' : `
       <div class="navbar-bottom" aria-label="Marketplace shortcuts">
-        <a href="products.html?category=Electronics" class="navbar-featured-link" aria-label="Browse electronics listings">Electronics</a>
-        <a href="products.html?category=Fashion" class="navbar-featured-link" aria-label="Browse fashion listings">Fashion</a>
-        <a href="products.html?category=Phones" class="navbar-featured-link" aria-label="Browse phone listings">Phones</a>
-        <a href="products.html?category=Cars" class="navbar-featured-link" aria-label="Browse vehicle listings">Cars</a>
-        <a href="products.html?category=Houses%20%26%20Rents" class="navbar-featured-link" aria-label="Browse homes and rentals">Homes &amp; rentals</a>
-        <a href="products.html?category=Others" class="navbar-featured-link" aria-label="Browse other listings">Others</a>
+        <div class="navbar-dropdown-wrap navbar-products-wrap">
+          <button type="button" class="navbar-featured-link navbar-dropdown-toggle" aria-label="Products" aria-expanded="false" aria-controls="products-menu-dropdown">
+            <i class="fa-solid fa-box" aria-hidden="true"></i>
+            <span>Products</span>
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+          </button>
+          <div class="navbar-dropdown-panel" id="products-menu-dropdown" role="menu" aria-label="Product categories">
+            <a href="products.html?category=Electronics" aria-label="Browse electronics listings">Electronics</a>
+            <a href="products.html?category=Fashion" aria-label="Browse fashion listings">Fashion</a>
+            <a href="products.html?category=Phones" aria-label="Browse phone listings">Phones</a>
+            <a href="products.html?category=Cars" aria-label="Browse vehicle listings">Cars</a>
+            <a href="products.html?category=Houses%20%26%20Rents" aria-label="Browse homes and rentals">Homes &amp; rentals</a>
+          </div>
+        </div>
+
+        <div class="navbar-dropdown-wrap navbar-services-wrap">
+          <button type="button" class="navbar-featured-link navbar-dropdown-toggle" aria-label="Services" aria-expanded="false" aria-controls="services-menu-dropdown">
+            <i class="fa-solid fa-briefcase" aria-hidden="true"></i>
+            <span>Services</span>
+            <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+          </button>
+          <div class="navbar-dropdown-panel" id="services-menu-dropdown" role="menu" aria-label="Service categories">
+            <a href="products.html?category=Services" aria-label="Browse service listings">Services</a>
+            <a href="products.html?category=Businesses" aria-label="Browse businesses">Businesses</a>
+            <a href="products.html?category=Jobs" aria-label="Browse jobs">Jobs</a>
+            <a href="products.html?category=Food" aria-label="Browse food listings">Food</a>
+            <a href="products.html?category=Transport" aria-label="Browse transport listings">Transport</a>
+            <a href="products.html?category=Learning" aria-label="Browse learning listings">Learning</a>
+            <a href="products.html?category=Events" aria-label="Browse events">Events</a>
+            <a href="products.html?category=Digital" aria-label="Browse digital listings">Digital</a>
+            <a href="products.html?category=Others" aria-label="Browse other listings">Others</a>
+          </div>
+        </div>
+
         <a href="image-studio.html" class="navbar-featured-link" aria-label="Open Image Studio"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Image Studio</a>
-        <a href="sell.html" class="navbar-featured-link" aria-label="Sell on IsokoHub">Sell on IsokoHub</a>
+        <a href="houses-rent.html" class="navbar-featured-link" aria-label="Open HouseHub"><i class="fa-solid fa-house" aria-hidden="true"></i> HouseHub</a>
+        <a href="sell.html" class="navbar-featured-link" aria-label="Sell on IsokoHub"><i class="fa-solid fa-plus" aria-hidden="true"></i> Sell on IsokoHub</a>
       </div>
       `}
     </nav>
@@ -917,6 +945,14 @@ function renderNavbar() {
               <li><a href="products.html?category=Phones">Phones <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
               <li><a href="products.html?category=Cars">Cars &amp; vehicles <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
               <li><a href="products.html?category=Houses%20%26%20Rents">Homes &amp; rentals <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Services">Services <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Businesses">Businesses <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Jobs">Jobs <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Food">Food <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Transport">Transport <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Learning">Learning <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Events">Events <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="products.html?category=Digital">Digital <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
               <li><a href="products.html?category=Others">Others <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
             </ul>
           </div>
@@ -954,6 +990,8 @@ function renderNavbar() {
   const sideDrawer = document.getElementById('side-drawer');
   const drawerOverlay = document.getElementById('side-drawer-overlay');
   const closeBtn = document.getElementById('close-drawer');
+  const productsMenuToggle = document.getElementById('products-menu-toggle');
+  const productsMenuDropdown = document.getElementById('products-menu-dropdown');
   const settings = getDrawerUiSettings();
   const themeSelect = document.getElementById('drawer-theme-select');
   const compactToggle = document.getElementById('drawer-compact-toggle');
@@ -977,6 +1015,63 @@ function renderNavbar() {
 
   [themeSelect, compactToggle, reducedMotionToggle, highContrastToggle].forEach((control) => {
     if (control) control.addEventListener('change', handleDrawerSettingsChange);
+  });
+
+  const navbar = document.querySelector('.navbar');
+  const updateNavbarDropdownPositions = () => {
+    if (!navbar) return;
+    const headerBottom = Math.ceil(navbar.getBoundingClientRect().bottom);
+    navbar.style.setProperty('--navbar-dropdown-top', `${headerBottom}px`);
+
+    document.querySelectorAll('.navbar-dropdown-wrap').forEach((wrap) => {
+      const panel = wrap.querySelector('.navbar-dropdown-panel');
+      if (!panel) return;
+      const toggleLeft = Math.round(wrap.getBoundingClientRect().left);
+      wrap.style.setProperty('--navbar-dropdown-left', `${toggleLeft}px`);
+    });
+  };
+
+  updateNavbarDropdownPositions();
+  window.addEventListener('resize', updateNavbarDropdownPositions, { passive: true });
+  window.addEventListener('scroll', updateNavbarDropdownPositions, { passive: true });
+
+  const dropdownWraps = document.querySelectorAll('.navbar-dropdown-wrap');
+  dropdownWraps.forEach((wrap) => {
+    const toggle = wrap.querySelector('.navbar-dropdown-toggle');
+    const panel = wrap.querySelector('.navbar-dropdown-panel');
+    if (!toggle || !panel) return;
+
+    const openMenu = () => {
+      wrap.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+      updateNavbarDropdownPositions();
+    };
+
+    const closeMenu = () => {
+      wrap.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+
+    toggle.addEventListener('mouseenter', openMenu);
+    wrap.addEventListener('mouseleave', closeMenu);
+    toggle.addEventListener('focus', openMenu);
+    toggle.addEventListener('blur', closeMenu);
+    toggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      const isOpen = wrap.classList.contains('is-open');
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    panel.addEventListener('mouseleave', closeMenu);
+    document.addEventListener('click', (event) => {
+      if (!wrap.contains(event.target)) {
+        closeMenu();
+      }
+    });
   });
 
   if (sideTrigger && sideDrawer && drawerOverlay) {
