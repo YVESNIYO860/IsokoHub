@@ -2333,7 +2333,7 @@ body.menu-open .menu-active-overlay {
     --header-offset-scrolled: 80px;
   }
 
-  body { padding-top: 154px !important; padding-bottom: 5.4rem; }
+  body { padding-top: var(--header-offset) !important; padding-bottom: 5.4rem; }
   .marketplace-hero { scroll-margin-top: 158px; }
   .hero-marketplace { height: auto; min-height: 320px; max-height: none; padding: 1.25rem 1rem; }
   .hero-marketplace-grid { display: block; }
@@ -2939,7 +2939,7 @@ body.menu-open .menu-active-overlay {
 
 @media (max-width: 768px) {
   body {
-    padding-top: calc(var(--header-offset) - 10px);
+    padding-top: var(--header-offset);
   }
 
   /* Navbar Stacking */
@@ -3065,7 +3065,7 @@ body.menu-open .menu-active-overlay {
 
 @media (max-width: 480px) {
   body {
-    padding-top: calc(var(--header-offset) - 16px);
+    padding-top: var(--header-offset);
   }
 
   .side-drawer {

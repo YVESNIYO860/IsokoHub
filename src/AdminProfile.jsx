@@ -9,11 +9,16 @@ const profileStyles = `
   .profile-img-container { text-align: center; }
   .profile-img { display: block; width: 100%; max-width: 320px; aspect-ratio: 4 / 5; margin: 0 auto; border-radius: var(--radius-md); object-fit: cover; object-position: center 35%; box-shadow: var(--shadow-sm); }
   .profile-socials { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-  .profile-socials a { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid var(--border-color); border-radius: 10px; background: #fff; color: var(--primary-blue) !important; font-size: 1.1rem; transition: background 180ms ease, transform 180ms ease; }
+  .profile-socials a { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--primary-blue) !important; font-size: 1.1rem; transition: background 180ms ease, transform 180ms ease; }
   .profile-socials a:hover { transform: translateY(-2px); background: #eff6ff; }
+  .profile-socials a[aria-label="X"] { color: var(--primary-blue) !important; }
   .bio-content { line-height: 1.75; color: var(--text-muted); font-size: 1rem; }
   .bio-content h2 { margin: 0.4rem 0 1rem; color: var(--text-dark); font-size: 2rem; }
   .bio-content p { margin-bottom: 1rem; }
+  .founder-quote { position: relative; margin: 0 0 1.25rem; padding: 1rem 1.1rem; border: 1px solid #bfdbfe; border-left: 3px solid #0f766e; border-radius: 8px; background: #eff6ff; color: #19304d; }
+  .founder-quote::after { position: absolute; bottom: -0.45rem; left: 1.2rem; width: 0.8rem; height: 0.8rem; border-right: 1px solid #bfdbfe; border-bottom: 1px solid #bfdbfe; background: #eff6ff; content: ""; transform: rotate(45deg); }
+  .founder-quote p { margin: 0; font-size: 0.95rem; font-weight: 650; line-height: 1.55; }
+  .founder-quote cite { display: block; margin-top: 0.55rem; color: #52647c; font-size: 0.76rem; font-style: normal; font-weight: 700; }
   .experience-tag { background: #eff6ff; color: #1d4ed8; padding: 0.35rem 0.65rem; border-radius: 999px; font-weight: 750; font-size: 0.75rem; display: inline-flex; margin-bottom: 0.25rem; }
   .profile-marketplace-link { display: inline-flex; margin-top: 0.5rem; }
   @media (max-width: 700px) {
@@ -44,16 +49,20 @@ export default function AdminProfile() {
               <img src="assets/admin.jpeg" alt="Niyonkuru Yves, founder and developer of IsokoHub" className="profile-img" loading="lazy" />
               <div className="profile-socials">
                 <a href="https://www.instagram.com/maverix_001/" target="_blank" rel="noreferrer" title="Instagram" aria-label="Instagram"><i className="fa-brands fa-instagram"></i></a>
-                <a href="https://www.facebook.com/profile.php?id=100073494818427&amp;sk=friends" target="_blank" rel="noreferrer" title="Facebook" aria-label="Facebook"><i className="fa-brands fa-facebook"></i></a>
+                <a href="https://www.facebook.com/yves0011/" target="_blank" rel="noreferrer" title="Facebook" aria-label="Facebook"><i className="fa-brands fa-facebook"></i></a>
                 <a href="https://www.youtube.com/@techli_001" target="_blank" rel="noreferrer" title="YouTube" aria-label="YouTube"><i className="fa-brands fa-youtube"></i></a>
                 <a href="https://www.linkedin.com/in/best-shineboy-3aa183383/" target="_blank" rel="noreferrer" title="LinkedIn" aria-label="LinkedIn"><i className="fa-brands fa-linkedin"></i></a>
-                <a href="https://x.com/best_shineboy" target="_blank" rel="noreferrer" title="X" aria-label="X"><i className="fa-brands fa-x-twitter"></i></a>
+                <a href="https://x.com/le_grand_yves" target="_blank" rel="noreferrer" title="X (formerly Twitter)" aria-label="X"><i className="fa-brands fa-x-twitter"></i></a>
                 <a href="mailto:yvesniyonkuru2022@gmail.com" title="Email" aria-label="Email"><i className="fa-solid fa-envelope"></i></a>
               </div>
             </div>
             <div className="bio-content">
               <span className="experience-tag">FOUNDER · CEO · DEVELOPER</span>
-              <h2>Niyonkuru Yves</h2>
+              <h2>NIYONKURU Yves</h2>
+              <blockquote className="founder-quote">
+                <p>“I’m driven by curiosity and creativity, and by the belief that practical digital tools can help people connect and move ideas forward.”</p>
+                <cite>Niyonkuru Yves, Founder</cite>
+              </blockquote>
               <p><strong>Niyonkuru Yves</strong> is a passionate and ambitious young Rwandan from Kamonyi District, Southern Province, Rwanda. From an early age, Yves demonstrated a natural curiosity and love for learning, exploring both academic subjects and creative pursuits with dedication and enthusiasm.</p>
               <p>He completed his secondary education at <strong>ES Runaba</strong>, where he excelled academically while actively participating in school activities and community initiatives. His time at ES Runaba instilled in him a deep appreciation for education, discipline, and teamwork, shaping the values that continue to guide him today.</p>
               <p>Currently, Yves is pursuing higher education at the <strong>University of Rwanda</strong>, balancing rigorous academics with his diverse interests. Beyond formal education, he is deeply passionate about creativity, innovation, and digital projects that combine practical solutions with artistic expression.</p>

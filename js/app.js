@@ -685,9 +685,8 @@ function setupStickyHeader() {
     const measuredHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
     const baseOffset = measuredHeaderHeight;
     const scrolledOffset = Math.max(64, Math.min(96, measuredHeaderHeight - 56));
-    const nextOffset = shouldScroll ? scrolledOffset : baseOffset;
 
-    document.documentElement.style.setProperty('--header-offset', `${nextOffset}px`);
+    document.documentElement.style.setProperty('--header-offset', `${baseOffset}px`);
     document.documentElement.style.setProperty('--header-offset-scrolled', `${scrolledOffset}px`);
     lastScrollY = currentScrollY;
     ticking = false;
@@ -753,7 +752,7 @@ function addDependencies() {
     const link = document.createElement('link');
     link.id = 'fontawesome-css';
     link.rel = 'stylesheet';
-    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css';
     document.head.appendChild(link);
   }
 }
