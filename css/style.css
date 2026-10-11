@@ -5043,6 +5043,376 @@ body.menu-open .menu-active-overlay {
   }
 }
 
+/* Product card refresh: shared presentation only; grid and page layout stay intact. */
+.product-card {
+  min-width: 0;
+  border: 1px solid #dbe7f3;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 5px 18px rgba(16, 33, 63, 0.07);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.product-card::before {
+  display: none;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  border-color: #bfdbfe;
+  box-shadow: 0 12px 28px rgba(16, 33, 63, 0.12);
+}
+
+.product-card-image-shell {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+  background: #f4f7fb;
+}
+
+.product-card-image-shell .product-card-img {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  object-fit: cover;
+  object-position: center;
+  mix-blend-mode: normal;
+}
+
+.product-card > .product-card-img {
+  width: 100%;
+  height: auto;
+  flex: 0 0 auto;
+  aspect-ratio: 4 / 3;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  object-fit: cover;
+  object-position: center;
+}
+
+.product-card.blurred-product-card .product-card-backdrop,
+.product-card.blurred-product-card .hero-product-card-backdrop,
+.amazon-product-grid .hero-product-card .hero-product-card-backdrop {
+  display: none;
+}
+
+.product-card-image-shell > .product-card-img:not(img) {
+  opacity: 1;
+}
+
+.product-card-gallery {
+  height: 100%;
+  padding: 0;
+  aspect-ratio: 4 / 3;
+}
+
+.product-card-gallery img {
+  border: 0;
+  border-radius: 0;
+}
+
+.product-card-badge {
+  top: 0.8rem;
+  left: 0.8rem;
+  padding: 0.35rem 0.65rem;
+  border: 0;
+  border-radius: 999px;
+  background: #2563eb;
+  box-shadow: none;
+  color: #ffffff;
+  font-size: 0.68rem;
+  letter-spacing: 0;
+}
+
+.amazon-product-grid .hero-product-card .product-card-badge {
+  border-radius: 999px;
+}
+
+.product-card-image-condition {
+  top: auto;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(219, 228, 239, 0.9);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #24364b;
+  font-size: 0.65rem;
+}
+
+.product-card-image-buy {
+  top: 0.75rem;
+  right: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.product-card-content {
+  min-width: 0;
+  gap: 0.45rem;
+  padding: 0.9rem;
+}
+
+.product-card-main-link {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-listing-card .product-card-meta-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+}
+
+.product-category {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0.25rem 0.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.66rem;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-title {
+  display: -webkit-box;
+  min-height: 2.6em;
+  overflow: hidden;
+  color: #152238;
+  font-size: 0.94rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.product-card-location {
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card-foot {
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.65rem;
+  border-color: #e8eef5;
+}
+
+.product-price {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 1.1rem;
+  font-weight: 850;
+  justify-content: flex-start;
+  white-space: normal;
+}
+
+.product-card-foot > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.4rem;
+}
+
+.old-price {
+  margin: 0;
+  font-size: 0.72rem;
+}
+
+.new-price {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 1.05rem;
+}
+
+.product-card-view-link,
+.hero-product-card-view {
+  min-height: 2.5rem;
+  justify-content: center;
+  padding: 0.55rem 0.8rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 750;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.product-card-view-link:hover,
+.hero-product-card-view:hover {
+  background: #1e40af;
+  color: #ffffff;
+}
+
+.amazon-product-grid .hero-product-card-view {
+  min-height: 2.75rem;
+  justify-content: center;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.amazon-product-grid .hero-product-card-view:hover {
+  background: #1e40af;
+  color: #ffffff;
+}
+
+.product-card-actions {
+  min-height: 0;
+  gap: 0.45rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.product-card-chat,
+.product-card-availability {
+  min-height: 2.75rem;
+  justify-content: center;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #f8fbff;
+  color: #1d4ed8;
+}
+
+.product-card-actions .btn-buy-online {
+  min-height: 2.75rem;
+  border-radius: 999px;
+}
+
+.product-card-actions .product-contact-btn,
+.amazon-product-grid .hero-product-card .product-contact-btn {
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: #eff6ff;
+  box-shadow: none;
+  color: #1d4ed8;
+}
+
+.product-card-actions .product-contact-btn:hover,
+.amazon-product-grid .hero-product-card .product-contact-btn:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.product-card-image-shell.house-card-image {
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: 0;
+}
+
+.house-card-image .product-card-img {
+  height: 100%;
+}
+
+.house-card .product-card-content {
+  padding: 0.9rem;
+}
+
+.house-card-price {
+  color: #1d4ed8;
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+
+.house-card-actions {
+  padding: 0 0.9rem 0.9rem;
+}
+
+.house-card-view {
+  min-height: 2.75rem;
+  justify-content: center;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.house-card-view:hover {
+  background: #1e40af;
+  color: #ffffff;
+}
+
+.house-card-cart {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.amazon-product-grid .hero-product-card .product-card-image-shell {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 4 / 3;
+}
+
+.amazon-product-grid .hero-product-card .product-card-img,
+.amazon-product-grid .hero-product-card .product-card-gallery {
+  height: 100%;
+}
+
+.amazon-product-grid .hero-product-card .product-card-img {
+  padding: 0;
+  object-fit: cover !important;
+}
+
+@media (max-width: 720px) {
+  .product-listing-card .product-card-content {
+    padding: 0.7rem;
+  }
+
+  .product-listing-card .product-card-actions {
+    flex-wrap: wrap;
+    padding: 0 0.7rem 0.7rem;
+  }
+
+  .product-listing-card .product-card-chat,
+  .product-listing-card .product-card-availability {
+    min-height: 2.75rem;
+  }
+
+  .product-listing-card .product-card-view-link {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.65rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .slide,
   .slide-title,

@@ -186,37 +186,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
       const displayImg = imageUrls[0] || '';
       const imageMarkup = displayImg
-        ? `<div class="product-card-image-shell" data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"><img src="${escapeHtml(displayImg)}" alt="" aria-hidden="true" class="product-card-backdrop" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none';"><img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"><span class="product-card-image-condition">${escapeHtml(p.condition || 'Used')}</span>${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt"></i> Buy online</span>' : ''}</div>`
-        : `<div class="product-card-image-shell"><div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div></div>`;
+        ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(p.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);">`
+        : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
       const shopBadge = p.shop?.name
         ? `<div class="product-card-shop"><i class="fa-solid fa-store"></i> ${escapeHtml(p.shop.name)}</div>`
         : '';
+      const productUrl = `product.html?id=${encodeURIComponent(p.id)}`;
+      const productName = escapeHtml(p.name || 'Untitled listing');
       return `
-        <div class="product-card blurred-product-card">
-          <a href="product.html?id=${p.id}" style="display:block; color:inherit; text-decoration:none;">
-            <div class="product-card-image-shell">
+        <article class="product-card product-listing-card">
+          <a href="${productUrl}" class="product-card-main-link" aria-label="View ${productName}">
+            <div class="product-card-image-shell"${imageUrls.length ? ` data-image-urls="${escapeHtml(JSON.stringify(imageUrls))}"` : ''}>
               ${imageMarkup}
               <span class="product-card-image-condition">${escapeHtml(p.condition || 'Used')}</span>
-              ${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt"></i> Buy online</span>' : ''}
+              ${p.buy_online ? '<span class="product-card-image-buy"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Buy online</span>' : ''}
             </div>
             <div class="product-card-content">
               <div class="product-card-meta-row">
-                <span class="product-category">${p.category}</span>
+                <span class="product-category">${escapeHtml(p.category || 'Other')}</span>
               </div>
-              <h3 class="product-title">${p.name}</h3>
+              <h3 class="product-title">${productName}</h3>
               ${shopBadge}
-              <div class="product-card-seller-line"><i class="fa-solid fa-location-dot"></i><span>${p.district || 'District not set'}</span><span class="product-card-dot">•</span><span>${p.seller_phone || p.seller_email ? 'Seller available' : 'Seller details pending'}</span></div>
+              <div class="product-card-seller-line"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>${escapeHtml(p.district || 'District not set')}</span><span class="product-card-dot" aria-hidden="true">•</span><span>${p.seller_phone || p.seller_email ? 'Seller available' : 'Seller details pending'}</span></div>
               <div class="product-card-foot">
                 ${priceMarkup}
-                <span class="product-card-view-link">View details <i class="fa-solid fa-arrow-right"></i></span>
+                <span class="product-card-view-link">View listing <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
               </div>
             </div>
           </a>
           <div class="product-card-actions">
             <a href="chat.html?product=${encodeURIComponent(p.id)}" onclick="event.stopPropagation();" class="product-card-chat"><i class="fa-solid fa-comments"></i> Chat</a>
-            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='product.html?id=${p.id}&buy=1'" class="btn btn-primary btn-buy-online"><i class="fa-solid fa-bolt"></i> Buy now</button>` : '<span class="product-card-availability"><i class="fa-solid fa-circle-check"></i> Available</span>'}
+            ${p.buy_online ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.location.href='${productUrl}&buy=1'" class="btn btn-primary btn-buy-online"><i class="fa-solid fa-bolt"></i> Buy now</button>` : '<span class="product-card-availability"><i class="fa-solid fa-circle-check"></i> Available</span>'}
           </div>
-        </div>
+        </article>
       `;
     }).join('');
     enableProductImageRotation(productsContainer);
