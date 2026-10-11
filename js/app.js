@@ -335,7 +335,7 @@ function ensurePwaMetaTags() {
   if (!document.querySelector('link[rel="manifest"]')) {
     const manifestLink = document.createElement('link');
     manifestLink.rel = 'manifest';
-    manifestLink.href = 'manifest.json';
+    manifestLink.href = '/manifest.json';
     document.head.appendChild(manifestLink);
   }
 
@@ -363,7 +363,7 @@ function ensurePwaMetaTags() {
   if (!document.querySelector('link[rel="apple-touch-icon"]')) {
     const appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
-    appleIcon.href = 'assets/icon-192.png';
+    appleIcon.href = '/assets/logo.png';
     document.head.appendChild(appleIcon);
   }
 }

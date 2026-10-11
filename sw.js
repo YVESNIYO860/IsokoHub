@@ -1,14 +1,14 @@
-const CACHE_NAME = 'isokohub-pwa-v2';
+const CACHE_NAME = 'isokohub-pwa-v3';
 const ASSETS_TO_CACHE = [
-  './',
-  './home',
-  './manifest.json',
-  './css/style.css',
-  './js/app.js',
-  './js/home.js',
-  './js/data.js',
-  './js/supabase-config.js',
-  './assets/logo.png'
+  '/',
+  '/home',
+  '/manifest.json',
+  '/css/style.css',
+  '/js/app.js',
+  '/js/home.js',
+  '/js/data.js',
+  '/js/supabase-config.js',
+  '/assets/logo.png'
 ];
 
 self.addEventListener('install', (event) => {

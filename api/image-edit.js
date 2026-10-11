@@ -54,8 +54,16 @@ module.exports = async function imageEdit(request, response) {
   const apiToken = process.env.CLOUDFLARE_API_TOKEN;
   const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-  if (!accountId || !apiToken || !supabaseUrl || !supabaseAnonKey) {
-    return sendJson(response, 503, { error: 'Image editing is not configured on the server yet.' });
+  const missingEnvironment = [
+    ['CLOUDFLARE_ACCOUNT_ID', accountId],
+    ['CLOUDFLARE_API_TOKEN', apiToken],
+    ['SUPABASE_URL', supabaseUrl],
+    ['SUPABASE_ANON_KEY', supabaseAnonKey]
+  ].filter(([, value]) => !value).map(([name]) => name);
+  if (missingEnvironment.length) {
+    return sendJson(response, 503, {
+      error: `Image editing is not configured. Add these Vercel environment variables: ${missingEnvironment.join(', ')}.`
+    });
   }
 
   const token = getBearerToken(request);
