@@ -144,6 +144,7 @@
   function renderToolPanel() {
     const templates = {
       editor: `<h2><i class="fa-solid fa-crop-simple" aria-hidden="true"></i> Image Editor</h2><p>Make quick, natural edits before sharing or listing.</p><label class="studio-control"><span><i class="fa-solid fa-crop-simple" aria-hidden="true"></i> Crop</span><select data-control="crop"><option value="original">Original</option><option value="1">Square 1:1</option><option value="0.8">Portrait 4:5</option><option value="1.7778">Landscape 16:9</option></select></label>${makeControl('Brightness', 'brightness', 70, 130)}${makeControl('Contrast', 'contrast', 70, 140)}${makeControl('Saturation', 'saturation', 0, 160)}${makeControl('Sharpness', 'sharpness', 0, 100)}<label class="studio-control"><span><i class="fa-solid fa-sliders" aria-hidden="true"></i> Filter</span><select data-control="filter"><option value="none">Original</option><option value="mono">Black and white</option><option value="warm">Warm</option><option value="cool">Cool</option></select></label><div class="studio-button-row"><button class="studio-secondary-button" data-action="undo" title="Undo last change"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i><span>Undo</span></button><button class="studio-secondary-button" data-action="redo" title="Redo last change"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i><span>Redo</span></button><button class="studio-secondary-button" data-action="reset" title="Reset edits"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i><span>Reset</span></button></div>`,
+      'ai-edit': `<h2><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> AI Image Edit</h2><p>Describe the change you want. For product photos, ask for lighting or background changes and review the result carefully.</p><label class="studio-control" for="studio-ai-prompt">Edit instructions<textarea class="studio-ai-prompt" id="studio-ai-prompt" maxlength="500" placeholder="Place this product on a clean white background with soft natural lighting."></textarea></label><p class="studio-ai-note">AI may change product details. Sign-in is required; your resized image is sent to Cloudflare.</p><button class="studio-download-button" data-action="ai-edit"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Generate edit</button>`,
       background: `<h2>🪄 Remove Background</h2><p>Prepare a clean product cutout. The replaceable adapter is currently running in local development mode.</p><button class="studio-download-button" data-action="background">Remove Background</button><label class="studio-control">Preview background<select data-control="backgroundColor"><option value="transparent">Transparent</option><option value="#ffffff">White</option><option value="#000000">Black</option><option value="#dbeafe">Custom Color</option></select></label><div class="studio-button-row"><button class="studio-secondary-button" data-action="custom-color">Choose custom color</button></div>`,
       enhance: `<h2>✨ Enhance Image</h2><p>Improve lighting and clarity with the local development enhancer, or connect a provider adapter later.</p><label class="studio-control">Enhancement strength<select data-control="enhanceStrength"><option value="1">Standard</option><option value="2">2x enhancement</option><option value="4">4x where supported</option></select></label><button class="studio-download-button" data-action="enhance">Enhance Image</button>`,
       product: `<h2><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Product Photo</h2><p>Quick seller presets for marketplace-ready images.</p><div class="studio-button-row"><button class="studio-secondary-button" data-action="product-background"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span>Remove background</span></button><button class="studio-secondary-button" data-action="product-white"><i class="fa-solid fa-square" aria-hidden="true"></i><span>White background</span></button><button class="studio-secondary-button" data-action="product-light"><i class="fa-solid fa-sun" aria-hidden="true"></i><span>Improve lighting</span></button><button class="studio-secondary-button" data-action="product-sharpen"><i class="fa-solid fa-wand-magic" aria-hidden="true"></i><span>Sharpen product</span></button></div><label class="studio-control"><span><i class="fa-solid fa-expand" aria-hidden="true"></i> Preset size</span><select data-control="crop"><option value="1">1:1</option><option value="0.8">4:5</option><option value="1.7778">16:9</option></select></label><button class="studio-secondary-button" data-action="compress"><i class="fa-solid fa-compress" aria-hidden="true"></i><span>Compress for marketplace</span></button>`,
@@ -183,6 +184,7 @@
     if (action === 'save') return saveCurrentChanges();
     if (action === 'undo' || action === 'redo') return setStatus(`${action === 'undo' ? 'Undo' : 'Redo'} history is ready for provider-backed editing.`);
     if (action === 'custom-color') return setStatus('Custom color preview is available after processing.');
+    if (action === 'ai-edit') return processAiEdit();
     if (action === 'product-light') { state.brightness = 108; state.contrast = 106; updatePreview(); return; }
     if (action === 'product-sharpen') { state.sharpness = 70; state.contrast = 108; updatePreview(); return; }
     if (action === 'product-white') { state.crop = '1'; updatePreview(); return; }
@@ -202,6 +204,25 @@
     } catch (error) {
       setError('😕 Something went wrong. Try Again or choose another image.');
     } finally { clearBusy('Ready'); }
+  }
+
+  async function processAiEdit() {
+    const prompt = panel.querySelector('#studio-ai-prompt')?.value || '';
+    if (!state.image) return setError('Choose an image before editing.');
+    if (!prompt.trim()) return setError('Describe the image change you want.');
+
+    setBusy('✨ Editing image with AI...');
+    let completed = false;
+    try {
+      const source = state.currentBlob || await blobFromPreview('image/png', 1);
+      const result = await window.aiImageEditService.edit(source, prompt);
+      await showComparison(source, result, 'AI edit preview');
+      completed = true;
+    } catch (error) {
+      setError(error.message || 'AI image editing failed. Please try again.');
+    } finally {
+      clearBusy(completed ? 'AI edit preview' : 'Ready');
+    }
   }
 
   async function processEnhancement() {

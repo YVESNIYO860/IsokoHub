@@ -86,6 +86,7 @@ const routeDefinitions = {
       'js/services/image/backgroundRemovalService.js',
       'js/services/image/enhancementService.js',
       'js/services/image/upscaleService.js',
+      'js/services/image/aiImageEditService.js',
       'js/image-studio.js'
     ]
   },
