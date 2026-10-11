@@ -294,7 +294,10 @@ async function logSiteVisit(pagePath = window.location.pathname) {
   try {
     const { error } = await supabase
       .from(SITE_VISITS_TABLE)
-      .insert([visitRecord]);
+      .insert([{
+        visitor_id: visitRecord.visitor_id,
+        page: visitRecord.page
+      }], { returning: 'minimal' });
 
     if (error) {
       throw error;

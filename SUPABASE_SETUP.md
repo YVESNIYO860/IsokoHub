@@ -68,7 +68,15 @@ CREATE POLICY "Users can insert their own profile"
 
 3. Click **Run**
 
-## Step 5: Test Sign In Locally
+## Step 5: Apply API Security and Visitor Analytics
+
+After creating `user_profiles` and applying the existing migrations through `012`, run `db/migrations/013_secure_api_access.sql` in the Supabase **SQL Editor**. Before running it, confirm the admin email in that migration matches the verified owner account used by this project.
+
+This migration creates the missing `site_visits` table, permits anonymous visits to be inserted without exposing analytics reads, and restricts analytics reads to that verified admin. It also blocks users from changing their own admin/verification fields, self-granting capabilities, approving their own listings, activating ads, editing other users' IsokoLink relations, or managing other sellers' listing media. It creates the public-read `product-images` and `house-videos` buckets if needed. Apply this migration before relying on browser-side admin screens; the SQL policies, not the UI, enforce access.
+
+For production, review **Authentication → URL Configuration** and keep only your real site domains and necessary local development URLs. Never add a Supabase `service_role` key to any frontend file. The public browser key is not a secret; Row Level Security must protect every exposed table and Storage bucket.
+
+## Step 6: Test Sign In Locally
 1. Run dev server:
    ```bash
    npm run dev

@@ -266,14 +266,17 @@ async function saveUserProfile(userId, userData) {
   const profile = {
     id: userId,
     ...userData,
-    is_verified: userData.is_verified ?? false,
-    verified_at: userData.verified_at || null,
-    verified_by: userData.verified_by || null,
     updated_at: new Date().toISOString()
+  };
+  const storedProfile = {
+    is_verified: false,
+    verified_at: null,
+    verified_by: null,
+    ...profile
   };
 
   if (typeof upsertStoredUserProfile === 'function') {
-    upsertStoredUserProfile(profile);
+    upsertStoredUserProfile(storedProfile);
   }
 
   const profileTable = (typeof SUPABASE_USER_PROFILES_TABLE !== 'undefined' && SUPABASE_USER_PROFILES_TABLE)
@@ -309,7 +312,7 @@ async function saveUserProfile(userId, userData) {
     }
   }
 
-  return Promise.resolve({ data: [profile], error: null });
+  return Promise.resolve({ data: [storedProfile], error: null });
 }
 
 /**
@@ -415,8 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Supabase Auth State Listener
   if (supabase && supabase.auth) {
     supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state changed:', event);
-      
       if (session && session.user) {
         // User is signed in
         const user = session.user;
@@ -440,8 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
           role: user.email === adminEmail ? 'admin' : 'seller',
           created_at: new Date().toISOString()
         });
-        console.log('User logged in:', user.email);
-
         // If on auth pages, redirect to dashboard
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('login.html') || currentPath.includes('signup.html')) {
@@ -450,15 +449,12 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // User is signed out
         localStorage.removeItem('isokoHubCurrentUser');
-        console.log('User logged out');
-        
         // If on protected page, redirect to login
         const currentPath = window.location.pathname.toLowerCase();
         const protectedPages = ['dashboard', 'sell', 'admin', 'product-details', 'admin-profile'];
         const isProtected = protectedPages.some(page => currentPath.includes(page));
         
         if (isProtected && !currentPath.includes('index.html') && !currentPath.includes('/')) {
-          console.log('Redirecting to login - page is protected');
           const loginUrl = window.location.protocol + '//' + window.location.host + '/login.html';
           setTimeout(() => { window.location.href = loginUrl; }, 500);
         }

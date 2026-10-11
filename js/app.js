@@ -321,7 +321,6 @@ function setupSupabaseAuthRefresh() {
   }
 
   supabase.auth.onAuthStateChange((event, session) => {
-    console.log('App auth state changed:', event);
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'SIGNED_OUT') {
       if (typeof renderNavbar === 'function') {
         renderNavbar();
@@ -1052,10 +1051,6 @@ function renderNavbar() {
       toggle.setAttribute('aria-expanded', 'false');
     };
 
-    toggle.addEventListener('mouseenter', openMenu);
-    wrap.addEventListener('mouseleave', closeMenu);
-    toggle.addEventListener('focus', openMenu);
-    toggle.addEventListener('blur', closeMenu);
     toggle.addEventListener('click', (event) => {
       event.preventDefault();
       const isOpen = wrap.classList.contains('is-open');
@@ -1063,6 +1058,12 @@ function renderNavbar() {
         closeMenu();
       } else {
         openMenu();
+      }
+    });
+
+    wrap.addEventListener('focusout', (event) => {
+      if (!wrap.contains(event.relatedTarget)) {
+        closeMenu();
       }
     });
 
@@ -1136,18 +1137,14 @@ function renderFooter() {
             <li><a href="dashboard.html">Seller dashboard</a></li>
           </ul>
         </div>
-        <div class="footer-col">
+        <div class="footer-col footer-company-col">
           <h4>Company</h4>
           <ul>
-            <li><a href="about.html">About IsokoHub</a></li>
-            <li><a href="admin-profile.html">About the founder</a></li>
-            <li><a href="about.html#careers">Careers</a></li>
+            <li class="footer-link-pair"><a href="about.html">About</a><a href="admin-profile.html">Founder</a></li>
+            <li class="footer-link-pair"><a href="about.html#careers">Careers</a><a href="about.html#investor">Investors</a></li>
             <li><a href="about.html#blog">Blog</a></li>
-            <li><a href="about.html#investor">Investor relations</a></li>
-            <li><a href="support.html">Support</a></li>
-            <li><a href="about.html#contact">Contact us</a></li>
-            <li><a href="privacy.html">Privacy</a></li>
-            <li><a href="terms.html">Terms</a></li>
+            <li class="footer-link-pair"><a href="support.html">Support</a><a href="about.html#contact">Contact</a></li>
+            <li class="footer-link-pair"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></li>
           </ul>
         </div>
         <div class="footer-col">
