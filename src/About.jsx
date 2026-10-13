@@ -179,6 +179,12 @@ export default function About() {
             <a href="products.html">Explore marketplace</a>
           </article>
 
+          <article className="about-card" id="creator">
+            <h3>Created by</h3>
+            <p><strong>Niyonkuru Yves</strong>, founder and developer of IsokoHub.</p>
+            <a href="admin-profile.html">Meet the founder</a>
+          </article>
+
           <article className="about-card" id="mission">
             <h3>Our mission</h3>
             <p>Make it easier for people in Rwanda to find useful products and connect with local sellers through a clear, accessible digital marketplace.</p>

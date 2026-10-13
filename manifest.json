@@ -1,7 +1,8 @@
 {
   "name": "IsokoHub",
   "short_name": "IsokoHub",
-  "description": "Buy, sell, and rent locally with IsokoHub.",
+  "description": "Buy, sell, and rent locally with IsokoHub. Created by Niyonkuru Yves.",
+  "author": "Niyonkuru Yves",
   "id": "/",
   "start_url": "/home",
   "scope": "/",
