@@ -95,31 +95,6 @@ async function run() {
     assert.ok(deleteCalls.some(({ url, options }) => url.includes('/auth/v1/admin/users/22222222-2222-4222-8222-222222222222')
       && options.method === 'DELETE'));
 
-    const productDeleteCalls = [];
-    global.fetch = async (url, options = {}) => {
-      productDeleteCalls.push({ url, options });
-      if (url.endsWith('/auth/v1/user')) return mockFetchResponse({ id: '11111111-1111-4111-8111-111111111111' });
-      if (url.endsWith('/rest/v1/rpc/is_isokohub_admin')) return mockFetchResponse(true);
-      if (url.includes('/rest/v1/products?') && options.method !== 'DELETE') {
-        return mockFetchResponse({
-          image: ['https://example.supabase.co/storage/v1/object/public/product-images/seller/listing.png'],
-          video_url: null
-        });
-      }
-      if (url.includes('/storage/v1/object/')) return mockFetchResponse([]);
-      return mockFetchResponse({}, options.method === 'DELETE' ? 204 : 200);
-    };
-
-    const productDeleteResponse = createResponse();
-    await adminUsers({
-      method: 'POST',
-      headers: { authorization: 'Bearer verified-admin-token' },
-      body: { productId: '33333333-3333-4333-8333-333333333333', action: 'delete_listing' }
-    }, productDeleteResponse);
-    assert.strictEqual(productDeleteResponse.statusCode, 200, JSON.stringify(productDeleteResponse.body));
-    assert.ok(productDeleteCalls.some(({ url, options }) => url.includes('/storage/v1/object/product-images')
-      && JSON.parse(options.body).prefixes.includes('seller/listing.png')));
-    assert.ok(productDeleteCalls.some(({ url, options }) => url.includes('/rest/v1/products?') && options.method === 'DELETE'));
     console.log('admin user controls and deletion test passed');
   } finally {
     global.fetch = originalFetch;

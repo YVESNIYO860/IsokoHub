@@ -932,8 +932,6 @@ async function updateProductData(id, changes = {}) {
 
 async function deleteProduct(id) {
   if (!supabase) return;
-
-  const isMissingHousehubTable = (error) => /not found|does not exist|relation .* does not exist|schema cache|could not find the table/i.test(error?.message || error || '');
   
   // Get product data to delete associated files
   const product = await fetchProductById(id);
@@ -951,21 +949,7 @@ async function deleteProduct(id) {
     }
   }
 
-  try {
-    const { error: mirrorError } = await supabase
-      .from('househub_listings')
-      .delete()
-      .eq('product_id', id);
-    if (mirrorError && !isMissingHousehubTable(mirrorError)) {
-      throw mirrorError;
-    }
-  } catch (error) {
-    if (!isMissingHousehubTable(error)) {
-      throw error;
-    }
-  }
-  
-  // Delete product record from database
+  // HouseHub mirrors are removed by the product_id foreign-key cascade.
   const { error } = await supabase
     .from('products')
     .delete()

@@ -72,12 +72,11 @@ module.exports = async function adminUsers(request, response) {
     }
 
     const userId = typeof request.body?.userId === 'string' ? request.body.userId : '';
-    const productId = typeof request.body?.productId === 'string' ? request.body.productId : '';
     const action = request.body?.action;
-    if (!['verify', 'disable', 'enable', 'delete', 'delete_listing'].includes(action)) {
+    if (!['verify', 'disable', 'enable', 'delete'].includes(action)) {
       return sendJson(response, 400, { error: 'Unsupported account action.' });
     }
-    if (action === 'delete_listing' ? !/^[0-9a-f-]{36}$/i.test(productId) : (!/^[0-9a-f-]{36}$/i.test(userId) || userId === adminUser.id)) {
+    if (!/^[0-9a-f-]{36}$/i.test(userId) || userId === adminUser.id) {
       return sendJson(response, 400, { error: 'Choose a valid account other than your own.' });
     }
 
@@ -89,15 +88,13 @@ module.exports = async function adminUsers(request, response) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal'
     };
-    if (action !== 'delete_listing') {
-      const targetResponse = await fetch(`${profileUrl}&select=id,role`, {
-        headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` }
-      });
-      if (!targetResponse.ok) return sendJson(response, 503, { error: 'Could not verify the selected account.' });
-      const targetProfiles = await targetResponse.json();
-      if (!targetProfiles.length) return sendJson(response, 404, { error: 'Account not found.' });
-      if (targetProfiles[0].role === 'admin') return sendJson(response, 403, { error: 'Admin accounts cannot be changed here.' });
-    }
+    const targetResponse = await fetch(`${profileUrl}&select=id,role`, {
+      headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` }
+    });
+    if (!targetResponse.ok) return sendJson(response, 503, { error: 'Could not verify the selected account.' });
+    const targetProfiles = await targetResponse.json();
+    if (!targetProfiles.length) return sendJson(response, 404, { error: 'Account not found.' });
+    if (targetProfiles[0].role === 'admin') return sendJson(response, 403, { error: 'Admin accounts cannot be changed here.' });
 
     if (action === 'verify') {
       const profileResponse = await fetch(profileUrl, {
@@ -138,7 +135,7 @@ module.exports = async function adminUsers(request, response) {
         await fetch(authAdminUrl, { method: 'PUT', headers: serviceHeaders, body: JSON.stringify({ ban_duration: '876000h' }) });
         return sendJson(response, 503, { error: 'Could not save the enabled account status.' });
       }
-    } else if (action === 'delete') {
+    } else {
       const adminClient = createClient(supabaseUrl, serviceRoleKey, {
         auth: { autoRefreshToken: false, persistSession: false }
       });
@@ -167,34 +164,6 @@ module.exports = async function adminUsers(request, response) {
 
       const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
       if (deleteAuthError) return sendJson(response, 503, { error: 'Could not delete the Supabase Auth account.' });
-    } else {
-      const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-        auth: { autoRefreshToken: false, persistSession: false }
-      });
-      const { data: product, error: productError } = await adminClient
-        .from('products')
-        .select('image,video_url')
-        .eq('id', productId)
-        .maybeSingle();
-      if (productError) return sendJson(response, 503, { error: 'Could not load the listing for deletion.' });
-      if (!product) return sendJson(response, 404, { error: 'Listing not found.' });
-
-      const mediaByBucket = {
-        'product-images': (Array.isArray(product.image) ? product.image : [product.image])
-          .map((url) => getStorageObjectPath(url, 'product-images')).filter(Boolean),
-        'house-videos': [getStorageObjectPath(product.video_url, 'house-videos')].filter(Boolean)
-      };
-      for (const [bucket, paths] of Object.entries(mediaByBucket)) {
-        if (!paths.length) continue;
-        const { error: storageError } = await adminClient.storage.from(bucket).remove(paths);
-        if (storageError) return sendJson(response, 503, { error: `Could not remove the listing's ${bucket} files.` });
-      }
-
-      const { error: deleteProductError } = await adminClient
-        .from('products')
-        .delete()
-        .eq('id', productId);
-      if (deleteProductError) return sendJson(response, 503, { error: 'Could not delete the listing.' });
     }
 
     return sendJson(response, 200, { success: true });

@@ -5,6 +5,31 @@ BEGIN;
 ALTER TABLE public.user_profiles
   ADD COLUMN IF NOT EXISTS is_active boolean NOT NULL DEFAULT true;
 
+CREATE OR REPLACE FUNCTION public.is_isokohub_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM auth.users AS account
+    WHERE account.id = (SELECT auth.uid())
+      AND lower(account.email) = lower('yvesniyonkuru2022@gmail.com')
+      AND account.email_confirmed_at IS NOT NULL
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_isokohub_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_isokohub_admin() TO authenticated;
+
+GRANT DELETE ON public.products TO authenticated;
+DROP POLICY IF EXISTS isokohub_admin_delete_products ON public.products;
+CREATE POLICY isokohub_admin_delete_products
+  ON public.products FOR DELETE TO authenticated
+  USING ((SELECT public.is_isokohub_admin()));
+
 CREATE OR REPLACE FUNCTION public.protect_user_profile_privileges()
 RETURNS trigger
 LANGUAGE plpgsql

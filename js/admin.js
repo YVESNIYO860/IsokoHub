@@ -336,15 +336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.handleReject = async function(id) {
     if (confirm('REJECT and DELETE this listing? This cannot be undone.')) {
       try {
-        const session = supabase?.auth?.session?.();
-        if (!session?.access_token) throw new Error('Your admin session has expired. Sign in again.');
-        const response = await fetch('/api/admin-users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-          body: JSON.stringify({ productId: id, action: 'delete_listing' })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.error || 'Unable to delete this listing.');
+        await deleteProduct(id);
         await renderAdmin();
       } catch (error) {
         console.error('Failed to delete listing:', error);
