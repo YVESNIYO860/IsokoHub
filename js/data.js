@@ -1218,24 +1218,102 @@ function renderProductDescription(value = '') {
   return output.join('');
 }
 
+function descriptionNodeToMarkdown(node) {
+  if (!node) return '';
+  if (node.nodeType === 3) return String(node.nodeValue || '').replace(/\u00a0/g, ' ');
+  if (node.nodeType !== 1) return Array.from(node.childNodes || []).map(descriptionNodeToMarkdown).join('');
+
+  const tag = String(node.tagName || '').toLowerCase();
+  const children = Array.from(node.childNodes || []).map(descriptionNodeToMarkdown).join('');
+  if (tag === 'br') return '\n';
+  if (tag === 'strong' || tag === 'b') return `**${children}**`;
+  if (tag === 'em' || tag === 'i') return `*${children}*`;
+  if (tag === 'u') return `++${children}++`;
+  if (tag === 's' || tag === 'del' || tag === 'strike') return `~~${children}~~`;
+  if (tag === 'code') return `\`${children}\``;
+  if (tag === 'a') {
+    const href = node.getAttribute?.('href') || '';
+    if (/^https?:\/\/[^\s)]+$/i.test(href) || /^mailto:[^\s)]+$/i.test(href)) return `[${children}](${href})`;
+    return children;
+  }
+  if (tag === 'li') return `- ${children.trim()}\n`;
+  if (tag === 'ul' || tag === 'ol') {
+    const items = Array.from(node.children || []).filter((child) => String(child.tagName).toLowerCase() === 'li');
+    return `${items.map((item, index) => {
+      const marker = tag === 'ol' ? `${index + 1}.` : '-';
+      const text = Array.from(item.childNodes || []).map(descriptionNodeToMarkdown).join('').trim();
+      return `${marker} ${text}`;
+    }).join('\n')}\n\n`;
+  }
+  if (/^h[1-6]$/.test(tag)) return `## ${children.trim()}\n\n`;
+  if (tag === 'blockquote') return `${children.trim().split('\n').map((line) => `> ${line}`).join('\n')}\n\n`;
+  if (tag === 'p' || tag === 'div' || tag === 'pre') return `${children.trim()}\n\n`;
+  return children;
+}
+
+function descriptionHtmlToMarkdown(html) {
+  const parsed = new DOMParser().parseFromString(String(html || ''), 'text/html');
+  return Array.from(parsed.body.childNodes)
+    .map(descriptionNodeToMarkdown)
+    .join('')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function setDescriptionEditorValue(textarea, value) {
+  if (!textarea) return;
+  textarea.value = String(value || '');
+  const editor = textarea._descriptionEditor;
+  if (editor) {
+    editor.innerHTML = textarea.value ? renderProductDescription(textarea.value) : '';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}
+
 function enhanceDescriptionEditor(textarea) {
   if (!textarea || textarea.dataset.descriptionToolbar === 'true') return;
   textarea.dataset.descriptionToolbar = 'true';
+  const editor = document.createElement('div');
+  editor.id = `${textarea.id}-editor`;
+  editor.className = 'description-editor-surface';
+  editor.contentEditable = 'true';
+  editor.setAttribute('role', 'textbox');
+  editor.setAttribute('aria-multiline', 'true');
+  editor.setAttribute('aria-label', 'Product description');
+  editor.dataset.placeholder = textarea.getAttribute('placeholder') || 'Describe the product...';
+  editor.innerHTML = textarea.value ? renderProductDescription(textarea.value) : '';
+  textarea._descriptionEditor = editor;
+
+  textarea.classList.add('description-source-field');
+  textarea.setAttribute('aria-hidden', 'true');
+  textarea.tabIndex = -1;
+  textarea.required = false;
+  document.querySelectorAll(`label[for="${textarea.id}"]`).forEach((label) => {
+    label.htmlFor = editor.id;
+  });
+
   const toolbar = document.createElement('div');
   toolbar.className = 'description-format-toolbar';
   toolbar.setAttribute('role', 'toolbar');
   toolbar.setAttribute('aria-label', 'Description formatting');
 
   const controls = [
-    { label: 'B', title: 'Bold', start: '**', end: '**' },
-    { label: 'I', title: 'Italic', start: '*', end: '*' },
-    { label: 'U', title: 'Underline', start: '++', end: '++' },
-    { label: 'S', title: 'Strikethrough', start: '~~', end: '~~' },
-    { label: '• List', title: 'Bulleted list', block: '- ' },
-    { label: '1. List', title: 'Numbered list', block: '1. ' },
-    { label: 'Link', title: 'Insert link', link: true },
-    { label: '`</>`', title: 'Inline code', start: '`', end: '`' }
+    { label: 'B', title: 'Bold', command: 'bold' },
+    { label: 'I', title: 'Italic', command: 'italic' },
+    { label: 'U', title: 'Underline', command: 'underline' },
+    { label: 'S', title: 'Strikethrough', command: 'strikeThrough' },
+    { label: '• List', title: 'Bulleted list', command: 'insertUnorderedList' },
+    { label: '1. List', title: 'Numbered list', command: 'insertOrderedList' },
+    { label: 'H', title: 'Heading', command: 'formatBlock', value: 'h3' },
+    { label: 'Quote', title: 'Quote', command: 'formatBlock', value: 'blockquote' },
+    { label: 'Link', title: 'Insert link', command: 'createLink' },
+    { label: 'Code', title: 'Inline code', command: 'code' }
   ];
+
+  const syncDescription = () => {
+    textarea.value = descriptionHtmlToMarkdown(editor.innerHTML);
+    editor.setAttribute('aria-invalid', textarea.value.trim() ? 'false' : 'true');
+  };
 
   controls.forEach((control) => {
     const button = document.createElement('button');
@@ -1244,39 +1322,50 @@ function enhanceDescriptionEditor(textarea) {
     button.textContent = control.label;
     button.title = control.title;
     button.setAttribute('aria-label', control.title);
+    button.addEventListener('mousedown', (event) => event.preventDefault());
     button.addEventListener('click', () => {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selected = textarea.value.slice(start, end);
-      let insertion = '';
-      let selectionStart = start;
-      let selectionEnd = start;
-
-      if (control.block) {
-        const selection = selected || 'List item';
-        insertion = selection.split('\n').map((line) => `${control.block}${line}`).join('\n');
-        selectionEnd = start + insertion.length;
-      } else if (control.link) {
-        const label = selected || 'link text';
-        insertion = `[${label}](https://example.com)`;
-        selectionStart = start + label.length + 3;
-        selectionEnd = selectionStart + 'https://example.com'.length;
+      editor.focus();
+      if (control.command === 'createLink') {
+        const selectedText = window.getSelection()?.toString();
+        if (!selectedText) {
+          window.alert('Select the text you want to turn into a link first.');
+          return;
+        }
+        const url = window.prompt('Enter a website URL (https://) or email link (mailto:).');
+        if (url && (/^https?:\/\/[^\s]+$/i.test(url.trim()) || /^mailto:[^\s]+$/i.test(url.trim()))) {
+          document.execCommand('createLink', false, url.trim());
+        } else if (url) {
+          window.alert('Use a valid https:// URL or mailto: address.');
+          return;
+        }
+      } else if (control.command === 'code') {
+        const selectedText = window.getSelection()?.toString();
+        if (!selectedText) {
+          window.alert('Select the text you want to format as code first.');
+          return;
+        }
+        document.execCommand('insertHTML', false, `<code>${escapeDescriptionText(selectedText)}</code>`);
       } else {
-        const content = selected || 'text';
-        insertion = `${control.start}${content}${control.end}`;
-        selectionStart = start + control.start.length;
-        selectionEnd = selectionStart + content.length;
+        document.execCommand(control.command, false, control.value || null);
       }
-
-      textarea.setRangeText(insertion, start, end, 'end');
-      textarea.focus();
-      textarea.setSelectionRange(selectionStart, selectionEnd);
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      syncDescription();
     });
     toolbar.appendChild(button);
   });
 
+  editor.addEventListener('input', syncDescription);
+  editor.addEventListener('blur', syncDescription);
+  textarea.form?.addEventListener('submit', (event) => {
+    syncDescription();
+    if (!textarea.value.trim()) {
+      event.preventDefault();
+      editor.focus();
+      editor.setAttribute('aria-invalid', 'true');
+    }
+  }, true);
   textarea.parentNode.insertBefore(toolbar, textarea);
+  textarea.parentNode.insertBefore(editor, textarea);
+  syncDescription();
 }
 
 /**

@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       priceMinInput.value                                     = product.price_min ?? product.priceMin ?? product.price;
       priceMaxInput.value                                     = product.price_max ?? product.priceMax ?? product.price;
       buyOnlineInput.checked                                  = product.buy_online === true || product.buyOnline === true;
-      document.getElementById('prod-description').value       = product.description;
+      setDescriptionEditorValue(document.getElementById('prod-description'), product.description);
       document.getElementById('prod-email').value             = product.sellerEmail || product.seller_email || user.email || '';
       document.getElementById('prod-phone').value             = product.sellerPhone || product.seller_phone || '';
       const districtParts = String(product.district || '').split(' • ');

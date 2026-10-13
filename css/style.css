@@ -2894,6 +2894,30 @@ body.menu-open .menu-active-overlay {
   margin: 0 0 0.45rem;
 }
 
+.description-source-field { display: none !important; }
+
+.description-editor-surface {
+  min-height: 8rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #94a3b8;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text-dark);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.description-editor-surface:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.description-editor-surface:focus { outline: 3px solid rgba(37, 99, 235, .16); border-color: var(--primary-blue); }
+.description-editor-surface[aria-invalid="true"]:focus { outline-color: rgba(220, 38, 38, .18); border-color: #dc2626; }
+.description-editor-surface p { margin: 0 0 0.65rem; }
+
 .description-format-button {
   min-width: 2.25rem;
   min-height: 2.15rem;
