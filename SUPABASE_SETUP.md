@@ -76,21 +76,30 @@ This migration creates the missing `site_visits` table, permits anonymous visits
 
 For production, review **Authentication → URL Configuration** and keep only your real site domains and necessary local development URLs. Never add a Supabase `service_role` key to any frontend file. The public browser key is not a secret; Row Level Security must protect every exposed table and Storage bucket.
 
-## Step 6: Test Sign In Locally
-1. Run dev server:
+## Step 6: Enable Username Sign In and Test Authentication
+1. Apply `db/migrations/016_auth_usernames.sql` in the Supabase SQL Editor. It adds unique usernames and creates each profile from signup metadata, including before email confirmation.
+2. Add these server-side environment variables to the deployment hosting `/api/username-login`:
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+
+  Keep the service-role key out of frontend code, `.env` files committed to Git, and client-visible build variables. See `docs/AUTH_SETUP.md` for the endpoint behavior.
+3. Run the local API runtime with the environment variables configured:
    ```bash
-   npm run dev
+  vercel dev
    ```
-2. Go to `http://localhost:3000/login.html`
-3. Try:
-   - Email/Password signup
-   - Email/Password login
-   - Google OAuth sign-in
+4. Open `/signup` to create an account. Confirm the email, username, and password flow; the Terms checkbox is required.
+5. Open `/login` to test email or username sign-in, Terms consent, and password recovery. Google sign-in remains available.
 
 ## Troubleshooting
 
 ### "Email provider not found"
 - Make sure Email provider is enabled in Authentication → Providers
+
+### "Error sending confirmation email"
+- Supabase's default email sender is for testing only: it can send only to project team addresses and is limited to about two messages per hour.
+- For public signups, configure a custom SMTP provider in Supabase Dashboard → Authentication → SMTP Settings. Set the SMTP host, port, credentials, sender email, and sender name, and verify the sender domain with your provider.
+- Check Supabase Authentication logs and your SMTP provider's delivery logs for rejected credentials, sender verification failures, or rate limits. Do not disable email confirmation to work around delivery failures.
 
 ### "Google OAuth redirect mismatch"
 - Ensure redirect URL in Supabase matches exactly:

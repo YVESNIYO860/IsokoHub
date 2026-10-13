@@ -370,6 +370,7 @@ async function importUsersFromJson(usersArray) {
 document.addEventListener('DOMContentLoaded', () => {
   const errorMsg = document.getElementById('error-msg');
   const loginForm = document.getElementById('login-form');
+  const passwordResetForm = document.getElementById('password-reset-form');
   const signupForm = document.getElementById('signup-form');
   const adminEmail = 'yvesniyonkuru2022@gmail.com';
 
@@ -418,32 +419,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // Supabase Auth State Listener
   if (supabase && supabase.auth) {
     supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' && passwordResetForm) {
+        loginForm?.setAttribute('hidden', '');
+        passwordResetForm.removeAttribute('hidden');
+        document.getElementById('new-password')?.focus();
+        return;
+      }
       if (session && session.user) {
         // User is signed in
         const user = session.user;
         const profileName = user.user_metadata?.full_name || user.user_metadata?.name || user.user_metadata?.preferred_username || 'User';
+        const profileUsername = user.user_metadata?.username || '';
         const profilePhone = user.user_metadata?.phone || user.user_metadata?.telephone || user.user_metadata?.phone_number || '';
         const profileAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || user.user_metadata?.profile_image || '';
         const userData = {
           id: user.id,
           email: user.email,
           name: profileName,
+          username: profileUsername,
           phone: profilePhone,
           avatarUrl: profileAvatar,
           role: user.email === adminEmail ? 'admin' : 'seller'
         };
         localStorage.setItem('isokoHubCurrentUser', JSON.stringify(userData));
-        saveUserProfile(user.id, {
+        const profileUpdate = {
           email: user.email,
           full_name: profileName,
           phone: profilePhone,
           avatar_url: profileAvatar || null,
           role: user.email === adminEmail ? 'admin' : 'seller',
           created_at: new Date().toISOString()
-        });
+        };
+        if (profileUsername) profileUpdate.username = profileUsername;
+        saveUserProfile(user.id, profileUpdate);
         // If on auth pages, redirect to dashboard
         const currentPath = window.location.pathname.toLowerCase();
-        if (currentPath.includes('login.html') || currentPath.includes('signup.html')) {
+        if (currentPath.includes('login.html') || currentPath.includes('signup.html') || /\/(login|signup)\/?$/.test(currentPath)) {
           setTimeout(redirectToDashboard, 500);
         }
       } else {
@@ -458,6 +469,42 @@ document.addEventListener('DOMContentLoaded', () => {
           const loginUrl = window.location.protocol + '//' + window.location.host + '/login.html';
           setTimeout(() => { window.location.href = loginUrl; }, 500);
         }
+      }
+    });
+  }
+
+  const recoveryType = new URLSearchParams(window.location.hash.slice(1)).get('type');
+  if (recoveryType === 'recovery' && passwordResetForm) {
+    loginForm?.setAttribute('hidden', '');
+    passwordResetForm.removeAttribute('hidden');
+  }
+
+  if (passwordResetForm) {
+    passwordResetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById('new-password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const submitBtn = passwordResetForm.querySelector('button[type="submit"]');
+      if (newPassword.length < 8) {
+        showMessage('Use a password with at least 8 characters.', 'error');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showMessage('The passwords do not match.', 'error');
+        return;
+      }
+      submitBtn.disabled = true;
+      try {
+        const { error } = await supabase.auth.update({ password: newPassword });
+        if (error) throw error;
+        showMessage('Password updated. You can now sign in with your new password.', 'success');
+        passwordResetForm.reset();
+        passwordResetForm.hidden = true;
+        loginForm?.removeAttribute('hidden');
+      } catch (error) {
+        showMessage(error.message || 'Could not update your password. Request a new reset link and try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
       }
     });
   }
@@ -479,10 +526,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const email = document.getElementById('email').value;
+      const identifier = document.getElementById('email').value.trim();
       const pw = document.getElementById('password').value;
 
       try {
+        let email = identifier;
+        if (!identifier.includes('@')) {
+          const response = await fetch('/api/username-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: identifier, password: pw })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.email) {
+            throw new Error(result.error || 'Invalid username or password.');
+          }
+          email = result.email;
+        }
         // Use v1-compatible signIn for email/password to avoid missing method errors
         const { user, session, error } = await supabase.auth.signIn({
           email: email,
@@ -513,12 +573,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const forgotPasswordBtn = document.getElementById('forgot-password-btn');
+  if (forgotPasswordBtn) {
+    forgotPasswordBtn.addEventListener('click', async () => {
+      const identifier = document.getElementById('email').value.trim();
+      if (!identifier || !identifier.includes('@')) {
+        showMessage('Enter your account email address to receive a password reset link.', 'error');
+        return;
+      }
+      forgotPasswordBtn.disabled = true;
+      try {
+        const { error } = await supabase.auth.api.resetPasswordForEmail(identifier, {
+          redirectTo: `${window.location.origin}/login`
+        });
+        if (error) throw error;
+        showMessage('If an account uses that email, a password reset link has been sent.', 'success');
+      } catch (error) {
+        showMessage(error.message || 'Could not send a password reset email. Try again later.', 'error');
+      } finally {
+        forgotPasswordBtn.disabled = false;
+      }
+    });
+  }
+
   const googleLoginBtn = document.getElementById('google-login-btn');
   const googleSignupBtn = document.getElementById('google-signup-btn');
 
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
     const btn = e.currentTarget;
+    const termsCheckbox = document.getElementById(btn.id === 'google-signup-btn' ? 'accept-terms-signup' : 'accept-terms-login');
+    if (!termsCheckbox?.checked) {
+      showMessage('Please accept the Terms and Conditions to continue.', 'error');
+      return;
+    }
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Connecting to Google...';
@@ -545,113 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (googleLoginBtn) googleLoginBtn.addEventListener('click', handleGoogleSignIn);
   if (googleSignupBtn) googleSignupBtn.addEventListener('click', handleGoogleSignIn);
-  // Signup verification flow (client-only code generator)
-  const sendCodeBtn = document.getElementById('send-code-btn');
-  const verificationSection = document.getElementById('verification-section');
-  const verifyCodeBtn = document.getElementById('verify-code-btn');
-  const verificationCodeInput = document.getElementById('verification-code');
-  const testCodeDisplay = document.getElementById('test-code-display');
-  const signupFields = document.getElementById('signup-fields');
-
-  // send-code now requests the server to email a verification code
-
-  function startSendCooldown(btn, seconds = 60) {
-    btn.disabled = true;
-    let remaining = seconds;
-    const origText = btn.textContent;
-    btn.textContent = `Resend code (${remaining}s)`;
-    const iv = setInterval(() => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        clearInterval(iv);
-        btn.disabled = false;
-        btn.textContent = origText;
-      } else {
-        btn.textContent = `Resend code (${remaining}s)`;
-      }
-    }, 1000);
-  }
-
-  if (sendCodeBtn) {
-    sendCodeBtn.addEventListener('click', async (e) => {
-      const emailInput = document.getElementById('email');
-      const email = (emailInput && emailInput.value || '').trim();
-      if (!email) {
-        showMessage('Please enter your email first.', 'error');
-        return;
-      }
-
-      try {
-        sendCodeBtn.disabled = true;
-        sendCodeBtn.textContent = 'Sending...';
-        const res = await fetch('/api/send-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-
-        if (res.ok) {
-          if (verificationSection) verificationSection.classList.remove('d-none');
-          showMessage('Verification code sent to your email. Check your inbox.', 'success');
-          startSendCooldown(sendCodeBtn, 60);
-        } else if (res.status === 429) {
-          showMessage('Too many requests. Please wait before requesting another code.', 'error');
-          startSendCooldown(sendCodeBtn, 60);
-        } else {
-          const body = await res.json().catch(() => ({}));
-          showMessage(body.error || body.message || 'Failed to send verification code.', 'error');
-          sendCodeBtn.disabled = false;
-          sendCodeBtn.textContent = 'Send verification code';
-        }
-      } catch (err) {
-        console.error('Error sending verification code:', err);
-        showMessage('Failed to send verification code. Try again later.', 'error');
-        sendCodeBtn.disabled = false;
-        sendCodeBtn.textContent = 'Send verification code';
-      }
-    });
-  }
-
-  if (verifyCodeBtn) {
-    verifyCodeBtn.addEventListener('click', async (e) => {
-      const emailInput = document.getElementById('email');
-      const email = (emailInput && emailInput.value || '').trim();
-      const entered = (verificationCodeInput && verificationCodeInput.value || '').trim();
-      if (!email || !entered) {
-        showMessage('Please provide both email and code.', 'error');
-        return;
-      }
-
-      try {
-        verifyCodeBtn.disabled = true;
-        verifyCodeBtn.textContent = 'Verifying...';
-        const res = await fetch('/api/verify-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code: entered })
-        });
-
-        if (res.ok) {
-          try { sessionStorage.setItem('isoko_verified_email', email); } catch (e) { }
-          showMessage('Email verified. Please complete the signup form below.', 'success');
-          if (signupFields) signupFields.classList.remove('d-none');
-          if (verificationSection) verificationSection.classList.add('d-none');
-          const nameInput = document.getElementById('name');
-          if (nameInput) nameInput.focus();
-        } else {
-          const body = await res.json().catch(() => ({}));
-          showMessage(body.error || body.message || 'Invalid code.', 'error');
-        }
-      } catch (err) {
-        console.error('Error verifying code:', err);
-        showMessage('Verification failed. Try again later.', 'error');
-      } finally {
-        verifyCodeBtn.disabled = false;
-        verifyCodeBtn.textContent = 'Verify code';
-      }
-    });
-  }
-
   if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -669,15 +650,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const name = document.getElementById('name').value;
-      const email = document.getElementById('email').value;
+      const name = document.getElementById('name').value.trim();
+      const username = document.getElementById('username').value.trim().toLowerCase();
+      const email = document.getElementById('email').value.trim().toLowerCase();
       const phone = document.getElementById('phone').value.trim();
       const pw = document.getElementById('password').value;
 
-      // Ensure email was verified via the code flow
-      const verifiedEmail = sessionStorage.getItem('isoko_verified_email');
-      if (!verifiedEmail || verifiedEmail !== email) {
-        showMessage('Please verify your email first using the verification code.', 'error');
+      if (!/^[a-z0-9_]{3,24}$/.test(username)) {
+        showMessage('Choose a username with 3-24 letters, numbers, or underscores.', 'error');
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
         return;
@@ -700,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const { user, session, error } = await supabase.auth.signUp(
           { email: email, password: pw },
-          { data: { full_name: name } }
+          { data: { full_name: name, username } }
         );
 
         if (error) {
@@ -716,7 +696,8 @@ document.addEventListener('DOMContentLoaded', () => {
               submitBtn.textContent = originalText;
             }, 10000);
           } else {
-            showMessage(error.message || 'Sign up failed. Please try again.', 'error');
+            const duplicateUsername = /user_profiles_username_lower_uidx|duplicate key/i.test(error.message || '');
+            showMessage(duplicateUsername ? 'That username is already in use. Choose another one.' : (error.message || 'Sign up failed. Please try again.'), 'error');
           }
 
           try {
@@ -729,6 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const { data: profileData, error: profileError } = await saveUserProfile(user.id, {
             email: email,
             full_name: name,
+            username,
             role: userRole,
             phone: phone,
             avatar_url: null,
@@ -737,7 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (profileError) console.error('Error saving profile:', profileError);
 
-          showMessage('Sign up successful! Please check your email to confirm your account.', 'success');
+          showMessage('Account created. Please check your email to confirm your account.', 'success');
           signupForm.reset();
           console.log('User registered:', email);
         }
