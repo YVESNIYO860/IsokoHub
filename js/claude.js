@@ -27,7 +27,7 @@ function buildProductSummaryInput(product) {
   if (product.category) lines.push(`Category: ${product.category}`);
   if (product.condition) lines.push(`Condition: ${product.condition}`);
   if (product.district) lines.push(`Location: ${product.district}`);
-  if (typeof product.price !== 'undefined') lines.push(`Price: ${formatPrice(product.price)}`);
+  if (typeof product.price !== 'undefined') lines.push(`Price: ${formatProductPrice(product)}`);
   if (product.description) lines.push(`Description: ${product.description}`);
   if (product.is_ad || product.ad_requested) {
     lines.push(`Ad requested: ${product.ad_requested ? 'yes' : 'no'}, boosted: ${product.is_ad ? 'yes' : 'no'}`);

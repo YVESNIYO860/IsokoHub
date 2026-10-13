@@ -1307,6 +1307,10 @@ function saveCart(cart) {
 }
 
 function addToCart(product) {
+  if (typeof hasProductPriceRange === 'function' && hasProductPriceRange(product)) {
+    window.alert('This listing has a price range. Please contact the seller to confirm the final price.');
+    return;
+  }
   const cart = getCart();
   const existingItem = cart.find(item => item.id === product.id);
   

@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   productContext.innerHTML = `
     <div class="chat-product-card">
       <img src="${chatEscape(productImage || 'assets/logo.png')}" alt="${chatEscape(product.name || 'Product')}">
-      <div><strong>${chatEscape(product.name || 'Product')}</strong><span>${chatEscape(formatPrice(product.price || 0))}</span><small>${chatEscape(product.district || 'Local listing')}</small></div>
+      <div><strong>${chatEscape(product.name || 'Product')}</strong><span>${chatEscape(formatProductPrice(product))}</span><small>${chatEscape(product.district || 'Local listing')}</small></div>
     </div>
     <a class="chat-profile-link" href="seller-profile.html?id=${encodeURIComponent(product.seller_id || '')}"><i class="fa-solid fa-user"></i> View seller profile</a>
   `;

@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <h3 class="product-title">${escapeHtml(product.name || 'Untitled listing')}</h3>
                   <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(product.district || 'District not set')}</div>
                   <div class="product-card-foot">
-                    <span class="product-price">${formatPrice(product.price)}</span>
+                    <span class="product-price">${formatProductPrice(product)}</span>
                     <span style="background:#ecfeff;color:#0f766e;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-eye"></i> View</span>
                   </div>
                 </div>

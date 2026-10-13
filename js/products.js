@@ -19,7 +19,7 @@ function normalizeProductImage(value) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const CATEGORIES = ['Electronics', 'Fashion', 'Shoes', 'Phones', 'Cars', 'Houses & Rents', 'Others'];
+  const CATEGORIES = ['Electronics', 'Fashion', 'Shoes', 'Phones', 'Cars', 'Houses & Rents', 'Services', 'Businesses', 'Jobs', 'Food', 'Transport', 'Learning', 'Events', 'Digital', 'Others'];
   const categorySelect = document.getElementById('category-filter-select');
   const conditionSelect = document.getElementById('condition-filter-select');
   const districtSelect = document.getElementById('district-filter-select');
@@ -181,8 +181,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const prevPriceVal = Number(p.previous_price || p.previousPrice || 0);
       const currentPriceVal = Number(p.price || 0);
       const priceMarkup = (prevPriceVal && prevPriceVal > currentPriceVal)
-        ? `<div><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div>`
-        : `<span class="product-price">${formatPrice(currentPriceVal)}</span>`;
+        ? `<div><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatProductPrice(p)}</span></div>`
+        : `<span class="product-price">${formatProductPrice(p)}</span>`;
       const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
       const displayImg = imageUrls[0] || '';
       const imageMarkup = displayImg

@@ -91,15 +91,23 @@ For production, review **Authentication → URL Configuration** and keep only yo
 4. Open `/signup` to create an account. Confirm the email, username, and password flow; the Terms checkbox is required.
 5. Open `/login` to test email or username sign-in, Terms consent, and password recovery. Google sign-in remains available.
 
+## Step 7: Publish Without Confirmation Email
+1. In **Authentication → Sign In / Providers → Email**, turn off **Confirm email**. This is a project-wide setting; Supabase will no longer verify new email addresses.
+2. Apply `db/migrations/017_admin_user_approval.sql` after migrations `013` and `016`.
+3. Keep `SUPABASE_SERVICE_ROLE_KEY` configured only on the server for admin account controls.
+4. In **Admin → Users**, review new accounts and select **Verify** to permit listing management. Use **Disable** to ban an account, or **Enable** to restore it.
+5. Review existing users and verify sellers who should continue listing. The migration leaves their verification state unchanged.
+
+This replaces email confirmation with admin approval for listing access. It does not verify a user's email address; do not use that address as proof of identity for payments or other sensitive actions.
+
 ## Troubleshooting
 
 ### "Email provider not found"
 - Make sure Email provider is enabled in Authentication → Providers
 
 ### "Error sending confirmation email"
-- Supabase's default email sender is for testing only: it can send only to project team addresses and is limited to about two messages per hour.
-- For public signups, configure a custom SMTP provider in Supabase Dashboard → Authentication → SMTP Settings. Set the SMTP host, port, credentials, sender email, and sender name, and verify the sender domain with your provider.
-- Check Supabase Authentication logs and your SMTP provider's delivery logs for rejected credentials, sender verification failures, or rate limits. Do not disable email confirmation to work around delivery failures.
+- If publishing without SMTP, turn off **Confirm email** in Authentication → Sign In / Providers → Email and use the admin-approval workflow above.
+- If keeping confirmation enabled, configure a custom SMTP provider in Authentication → SMTP Settings and verify its sender domain.
 
 ### "Google OAuth redirect mismatch"
 - Ensure redirect URL in Supabase matches exactly:

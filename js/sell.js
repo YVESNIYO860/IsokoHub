@@ -452,14 +452,43 @@ document.addEventListener('DOMContentLoaded', async function() {
   const progressStatus = document.getElementById('upload-progress-status');
   const progressLabel  = document.getElementById('upload-progress-label');
   const submitBtn      = form.querySelector('button[type="submit"]');
+  const priceMinInput  = document.getElementById('prod-price-min');
+  const priceMaxInput  = document.getElementById('prod-price-max');
+  const buyOnlineInput = document.getElementById('prod-buy-online');
+  const buyOnlineHelp  = document.getElementById('prod-buy-online-help');
   const imageInput     = document.getElementById('prod-images');
   const uploadOverlay  = document.getElementById('upload-overlay');
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
+  if (user.role !== 'admin' && user.email?.toLowerCase() !== 'yvesniyonkuru2022@gmail.com') {
+    const { data: sellerProfile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('is_verified,is_active')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profileError || sellerProfile?.is_active !== true || sellerProfile?.is_verified !== true) {
+      errorEl.textContent = 'Your account is awaiting admin approval before you can manage listings.';
+      errorEl.classList.remove('d-none');
+      form.hidden = true;
+      return;
+    }
+  }
   districtSelect.innerHTML =
     '<option value="">Select your district</option>' +
     RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
+
+  function syncBuyOnlineAvailability() {
+    const isRange = Number(priceMinInput.value) !== Number(priceMaxInput.value);
+    if (isRange) buyOnlineInput.checked = false;
+    buyOnlineInput.disabled = isRange;
+    buyOnlineHelp.textContent = isRange
+      ? 'Buy Online is unavailable for a price range. Set the same amount in both fields to enable checkout.'
+      : 'When enabled, buyers will see a Buy Online button and can checkout immediately.';
+  }
+
+  priceMinInput.addEventListener('input', syncBuyOnlineAvailability);
+  priceMaxInput.addEventListener('input', syncBuyOnlineAvailability);
 
   /* ── Edit-mode pre-fill ── */
   const urlParams    = new URLSearchParams(window.location.search);
@@ -481,7 +510,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       submitBtn.textContent                                    = 'Update Product';
       document.getElementById('prod-name').value              = product.name;
       document.getElementById('prod-category').value          = product.category;
-      document.getElementById('prod-price').value             = product.price;
+      priceMinInput.value                                     = product.price_min ?? product.priceMin ?? product.price;
+      priceMaxInput.value                                     = product.price_max ?? product.priceMax ?? product.price;
+      buyOnlineInput.checked                                  = product.buy_online === true || product.buyOnline === true;
       document.getElementById('prod-description').value       = product.description;
       document.getElementById('prod-email').value             = product.sellerEmail || product.seller_email || user.email || '';
       document.getElementById('prod-phone').value             = product.sellerPhone || product.seller_phone || '';
@@ -494,6 +525,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (existingImages.length > 0) {
         renderImagePreviews();
       }
+      syncBuyOnlineAvailability();
     } else {
       window.location.href = 'dashboard.html';
     }
@@ -600,9 +632,10 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
 
       // Validate price
-      const priceValue = Number(document.getElementById('prod-price').value);
-      if (!Number.isFinite(priceValue) || priceValue < 100) {
-        throw new Error('Please enter a valid price in RWF (minimum 100).');
+      const priceMinValue = Number(priceMinInput.value);
+      const priceMaxValue = Number(priceMaxInput.value);
+      if (!Number.isFinite(priceMinValue) || !Number.isFinite(priceMaxValue) || priceMinValue < 100 || priceMaxValue < priceMinValue) {
+        throw new Error('Enter a valid price range in RWF. The maximum must be at least 100 and not lower than the minimum.');
       }
 
       // Validate district
@@ -619,7 +652,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       const productData = {
         name:        document.getElementById('prod-name').value,
         category,
-        price:       Math.round(priceValue),
+        price:       Math.round(priceMinValue),
+        priceMin:    Math.round(priceMinValue),
+        priceMax:    Math.round(priceMaxValue),
         currency:    'RWF',
         image:       imageUrls,
         description: document.getElementById('prod-description').value,
@@ -628,7 +663,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
         // attach captured seller coordinates when available
-        buyOnline: document.getElementById('prod-buy-online') ? Boolean(document.getElementById('prod-buy-online').checked) : false,
+        buyOnline: !hasProductPriceRange({ priceMin: priceMinValue, priceMax: priceMaxValue }) && Boolean(buyOnlineInput.checked),
         isAd:        false,
         adRequested: false,
         sold: false,

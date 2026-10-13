@@ -18,4 +18,12 @@ For local API testing, use the Vercel function runtime (`vercel dev`) and provid
 
 ## Confirmation Email Delivery
 
-Supabase's default mailer is for testing: it only sends to project team addresses and allows about two messages per hour. For public signups, configure a custom SMTP provider under **Authentication → SMTP Settings**, verify the sender domain, and check Supabase Auth logs plus the provider's delivery logs if confirmation emails fail. Keep email confirmation enabled.
+Supabase's default mailer is for testing: it only sends to project team addresses and allows about two messages per hour. If you keep email confirmation enabled, configure a custom SMTP provider under **Authentication → SMTP Settings**, verify the sender domain, and check Supabase Auth logs plus the provider's delivery logs if confirmation emails fail. If you are launching without SMTP, use the admin-approval workflow below instead.
+
+## Admin-Approved Accounts Without Confirmation Email
+
+If the project is launching without SMTP, open **Authentication → Sign In / Providers → Email** and turn off **Confirm email**. New accounts can then sign in immediately; their email addresses are not verified by this flow.
+
+Apply `db/migrations/017_admin_user_approval.sql` after migrations `013` and `016`. New users can browse, but database triggers block creating or editing listings until an administrator approves them from **Admin → Users**. Administrators can also disable or re-enable accounts there. The account-management endpoint requires the server-side `SUPABASE_SERVICE_ROLE_KEY` already listed above.
+
+Review existing users in the Admin Users tab and approve accounts that should retain listing access. Do not treat an email address as verified for payments, identity checks, or other sensitive workflows. Supabase Auth settings changes apply at the project level, not per signup page.

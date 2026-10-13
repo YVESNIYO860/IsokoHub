@@ -237,12 +237,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             <h3 class="product-title">${escapeHtml(displayTitle)}</h3>
             <div class="house-card-location"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(p.district || p.location || 'Location not specified')}</div>
             <p class="house-card-description">${escapeHtml(displayDescription || 'View property details, availability, and seller information.')}</p>
-            <div class="house-card-price-row"><span class="house-card-price-label">${String(listingType).toLowerCase().includes('rent') ? 'Monthly price' : 'Asking price'}</span><strong class="house-card-price">${formatPrice(p.price)}</strong></div>
+            <div class="house-card-price-row"><span class="house-card-price-label">${String(listingType).toLowerCase().includes('rent') ? 'Monthly price' : 'Asking price'}</span><strong class="house-card-price">${formatProductPrice(p)}</strong></div>
           </div>
           </a>
           <div class="house-card-actions">
             <a href="product.html?id=${encodeURIComponent(p.id)}" class="house-card-view">View details <i class="fa-solid fa-arrow-right"></i></a>
-            <button type="button" class="house-card-cart" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' aria-label="Add property to cart"><i class="fa-solid fa-cart-plus"></i></button>
+            ${hasProductPriceRange(p) ? `<a href="chat.html?product=${encodeURIComponent(p.id)}" class="house-card-view">Contact seller <i class="fa-solid fa-comments"></i></a>` : `<button type="button" class="house-card-cart" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' aria-label="Add property to cart"><i class="fa-solid fa-cart-plus"></i></button>`}
           </div>
         </article>
       `;

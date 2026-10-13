@@ -53,7 +53,8 @@ export default function HousehubSell() {
                   <label className="house-form-wide">Listing title<input className="form-control" name="name" required maxLength="120" placeholder="e.g. Modern 3-bedroom home in Kimihurura" /></label>
                   <label>Property type<select className="form-control" name="propertyType" required><option value="">Choose type</option><option>House</option><option>Apartment</option><option>Room</option><option>Land</option><option>Office</option><option>Commercial space</option></select></label>
                   <label>Listing purpose<select className="form-control" name="listingType" required><option value="">Choose purpose</option><option value="Rent">For rent</option><option value="Sale">For sale</option></select></label>
-                  <label>Price in RWF<input className="form-control" name="price" type="number" min="100" step="1" required placeholder="350000" /></label>
+                  <label>Minimum price (RWF)<input className="form-control" name="priceMin" type="number" min="100" step="1" required placeholder="350000" /></label>
+                  <label>Maximum price (RWF)<input className="form-control" name="priceMax" type="number" min="100" step="1" required placeholder="450000" /></label>
                   <label>Payment period<select className="form-control" name="period" required><option value="Monthly">Monthly</option><option value="Weekly">Weekly</option><option value="Daily">Daily</option><option value="Yearly">Yearly</option><option value="One-time">One-time sale</option></select></label>
                   <label>Bedrooms<input className="form-control" name="bedrooms" type="number" min="0" max="100" placeholder="3" /></label>
                   <label>Bathrooms<input className="form-control" name="bathrooms" type="number" min="0" max="100" placeholder="2" /></label>

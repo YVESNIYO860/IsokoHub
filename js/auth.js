@@ -602,11 +602,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
     const btn = e.currentTarget;
-    const termsCheckbox = document.getElementById(btn.id === 'google-signup-btn' ? 'accept-terms-signup' : 'accept-terms-login');
-    if (!termsCheckbox?.checked) {
-      showMessage('Please accept the Terms and Conditions to continue.', 'error');
-      return;
-    }
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Connecting to Google...';
@@ -719,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           if (profileError) console.error('Error saving profile:', profileError);
 
-          showMessage('Account created. Please check your email to confirm your account.', 'success');
+          showMessage('Account created. You can sign in now. Admin approval is required before managing listings.', 'success');
           signupForm.reset();
           console.log('User registered:', email);
         }

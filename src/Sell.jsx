@@ -72,7 +72,7 @@ export default function Sell() {
               <div className="form-group"><label className="form-label" htmlFor="prod-name">Product Name</label><input type="text" id="prod-name" className="form-control" required placeholder="e.g. iPhone 13 Pro" /></div>
               <div className="form-group"><label className="form-label" htmlFor="prod-category">Category</label><select id="prod-category" className="form-control" required><option value="">Select a category</option><option value="Electronics">Electronics</option><option value="Fashion">Fashion</option><option value="Shoes">Shoes</option><option value="Phones">Phones</option><option value="Cars">Cars</option><option value="Others">Others</option></select></div>
               <div className="form-group"><label className="form-label" htmlFor="prod-condition">Condition</label><select id="prod-condition" className="form-control" required><option value="New">New (Factory Sealed)</option><option value="Used">Used (Still Works Excellent)</option></select></div>
-              <div className="form-group"><label className="form-label" htmlFor="prod-price">Price (RWF)</label><input type="number" id="prod-price" className="form-control" required min="100" step="1" inputMode="numeric" placeholder="10000" /><small className="text-muted d-block mt-1">Enter the amount in Rwandan francs. The product will be saved with RWF pricing.</small></div>
+              <div className="form-group"><span className="form-label">Price range (RWF)</span><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '.75rem' }}><label htmlFor="prod-price-min">From<input type="number" id="prod-price-min" className="form-control" required min="100" step="1" inputMode="numeric" placeholder="12000" /></label><label htmlFor="prod-price-max">To<input type="number" id="prod-price-max" className="form-control" required min="100" step="1" inputMode="numeric" placeholder="15000" /></label></div><small className="text-muted d-block mt-1">Enter both prices in Rwandan francs. Use the same amount for a fixed price.</small></div>
               <div className="form-group">
                 <label className="form-label" htmlFor="prod-images">Product Photos <span style={{ color: '#6b7280', fontWeight: 400, fontSize: '0.82em' }}>(Min 1 · Max 6)</span></label>
                 <div className="image-upload-zone" id="image-drop-zone">
@@ -101,7 +101,7 @@ export default function Sell() {
               <div className="form-group">
                 <label className="form-label" htmlFor="prod-buy-online">Sell Online</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}><input type="checkbox" id="prod-buy-online" /><label htmlFor="prod-buy-online" style={{ margin: 0 }}>Enable "Buy Online" so customers can purchase using Mobile Money</label></div>
-                <small className="text-muted d-block mt-1">When enabled, buyers will see a Buy Online button and can checkout immediately.</small>
+                <small className="text-muted d-block mt-1" id="prod-buy-online-help">When enabled, buyers will see a Buy Online button and can checkout immediately.</small>
               </div>
               <button type="submit" className="btn btn-primary btn-block">List Product</button>
             </form>

@@ -691,6 +691,8 @@ async function createProduct(productData) {
     name: productData.name,
     category: productData.category,
     price: productData.price,
+    price_min: productData.priceMin ?? productData.price_min ?? productData.price,
+    price_max: productData.priceMax ?? productData.price_max ?? productData.price,
     currency: productData.currency || 'RWF',
     image: productData.image || [],
     description: productData.description,
@@ -767,6 +769,8 @@ async function createProduct(productData) {
             district: data.district || null,
             location: null,
             price: data.price || null,
+            price_min: data.price_min ?? null,
+            price_max: data.price_max ?? null,
             currency: data.currency || 'RWF',
             image: data.image || null,
             video_url: data.video_url || null,
@@ -898,6 +902,8 @@ async function updateProductData(id, changes = {}) {
               district: data.district || null,
               location: null,
               price: data.price || null,
+              price_min: data.price_min ?? null,
+              price_max: data.price_max ?? null,
               currency: data.currency || 'RWF',
               image: data.image || null,
               video_url: data.video_url || null,
@@ -1118,6 +1124,24 @@ function formatPrice(rwfPrice) {
     currency: 'RWF',
     maximumFractionDigits: 0
   }).format(rwfPrice);
+}
+
+function formatProductPrice(product = {}) {
+  const fallback = Number(product.price || 0);
+  const minimum = Number(product.price_min ?? product.priceMin ?? fallback);
+  const maximum = Number(product.price_max ?? product.priceMax ?? fallback);
+  if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || maximum < minimum) {
+    return formatPrice(fallback);
+  }
+  if (minimum === maximum) return formatPrice(minimum);
+  return `${formatPrice(minimum)} - ${formatPrice(maximum)}`;
+}
+
+function hasProductPriceRange(product = {}) {
+  const fallback = Number(product.price || 0);
+  const minimum = Number(product.price_min ?? product.priceMin ?? fallback);
+  const maximum = Number(product.price_max ?? product.priceMax ?? fallback);
+  return Number.isFinite(minimum) && Number.isFinite(maximum) && maximum > minimum;
 }
 
 /**

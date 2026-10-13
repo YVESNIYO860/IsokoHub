@@ -6,6 +6,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const form = document.getElementById('househub-form');
+  if (user.role !== 'admin' && user.email?.toLowerCase() !== 'yvesniyonkuru2022@gmail.com') {
+    const { data: sellerProfile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('is_verified,is_active')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profileError || sellerProfile?.is_active !== true || sellerProfile?.is_verified !== true) {
+      document.getElementById('house-form-status').textContent = 'Your account is awaiting admin approval before you can manage listings.';
+      form.hidden = true;
+      return;
+    }
+  }
   const imageInput = document.getElementById('house-images');
   const videoInput = document.getElementById('house-video');
   const imageStatus = document.getElementById('house-image-status');
@@ -76,6 +88,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const video = videoInput.files?.[0] || null;
     const videoSource = selectedVideoSource();
     const externalVideoUrl = videoUrlInput.value.trim();
+    const priceMin = Number(values.priceMin);
+    const priceMax = Number(values.priceMax);
+    if (!Number.isInteger(priceMin) || !Number.isInteger(priceMax) || priceMin < 100 || priceMax < priceMin) { status.textContent = 'Enter a valid whole-number price range in RWF. The maximum must be at least 100 and not lower than the minimum.'; return; }
     if (files.length < 1) { status.textContent = 'Please add at least one property photo.'; return; }
     if (videoSource === 'url' && !externalVideoUrl) { status.textContent = 'Please provide a property video URL.'; return; }
     if (videoSource === 'url' && !/^https?:\/\//i.test(externalVideoUrl)) { status.textContent = 'Video URL must start with http:// or https://.'; return; }
@@ -103,7 +118,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         category: 'Houses & Rents',
         propertyType: values.propertyType,
         listingType: values.listingType,
-        price: Number(values.price),
+        price: priceMin,
+        priceMin,
+        priceMax,
         image: imageUrls,
         videoUrl,
         description,
@@ -119,7 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         title: values.name.trim(),
         property_type: values.propertyType,
         listing_type: values.listingType,
-        price: Number(values.price),
+        price: priceMin,
+        price_min: priceMin,
+        price_max: priceMax,
         currency: 'RWF',
         payment_period: values.period,
         bedrooms: values.bedrooms ? Number(values.bedrooms) : null,

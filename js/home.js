@@ -137,7 +137,7 @@ function initHomepageAdPopup() {
       const productLabel = promoted.name || 'Promoted listing';
       const productMeta = [];
       if (promoted.category) productMeta.push(promoted.category);
-      if (promoted.price != null) productMeta.push(formatPrice(promoted.price));
+      if (promoted.price != null) productMeta.push(formatProductPrice(promoted));
       if (promoted.shop?.name) productMeta.push(promoted.shop.name);
 
       const message = productMeta.length
@@ -282,7 +282,7 @@ function createFeaturedProductCard(p, useHeroImageTreatment = false) {
             ${shopBadge}
             <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${productDistrict}</div>
             <div class="product-card-foot">
-              <span class="product-price">${formatPrice(p.price)}</span>
+              <span class="product-price">${formatProductPrice(p)}</span>
               <div class="hero-product-card-actions">
                 <a href="${productUrl}" class="hero-product-card-view">View listing</a>
                 <a href="${escapeHtml(contactUrl)}" class="product-contact-btn" title="${contactTitle}" aria-label="${contactTitle}" target="_blank" rel="noopener noreferrer"><i class="${contactIcon}"></i></a>

@@ -792,7 +792,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (activeTab === 'users') {
-      const users = await fetchUserProfiles();
+      let users = [];
+      try {
+        const session = supabase?.auth?.session?.();
+        if (!session?.access_token) throw new Error('Your admin session has expired. Sign in again.');
+        const response = await fetch('/api/admin-users', {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'Could not load user accounts.');
+        users = Array.isArray(result.users) ? result.users : [];
+      } catch (error) {
+        content.innerHTML = `<div class="text-danger" role="alert">${escapeHtml(error.message || 'Could not load user accounts.')}</div>`;
+        return;
+      }
       if (!users || users.length === 0) {
         content.innerHTML = `
           <div style="text-align:center; padding: 4rem 0;">
@@ -810,6 +823,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               <th style="padding: 1rem;">User</th>
               <th style="padding: 1rem;">Email</th>
               <th style="padding: 1rem;">Role</th>
+              <th style="padding: 1rem;">Account status</th>
               <th style="padding: 1rem;">Joined</th>
               <th style="padding: 1rem; text-align: right;">Action</th>
             </tr>
@@ -817,19 +831,43 @@ document.addEventListener('DOMContentLoaded', async () => {
           <tbody>
             ${users.map(u => `
               <tr style="border-bottom:1px solid #f4f4f4;">
-                <td style="padding:1rem;">${u.full_name || 'User'}</td>
-                <td style="padding:1rem;">${u.email || 'N/A'}</td>
-                <td style="padding:1rem;">${u.role || 'seller'}</td>
+                <td style="padding:1rem;">${escapeHtml(u.full_name || u.username || 'User')}</td>
+                <td style="padding:1rem;">${escapeHtml(u.email || 'N/A')}</td>
+                <td style="padding:1rem;">${escapeHtml(u.role || 'seller')}</td>
+                <td style="padding:1rem;">${u.role === 'admin' ? 'Administrator' : u.is_active === false ? 'Disabled' : u.is_verified === true ? 'Verified' : 'Awaiting review'}</td>
                 <td style="padding:1rem;">${u.created_at ? new Date(u.created_at).toLocaleString() : ''}</td>
                 <td style="padding:1rem; text-align:right;">
-                  <button onclick="window.changeUserRole('${u.id}', '${u.role === 'admin' ? 'seller' : 'admin'}')" class="btn btn-secondary" style="margin-right:0.5rem;">${u.role === 'admin' ? 'Demote' : 'Promote'}</button>
-                  <button onclick="window.deleteUserProfileHandler('${u.id}')" class="btn btn-danger">Delete</button>
+                  ${u.role === 'admin' ? 'Protected admin account' : `
+                    ${u.is_verified === true ? '' : `<button onclick="window.manageUserAccount('${u.id}', 'verify')" class="btn btn-primary" style="margin-right:0.5rem;">Verify</button>`}
+                    ${u.is_active === false ? `<button onclick="window.manageUserAccount('${u.id}', 'enable')" class="btn btn-secondary" style="margin-right:0.5rem;">Enable</button>` : `<button onclick="window.manageUserAccount('${u.id}', 'disable')" class="btn btn-danger" style="margin-right:0.5rem;">Disable</button>`}
+                    <button onclick="window.changeUserRole('${u.id}', 'admin')" class="btn btn-secondary" style="margin-right:0.5rem;">Promote</button>
+                  `}
                 </td>
               </tr>
             `).join('')}
           </tbody>
         </table>
       `;
+
+      window.manageUserAccount = async function(id, action) {
+        const actionLabels = { verify: 'approve this account for listing access', disable: 'disable this account', enable: 're-enable this account' };
+        if (!confirm(`Are you sure you want to ${actionLabels[action]}?`)) return;
+        try {
+          const session = supabase?.auth?.session?.();
+          if (!session?.access_token) throw new Error('Your admin session has expired. Sign in again.');
+          const response = await fetch('/api/admin-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ userId: id, action })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || 'Could not update this account.');
+          await renderAdmin();
+        } catch (err) {
+          console.error('Account update failed:', err);
+          alert(err.message || 'Could not update this account.');
+        }
+      };
 
       window.changeUserRole = async function(id, newRole) {
         if (!confirm(`Change role of user to ${newRole}?`)) return;
@@ -917,7 +955,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div class="admin-item-subtitle">${p.category || p.subcategory || 'Uncategorized'}</div>
                     <div>${statusBadge}</div>
                   </div>
-                  <strong class="admin-item-price">${formatPrice(p.price)}</strong>
+                  <strong class="admin-item-price">${formatProductPrice(p)}</strong>
                 </div>
                 <div class="admin-item-body">
                   <div><strong>Seller:</strong> ${p.seller_name || p.seller_email || 'Unknown'}</div>
@@ -1010,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td style="padding: 1rem; font-size: 0.85rem;">
                   <div><i class="fa-solid fa-phone"></i> ${p.seller_phone || 'N/A'}</div>
                 </td>
-                <td style="padding: 1rem; font-weight: 700;">${formatPrice(p.price)}</td>
+                <td style="padding: 1rem; font-weight: 700;">${formatProductPrice(p)}</td>
                 <td style="padding: 1rem; text-align: right;">
                   ${activeTab === 'pending' ? `
                     <button onclick="handleApprove('${p.id}')" class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.85rem; border-radius:50px; margin-bottom:0.35rem;">Approve</button>

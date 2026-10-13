@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="seller-card-body">
               <h4 style="margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.name}</h4>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
-                <span style="font-weight: 700; color: var(--primary-blue); font-size: 1.1rem;">${formatPrice(p.price)}</span>
+                <span style="font-weight: 700; color: var(--primary-blue); font-size: 1.1rem;">${formatProductPrice(p)}</span>
                 <span class="text-muted" style="font-size: 0.8rem;">${p.category}</span>
               </div>
 

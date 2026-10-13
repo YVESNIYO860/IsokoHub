@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const prevPriceVal = Number(product.previous_price || product.previousPrice || 0);
   const currentPriceVal = Number(product.price || 0);
   const priceHtml = (prevPriceVal && prevPriceVal > currentPriceVal)
-    ? `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price"><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatPrice(currentPriceVal)}</span></div></div>`
-    : `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price">${formatPrice(currentPriceVal)}</div></div>`;
+    ? `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price"><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatProductPrice(product)}</span></div></div>`
+    : `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price">${formatProductPrice(product)}</div></div>`;
 
   const getPlaceholderImage = () => {
     const svg = `
@@ -188,10 +188,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <span class="contact-action-copy"><strong>Email</strong><small>Ask a question</small></span>
                 </a>
               </div>
-              ${product.buy_online ? `<button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button>` : ''}
-              <button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
+              ${product.buy_online && !hasProductPriceRange(product) ? `<button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button>` : ''}
+              ${!hasProductPriceRange(product) ? `<button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
                 <i class="fa-solid fa-cart-plus"></i> Add to Cart
-              </button>
+              </button>` : ''}
               ${getCurrentUser && getCurrentUser() && (getCurrentUser().id === product.seller_id || getCurrentUser().id === product.sellerId) ? `<a href="sell.html?editId=${product.id}" class="btn btn-secondary btn-block" style="border-radius:999px;">Edit this listing</a>` : ''}
             </div>
           </div>
@@ -493,7 +493,7 @@ function buildRelatedProductCard(product) {
   const imageList = Array.isArray(product.image) ? product.image : [product.image];
   const firstImage = imageList.find((img) => typeof img === 'string' && img.trim()) || '';
   const displayImage = firstImage || 'assets/logo.png';
-  const price = typeof product.price !== 'undefined' ? formatPrice(Number(product.price)) : 'Price unavailable';
+  const price = typeof product.price !== 'undefined' ? formatProductPrice(product) : 'Price unavailable';
   const district = product.district || 'District not set';
 
   return `
