@@ -67,7 +67,7 @@ export default function HousehubSell() {
                   <label>District<input className="form-control" name="district" required placeholder="Gasabo" /></label>
                   <label>Neighbourhood / landmark<input className="form-control" name="location" required placeholder="Near Kigali Heights" /></label>
                   <label className="house-form-wide">Amenities<input className="form-control" name="amenities" placeholder="Parking, garden, water, security" /></label>
-                  <label className="house-form-wide">Description<textarea className="form-control" name="description" rows="5" required placeholder="Describe access, utilities, rooms, rules, and what makes this property valuable."></textarea></label>
+                  <div className="house-form-wide"><label htmlFor="house-description">Description</label><textarea id="house-description" className="form-control" name="description" rows="5" required placeholder="Describe access, utilities, rooms, rules, and what makes this property valuable."></textarea><small className="text-muted d-block mt-1">Use the formatting buttons for bold, italic, lists, links, and more.</small></div>
                 </div>
               </div>
               <div className="house-form-section">

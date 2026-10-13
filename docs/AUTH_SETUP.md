@@ -26,4 +26,6 @@ If the project is launching without SMTP, open **Authentication → Sign In / Pr
 
 Apply `db/migrations/017_admin_user_approval.sql` after migrations `013` and `016`. New users can browse, but database triggers block creating or editing listings until an administrator approves them from **Admin → Users**. Administrators can also disable or re-enable accounts there. The account-management endpoint requires the server-side `SUPABASE_SERVICE_ROLE_KEY` already listed above.
 
+The **Delete account** action is permanent. It removes the user's uploaded product photos and property videos, marketplace listings, Supabase Auth account, and linked profile. Admin accounts are protected from this action.
+
 Review existing users in the Admin Users tab and approve accounts that should retain listing access. Do not treat an email address as verified for payments, identity checks, or other sensitive workflows. Supabase Auth settings changes apply at the project level, not per signup page.

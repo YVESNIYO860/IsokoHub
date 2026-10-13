@@ -461,6 +461,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
+  enhanceDescriptionEditor(document.getElementById('prod-description'));
   if (user.role !== 'admin' && user.email?.toLowerCase() !== 'yvesniyonkuru2022@gmail.com') {
     const { data: sellerProfile, error: profileError } = await supabase
       .from('user_profiles')

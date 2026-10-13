@@ -2887,6 +2887,40 @@ body.menu-open .menu-active-overlay {
   box-shadow: var(--shadow-md);
 }
 
+.description-format-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.45rem;
+}
+
+.description-format-button {
+  min-width: 2.25rem;
+  min-height: 2.15rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #9aa8b8;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.description-format-button:hover,
+.description-format-button:focus-visible {
+  border-color: var(--primary-blue);
+  background: #eff6ff;
+}
+
+.formatted-description p { margin: 0 0 0.7rem; }
+.formatted-description h3,
+.formatted-description h4,
+.formatted-description h5 { margin: 0.8rem 0 0.45rem; font-size: 1rem; }
+.formatted-description ul,
+.formatted-description ol { margin: 0 0 0.75rem; padding-left: 1.4rem; }
+.formatted-description blockquote { margin: 0 0 0.75rem; padding-left: 0.8rem; border-left: 3px solid #94a3b8; color: #475569; }
+.formatted-description code { padding: 0.08rem 0.25rem; border-radius: 3px; background: #f1f5f9; font-family: ui-monospace, monospace; }
+
 .mobile-download-card h3 {
   margin: 0.2rem 0 0.45rem;
   font-size: 1.1rem;

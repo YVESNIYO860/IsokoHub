@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   const form = document.getElementById('househub-form');
+  enhanceDescriptionEditor(form.querySelector('textarea[name="description"]'));
   if (user.role !== 'admin' && user.email?.toLowerCase() !== 'yvesniyonkuru2022@gmail.com') {
     const { data: sellerProfile, error: profileError } = await supabase
       .from('user_profiles')

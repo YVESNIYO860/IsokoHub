@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           <div class="detail-card">
             <div class="detail-card-title">About this item</div>
-            <div class="detail-card-value">${escapeHtml(product.description || '').replace(/\n/g, '<br>')}</div>
+            <div class="detail-card-value formatted-description">${renderProductDescription(product.description || '')}</div>
           </div>
 
           <div class="detail-card">

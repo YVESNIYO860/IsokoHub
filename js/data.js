@@ -1144,6 +1144,141 @@ function hasProductPriceRange(product = {}) {
   return Number.isFinite(minimum) && Number.isFinite(maximum) && maximum > minimum;
 }
 
+function escapeDescriptionText(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function formatDescriptionInline(value) {
+  const codeBlocks = [];
+  let formatted = escapeDescriptionText(value).replace(/`([^`]+)`/g, (_, code) => {
+    const token = `ISOKOCODETOKEN${codeBlocks.length}END`;
+    codeBlocks.push(`<code>${code}</code>`);
+    return token;
+  });
+
+  formatted = formatted.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/gi, (_, label, url) =>
+    `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`);
+  formatted = formatted
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.+?)__/g, '<strong>$1</strong>')
+    .replace(/\+\+(.+?)\+\+/g, '<u>$1</u>')
+    .replace(/~~(.+?)~~/g, '<s>$1</s>')
+    .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>')
+    .replace(/(^|[^_])_([^_\n]+)_(?!_)/g, '$1<em>$2</em>');
+  return formatted.replace(/ISOKOCODETOKEN(\d+)END/g, (_, index) => codeBlocks[Number(index)] || '');
+}
+
+function renderProductDescription(value = '') {
+  const lines = String(value || '').replace(/\r\n?/g, '\n').split('\n');
+  const output = [];
+  let activeList = '';
+  const closeList = () => {
+    if (activeList) output.push(`</${activeList}>`);
+    activeList = '';
+  };
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      closeList();
+      return;
+    }
+
+    const listMatch = trimmed.match(/^([-*])\s+(.+)$/) || trimmed.match(/^\d+\.\s+(.+)$/);
+    if (listMatch) {
+      const listType = trimmed.match(/^\d+\./) ? 'ol' : 'ul';
+      if (activeList !== listType) {
+        closeList();
+        output.push(`<${listType}>`);
+        activeList = listType;
+      }
+      output.push(`<li>${formatDescriptionInline(listMatch[listMatch.length - 1])}</li>`);
+      return;
+    }
+
+    closeList();
+    const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    const quote = trimmed.match(/^>\s?(.+)$/);
+    if (heading) {
+      const level = heading[1].length + 2;
+      output.push(`<h${level}>${formatDescriptionInline(heading[2])}</h${level}>`);
+    } else if (quote) {
+      output.push(`<blockquote>${formatDescriptionInline(quote[1])}</blockquote>`);
+    } else {
+      output.push(`<p>${formatDescriptionInline(trimmed)}</p>`);
+    }
+  });
+
+  closeList();
+  return output.join('');
+}
+
+function enhanceDescriptionEditor(textarea) {
+  if (!textarea || textarea.dataset.descriptionToolbar === 'true') return;
+  textarea.dataset.descriptionToolbar = 'true';
+  const toolbar = document.createElement('div');
+  toolbar.className = 'description-format-toolbar';
+  toolbar.setAttribute('role', 'toolbar');
+  toolbar.setAttribute('aria-label', 'Description formatting');
+
+  const controls = [
+    { label: 'B', title: 'Bold', start: '**', end: '**' },
+    { label: 'I', title: 'Italic', start: '*', end: '*' },
+    { label: 'U', title: 'Underline', start: '++', end: '++' },
+    { label: 'S', title: 'Strikethrough', start: '~~', end: '~~' },
+    { label: '• List', title: 'Bulleted list', block: '- ' },
+    { label: '1. List', title: 'Numbered list', block: '1. ' },
+    { label: 'Link', title: 'Insert link', link: true },
+    { label: '`</>`', title: 'Inline code', start: '`', end: '`' }
+  ];
+
+  controls.forEach((control) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'description-format-button';
+    button.textContent = control.label;
+    button.title = control.title;
+    button.setAttribute('aria-label', control.title);
+    button.addEventListener('click', () => {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selected = textarea.value.slice(start, end);
+      let insertion = '';
+      let selectionStart = start;
+      let selectionEnd = start;
+
+      if (control.block) {
+        const selection = selected || 'List item';
+        insertion = selection.split('\n').map((line) => `${control.block}${line}`).join('\n');
+        selectionEnd = start + insertion.length;
+      } else if (control.link) {
+        const label = selected || 'link text';
+        insertion = `[${label}](https://example.com)`;
+        selectionStart = start + label.length + 3;
+        selectionEnd = selectionStart + 'https://example.com'.length;
+      } else {
+        const content = selected || 'text';
+        insertion = `${control.start}${content}${control.end}`;
+        selectionStart = start + control.start.length;
+        selectionEnd = selectionStart + content.length;
+      }
+
+      textarea.setRangeText(insertion, start, end, 'end');
+      textarea.focus();
+      textarea.setSelectionRange(selectionStart, selectionEnd);
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    toolbar.appendChild(button);
+  });
+
+  textarea.parentNode.insertBefore(toolbar, textarea);
+}
+
 /**
  * Advertising Management
  */

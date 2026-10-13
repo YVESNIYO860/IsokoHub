@@ -192,13 +192,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             <label>Seller phone<input class="form-control" name="sellerPhone" type="tel" placeholder="+250 788 000 000"></label>
             <label>District<input class="form-control" name="district" placeholder="Kigali"></label>
             <label>Image URL<input class="form-control" name="imageUrl" type="url" placeholder="https://..."></label>
-            <label class="admin-form-wide">Description<textarea class="form-control" name="description" rows="4" required placeholder="Describe the item clearly for shoppers."></textarea></label>
+            <div class="admin-form-wide"><label for="admin-listing-description">Description</label><textarea id="admin-listing-description" class="form-control" name="description" rows="4" required placeholder="Describe the item clearly for shoppers."></textarea></div>
             <div class="admin-form-wide admin-form-actions"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-plus"></i> Create pending listing</button><span id="admin-listing-status" class="text-muted" role="status"></span></div>
           </form>
         </div>
       `;
 
       document.getElementById('cancel-admin-listing')?.addEventListener('click', renderAdmin);
+      enhanceDescriptionEditor(document.querySelector('#admin-listing-form textarea[name="description"]'));
       document.getElementById('admin-listing-form')?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const form = event.currentTarget;
@@ -335,7 +336,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.handleReject = async function(id) {
     if (confirm('REJECT and DELETE this listing? This cannot be undone.')) {
       try {
-        await deleteProduct(id);
+        const session = supabase?.auth?.session?.();
+        if (!session?.access_token) throw new Error('Your admin session has expired. Sign in again.');
+        const response = await fetch('/api/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ productId: id, action: 'delete_listing' })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'Unable to delete this listing.');
         await renderAdmin();
       } catch (error) {
         console.error('Failed to delete listing:', error);
@@ -841,6 +850,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ${u.is_verified === true ? '' : `<button onclick="window.manageUserAccount('${u.id}', 'verify')" class="btn btn-primary" style="margin-right:0.5rem;">Verify</button>`}
                     ${u.is_active === false ? `<button onclick="window.manageUserAccount('${u.id}', 'enable')" class="btn btn-secondary" style="margin-right:0.5rem;">Enable</button>` : `<button onclick="window.manageUserAccount('${u.id}', 'disable')" class="btn btn-danger" style="margin-right:0.5rem;">Disable</button>`}
                     <button onclick="window.changeUserRole('${u.id}', 'admin')" class="btn btn-secondary" style="margin-right:0.5rem;">Promote</button>
+                    <button onclick="window.deleteUserProfileHandler('${u.id}')" class="btn btn-danger">Delete account</button>
                   `}
                 </td>
               </tr>
@@ -882,14 +892,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
 
       window.deleteUserProfileHandler = async function(id) {
-        if (!confirm('Delete this user profile? (This will not delete the auth account)')) return;
+        if (!confirm('Permanently delete this account, its listings, and their uploaded media? This cannot be undone.')) return;
         try {
-          await deleteUserProfile(id);
-          alert('Profile deleted');
-          renderAdmin();
+          const session = supabase?.auth?.session?.();
+          if (!session?.access_token) throw new Error('Your admin session has expired. Sign in again.');
+          const response = await fetch('/api/admin-users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({ userId: id, action: 'delete' })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(result.error || 'Could not delete this account.');
+          await renderAdmin();
         } catch (err) {
-          console.error('Failed to delete profile:', err);
-          alert('Failed to delete profile. Check console.');
+          console.error('Failed to delete account:', err);
+          alert(err.message || 'Failed to delete account.');
         }
       };
 

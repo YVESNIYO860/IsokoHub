@@ -9,6 +9,20 @@ function getBearerToken(request) {
   return match ? match[1] : '';
 }
 
+function getStorageObjectPath(value, bucket) {
+  if (typeof value !== 'string') return '';
+  try {
+    const pathname = new URL(value).pathname;
+    const marker = `/storage/v1/object/public/${bucket}/`;
+    const index = pathname.indexOf(marker);
+    return index === -1 ? '' : decodeURIComponent(pathname.slice(index + marker.length));
+  } catch {
+    return '';
+  }
+}
+
+const { createClient } = require('@supabase/supabase-js');
+
 module.exports = async function adminUsers(request, response) {
   if (!['GET', 'POST'].includes(request.method)) {
     response.setHeader('Allow', 'GET, POST');
@@ -58,12 +72,13 @@ module.exports = async function adminUsers(request, response) {
     }
 
     const userId = typeof request.body?.userId === 'string' ? request.body.userId : '';
+    const productId = typeof request.body?.productId === 'string' ? request.body.productId : '';
     const action = request.body?.action;
-    if (!/^[0-9a-f-]{36}$/i.test(userId) || userId === adminUser.id) {
-      return sendJson(response, 400, { error: 'Choose a valid account other than your own.' });
-    }
-    if (!['verify', 'disable', 'enable'].includes(action)) {
+    if (!['verify', 'disable', 'enable', 'delete', 'delete_listing'].includes(action)) {
       return sendJson(response, 400, { error: 'Unsupported account action.' });
+    }
+    if (action === 'delete_listing' ? !/^[0-9a-f-]{36}$/i.test(productId) : (!/^[0-9a-f-]{36}$/i.test(userId) || userId === adminUser.id)) {
+      return sendJson(response, 400, { error: 'Choose a valid account other than your own.' });
     }
 
     const authAdminUrl = `${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`;
@@ -74,13 +89,15 @@ module.exports = async function adminUsers(request, response) {
       'Content-Type': 'application/json',
       Prefer: 'return=minimal'
     };
-    const targetResponse = await fetch(`${profileUrl}&select=id,role`, {
-      headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` }
-    });
-    if (!targetResponse.ok) return sendJson(response, 503, { error: 'Could not verify the selected account.' });
-    const targetProfiles = await targetResponse.json();
-    if (!targetProfiles.length) return sendJson(response, 404, { error: 'Account not found.' });
-    if (targetProfiles[0].role === 'admin') return sendJson(response, 403, { error: 'Admin accounts cannot be changed here.' });
+    if (action !== 'delete_listing') {
+      const targetResponse = await fetch(`${profileUrl}&select=id,role`, {
+        headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` }
+      });
+      if (!targetResponse.ok) return sendJson(response, 503, { error: 'Could not verify the selected account.' });
+      const targetProfiles = await targetResponse.json();
+      if (!targetProfiles.length) return sendJson(response, 404, { error: 'Account not found.' });
+      if (targetProfiles[0].role === 'admin') return sendJson(response, 403, { error: 'Admin accounts cannot be changed here.' });
+    }
 
     if (action === 'verify') {
       const profileResponse = await fetch(profileUrl, {
@@ -105,7 +122,7 @@ module.exports = async function adminUsers(request, response) {
         await fetch(authAdminUrl, { method: 'PUT', headers: serviceHeaders, body: JSON.stringify({ ban_duration: 'none' }) });
         return sendJson(response, 503, { error: 'Could not save the disabled account status.' });
       }
-    } else {
+    } else if (action === 'enable') {
       const enableResponse = await fetch(authAdminUrl, {
         method: 'PUT',
         headers: serviceHeaders,
@@ -121,6 +138,63 @@ module.exports = async function adminUsers(request, response) {
         await fetch(authAdminUrl, { method: 'PUT', headers: serviceHeaders, body: JSON.stringify({ ban_duration: '876000h' }) });
         return sendJson(response, 503, { error: 'Could not save the enabled account status.' });
       }
+    } else if (action === 'delete') {
+      const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+      const { data: products, error: productsError } = await adminClient
+        .from('products')
+        .select('image,video_url')
+        .eq('seller_id', userId);
+      if (productsError) return sendJson(response, 503, { error: 'Could not load the user listings for deletion.' });
+      const mediaByBucket = {
+        'product-images': products.flatMap((product) => (Array.isArray(product.image) ? product.image : [product.image])
+          .map((url) => getStorageObjectPath(url, 'product-images')).filter(Boolean)),
+        'house-videos': products.map((product) => getStorageObjectPath(product.video_url, 'house-videos')).filter(Boolean)
+      };
+
+      for (const [bucket, prefixes] of Object.entries(mediaByBucket)) {
+        if (!prefixes.length) continue;
+        const { error: storageError } = await adminClient.storage.from(bucket).remove(prefixes);
+        if (storageError) return sendJson(response, 503, { error: `Could not remove the user's ${bucket} files; account deletion was stopped.` });
+      }
+
+      const { error: deleteListingsError } = await adminClient
+        .from('products')
+        .delete()
+        .eq('seller_id', userId);
+      if (deleteListingsError) return sendJson(response, 503, { error: 'Could not remove the user listings; account deletion was stopped.' });
+
+      const { error: deleteAuthError } = await adminClient.auth.admin.deleteUser(userId);
+      if (deleteAuthError) return sendJson(response, 503, { error: 'Could not delete the Supabase Auth account.' });
+    } else {
+      const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+      const { data: product, error: productError } = await adminClient
+        .from('products')
+        .select('image,video_url')
+        .eq('id', productId)
+        .maybeSingle();
+      if (productError) return sendJson(response, 503, { error: 'Could not load the listing for deletion.' });
+      if (!product) return sendJson(response, 404, { error: 'Listing not found.' });
+
+      const mediaByBucket = {
+        'product-images': (Array.isArray(product.image) ? product.image : [product.image])
+          .map((url) => getStorageObjectPath(url, 'product-images')).filter(Boolean),
+        'house-videos': [getStorageObjectPath(product.video_url, 'house-videos')].filter(Boolean)
+      };
+      for (const [bucket, paths] of Object.entries(mediaByBucket)) {
+        if (!paths.length) continue;
+        const { error: storageError } = await adminClient.storage.from(bucket).remove(paths);
+        if (storageError) return sendJson(response, 503, { error: `Could not remove the listing's ${bucket} files.` });
+      }
+
+      const { error: deleteProductError } = await adminClient
+        .from('products')
+        .delete()
+        .eq('id', productId);
+      if (deleteProductError) return sendJson(response, 503, { error: 'Could not delete the listing.' });
     }
 
     return sendJson(response, 200, { success: true });
