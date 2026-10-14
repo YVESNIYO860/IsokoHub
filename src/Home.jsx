@@ -19,7 +19,7 @@ export default function Home() {
             </div>
           </div>
           <a className="marketplace-hero-visual" href="/products" aria-label="Explore marketplace listings">
-            <img src="/assets/hero-image.png" alt="Bicycles displayed for sale at a local shop" width="547" height="365" fetchPriority="high" decoding="async" />
+            <img src="/assets/hero-image.png?v=2" alt="A collage of clothing, electronics, books, home goods, and everyday products" width="1408" height="768" fetchPriority="high" decoding="async" />
             <span className="marketplace-hero-image-label"><span><strong>One marketplace.</strong><small>Products and opportunities from across Rwanda</small></span><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
           </a>
         </div>
