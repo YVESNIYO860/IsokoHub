@@ -41,21 +41,16 @@ async function renderHomepageProductShelf() {
     const products = await enrichProductsWithShopData(await fetchProducts(true));
     const picks = products.filter((product) => product && product.status !== 'pending').slice(0, 8);
     if (!picks.length) {
-      track.innerHTML = '<div class="amazon-shelf-loading">No products available right now.</div>';
+      track.innerHTML = '<div class="homepage-shelf-empty"><strong>No recent listings yet</strong><span>Browse all categories or check back as sellers add new items.</span><a href="/products">Browse listings <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div>';
       return;
     }
 
-    const shelfProducts = [...picks];
-    while (shelfProducts.length < 8 && picks.length > 1) {
-      shelfProducts.push(...picks);
-    }
-    const cards = shelfProducts.map((product) => createFeaturedProductCard(product, true)).join('');
-    track.innerHTML = `${cards}${cards}${cards}${cards}${cards}`;
+    track.innerHTML = picks.map((product) => createFeaturedProductCard(product, true)).join('');
     enableProductImageRotation(track);
     startHomepageShelfScroll();
   } catch (error) {
     console.warn('Unable to render homepage product shelf:', error);
-    track.innerHTML = '<div class="amazon-shelf-loading">Products are temporarily unavailable.</div>';
+    track.innerHTML = '<div class="homepage-shelf-empty"><strong>Listings are temporarily unavailable</strong><span>Please try again shortly.</span><a href="/products">Browse listings <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div>';
   }
 }
 
@@ -67,50 +62,13 @@ function startHomepageShelfScroll() {
   const nextButton = shelf?.querySelector('.amazon-shelf-arrow-next');
   if (!shelf || !viewport || !track || !previousButton || !nextButton) return;
 
-  const mobileCards = Array.from(track.querySelectorAll('.product-card'));
-  const cycleLength = Math.floor(mobileCards.length / 5);
-  let mobileCardIndex = cycleLength * 2;
-  let wrapTimer = null;
-  if (cycleLength) {
-    viewport.scrollLeft = mobileCards[mobileCardIndex].offsetLeft;
-  }
+  const moveShelf = (direction) => viewport.scrollBy({
+    left: direction * Math.max(240, viewport.clientWidth * 0.8),
+    behavior: 'smooth'
+  });
 
-  const moveShelf = (direction) => {
-    if (!cycleLength || !Number.isFinite(direction) || wrapTimer) return;
-    mobileCardIndex -= direction;
-
-    const movingNext = direction < 0;
-    const crossedForwardBoundary = movingNext && mobileCardIndex >= cycleLength * 4;
-    const crossedBackwardBoundary = !movingNext && mobileCardIndex < cycleLength;
-    if (crossedForwardBoundary) mobileCardIndex = cycleLength * 4;
-    if (crossedBackwardBoundary) mobileCardIndex = cycleLength - 1;
-
-    const targetCard = mobileCards[mobileCardIndex];
-    if (!targetCard) {
-      mobileCardIndex = cycleLength;
-      return;
-    }
-
-    viewport.scrollTo({
-      left: targetCard.offsetLeft,
-      behavior: 'smooth'
-    });
-
-    if (wrapTimer) window.clearTimeout(wrapTimer);
-    if (crossedForwardBoundary || crossedBackwardBoundary) {
-      wrapTimer = window.setTimeout(() => {
-        mobileCardIndex = crossedForwardBoundary ? cycleLength * 2 : cycleLength * 3 - 1;
-        const resetCard = mobileCards[mobileCardIndex];
-        if (resetCard) {
-          viewport.scrollTo({ left: resetCard.offsetLeft, behavior: 'auto' });
-        }
-        wrapTimer = null;
-      }, 450);
-    }
-  };
-
-  previousButton.onclick = () => moveShelf(1);
-  nextButton.onclick = () => moveShelf(-1);
+  previousButton.onclick = () => moveShelf(-1);
+  nextButton.onclick = () => moveShelf(1);
 }
 
 function initHomepageAdPopup() {
@@ -161,7 +119,7 @@ function initHomepageAdPopup() {
 function formatStatValue(value, target = null) {
   const effectiveTarget = Number.isFinite(target) && target > 0 ? target : value;
   const displayValue = Math.min(value, effectiveTarget);
-  return displayValue > 1000 ? (displayValue / 1000).toFixed(1).replace('.0', '') + 'K+' : displayValue + '+';
+  return displayValue.toLocaleString();
 }
 
 function animateStatValue(element, targetValue, duration = 1400, target = null) {
@@ -197,11 +155,11 @@ async function updateInlineStats() {
       const productCount = Number(stats?.productCount || 0);
       animateStatValue(listingEl, productCount, 1200);
     } else {
-      listingEl.textContent = '0+';
+      listingEl.textContent = '—';
     }
   } catch (e) {
     console.error(e);
-    listingEl.textContent = '0+';
+    listingEl.textContent = '—';
   }
 }
 
@@ -214,7 +172,7 @@ async function updateHomepageProductCount() {
     const count = Number(stats?.productCount || 0);
     countEl.textContent = `${count.toLocaleString()} product${count === 1 ? '' : 's'} listed`;
   } catch (error) {
-    countEl.textContent = 'Product listings available now';
+    countEl.textContent = 'Listing count unavailable right now';
   }
 }
 
@@ -270,7 +228,6 @@ function createFeaturedProductCard(p, useHeroImageTreatment = false) {
   return `
         <article class="product-card${useHeroImageTreatment ? ' hero-product-card blurred-product-card' : ''}">
           <a class="hero-product-card-link" href="${productUrl}" aria-label="View ${productName}">
-            <div class="product-card-badge">Featured</div>
           ${imageMarkup}
           </a>
           <div class="product-card-content">
@@ -395,28 +352,16 @@ function renderCategories() {
   const container = document.getElementById('categories-container');
   if (!container) return;
 
-  container.innerHTML = `
-    <label class="sr-only" for="homepage-category-filter">Choose a listing category</label>
-    <div class="homepage-filter-control">
-      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-      <select id="homepage-category-filter">
-        <option value="">All listings</option>
-        ${CATEGORIES.map(cat => `<option value="${cat.name}">${cat.name}</option>`).join('')}
-      </select>
-      <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-    </div>
-  `;
-
-  const filter = document.getElementById('homepage-category-filter');
-  filter.addEventListener('change', () => {
-    if (filter.value === 'Houses & Rents') {
-      window.location.href = 'houses-rent.html';
-      return;
-    }
-
-    const query = filter.value ? `?category=${encodeURIComponent(filter.value)}` : '';
-    window.location.href = `products.html${query}`;
-  });
+  container.innerHTML = CATEGORIES.map((category) => {
+    const href = category.name === 'Houses & Rents'
+      ? '/houses-rent'
+      : `/products?category=${encodeURIComponent(category.name)}`;
+    return `<a class="homepage-category-card" href="${href}">
+      <span class="homepage-category-icon"><i class="${category.icon}" aria-hidden="true"></i></span>
+      <span class="homepage-category-name">${escapeHtml(category.name)}</span>
+      <i class="fa-solid fa-arrow-right homepage-category-arrow" aria-hidden="true"></i>
+    </a>`;
+  }).join('');
 }
 
 async function renderHeroSection() {
@@ -492,7 +437,7 @@ async function renderFeaturedProducts() {
     removeFeaturedProductsSentinel();
 
     if (featuredProducts.length === 0) {
-      container.innerHTML = '<p class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">No products available at the moment. Check back soon!</p>';
+      container.innerHTML = '<div class="homepage-listings-empty"><span class="homepage-empty-icon"><i class="fa-solid fa-box-open" aria-hidden="true"></i></span><h3>No approved listings yet</h3><p>Try another category or check back soon.</p><a href="/products" class="btn btn-secondary">Browse all listings</a></div>';
       return;
     }
 
@@ -505,6 +450,6 @@ async function renderFeaturedProducts() {
     }
   } catch (err) {
     console.error('Unable to render featured products:', err);
-    container.innerHTML = '<p class="text-center text-muted" style="grid-column: 1/-1; padding: 2rem;">No products available at the moment. Check back soon!</p>';
+    container.innerHTML = '<div class="homepage-listings-empty"><span class="homepage-empty-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></span><h3>Listings could not be loaded</h3><p>Please try again in a moment.</p><button type="button" class="btn btn-secondary" onclick="renderFeaturedProducts()">Try again</button></div>';
   }
 }

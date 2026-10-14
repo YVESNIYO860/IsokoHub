@@ -1,36 +1,27 @@
 export default function Home() {
   return (
-    <main>
+    <main className="homepage">
       <section className="marketplace-hero" aria-labelledby="marketplace-hero-title">
         <div className="marketplace-hero-inner">
           <div className="marketplace-hero-copy">
             <span className="marketplace-hero-kicker"><i className="fa-solid fa-location-dot" aria-hidden="true"></i> Rwanda's local marketplace</span>
-            <h1 id="marketplace-hero-title">Good finds.<br /><span>Closer to home.</span></h1>
-            <p>Discover products from local sellers, find a place to call home, or share what you have with your community.</p>
+            <h1 id="marketplace-hero-title">Discover more.<br /><span>Shop smarter.</span></h1>
+            <p>Explore products, homes, services, and opportunities from sellers across Rwanda.</p>
+
             <div className="marketplace-hero-actions">
-              <a href="/products" className="btn btn-primary">Browse listings <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-              <a href="/sell" className="marketplace-hero-sell"><i className="fa-solid fa-plus" aria-hidden="true"></i> Sell on IsokoHub</a>
+              <a href="/products" className="btn btn-primary"><i className="fa-solid fa-grid-2" aria-hidden="true"></i> Browse all listings</a>
+              <a href="/sell" className="marketplace-hero-sell"><i className="fa-solid fa-plus" aria-hidden="true"></i> Start selling</a>
             </div>
             <div className="marketplace-hero-proof" aria-label="Marketplace activity">
-              <div><strong id="stat-active-listings">0+</strong><span>Local listings</span></div>
+              <div><strong id="stat-active-listings">Loading</strong><span>Active listings</span></div>
               <span className="marketplace-hero-divider" aria-hidden="true"></span>
-              <div><strong><i className="fa-solid fa-shield-halved" aria-hidden="true"></i> Made for Rwanda</strong><span>Local discovery, made simple</span></div>
+              <div><strong><i className="fa-solid fa-location-dot" aria-hidden="true"></i> Made for Rwanda</strong><span>Discover what's close to home</span></div>
             </div>
           </div>
-          <div className="marketplace-hero-visual">
-            <a className="marketplace-hero-image-link marketplace-hero-image-link--electronics" href="/products?category=Electronics" aria-label="Browse electronics listings">
-              <img src="/assets/hero-image.png" alt="A collection of electronics and household products" width="534" height="374" fetchPriority="high" decoding="async" />
-              <span className="marketplace-hero-image-label">Electronics <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
-            </a>
-            <a className="marketplace-hero-image-link marketplace-hero-image-link--bikes" href="/products?q=others" aria-label="Browse bicycle listings">
-              <img src="/assets/hero2.jpg" alt="Bicycles on display at a local shop" width="547" height="365" loading="lazy" decoding="async" />
-              <span className="marketplace-hero-image-label">Bicycles <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
-            </a>
-            <a className="marketplace-hero-image-link marketplace-hero-image-link--fashion" href="/products?category=Fashion" aria-label="Browse fashion listings">
-              <img src="/assets/hero1.jpg" alt="Clothing displayed at a local fashion shop" width="225" height="225" loading="lazy" decoding="async" />
-              <span className="marketplace-hero-image-label">Fashion <i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
-            </a>
-          </div>
+          <a className="marketplace-hero-visual" href="/products" aria-label="Explore marketplace listings">
+            <img src="/assets/hero-image.png" alt="Bicycles displayed for sale at a local shop" width="547" height="365" fetchPriority="high" decoding="async" />
+            <span className="marketplace-hero-image-label"><span><strong>One marketplace.</strong><small>Products and opportunities from across Rwanda</small></span><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
+          </a>
         </div>
       </section>
 
@@ -38,20 +29,23 @@ export default function Home() {
         <div className="amazon-product-shelf-inner">
           <div className="amazon-shelf-heading">
             <div>
-              <span className="amazon-shelf-kicker"><i className="fa-solid fa-bolt"></i> Fresh from the marketplace</span>
-              <h2 id="amazon-shelf-title">Top picks for you</h2>
-              <p>Explore new listings from local sellers and shops.</p>
+              <span className="amazon-shelf-kicker"><i className="fa-solid fa-sparkles" aria-hidden="true"></i> Recently listed</span>
+              <h2 id="amazon-shelf-title">New to the marketplace</h2>
+              <p>Browse the latest approved listings from local sellers.</p>
             </div>
-            <a href="products.html" className="amazon-shelf-link">See all products <i className="fa-solid fa-arrow-right"></i></a>
+            <a href="/products" className="amazon-shelf-link">Browse all listings <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
           </div>
           <div id="homepage-product-shelf" className="amazon-product-grid" aria-live="polite">
-            <button type="button" className="amazon-shelf-arrow amazon-shelf-arrow-prev" aria-label="Previous products" title="Previous products"><span aria-hidden="true">&lt;</span></button>
+            <button type="button" className="amazon-shelf-arrow amazon-shelf-arrow-prev" aria-label="Previous listings" title="Previous listings"><i className="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
             <div className="amazon-product-viewport">
-              <div className="amazon-product-track">
-                <div className="amazon-shelf-loading">Loading products...</div>
+              <div className="amazon-product-track" aria-label="Recently listed products">
+                <div className="homepage-shelf-skeleton" role="status" aria-label="Loading recent listings"><span></span><i></i><b></b></div>
+                <div className="homepage-shelf-skeleton" aria-hidden="true"><span></span><i></i><b></b></div>
+                <div className="homepage-shelf-skeleton" aria-hidden="true"><span></span><i></i><b></b></div>
+                <div className="homepage-shelf-skeleton" aria-hidden="true"><span></span><i></i><b></b></div>
               </div>
             </div>
-            <button type="button" className="amazon-shelf-arrow amazon-shelf-arrow-next" aria-label="Next products" title="Next products"><span aria-hidden="true">&gt;</span></button>
+            <button type="button" className="amazon-shelf-arrow amazon-shelf-arrow-next" aria-label="Next listings" title="Next listings"><i className="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
           </div>
         </div>
       </section>
@@ -59,12 +53,11 @@ export default function Home() {
       <div className="container">
         <section className="homepage-filter" aria-labelledby="homepage-filter-title">
           <div>
-            <span className="homepage-filter-kicker">Find your next thing</span>
-            <h2 className="section-title" id="homepage-filter-title">Filter listings</h2>
-            <p className="homepage-product-count" id="homepage-product-count" aria-live="polite">Loading listed products...</p>
+            <span className="homepage-filter-kicker">Explore by category</span>
+            <h2 className="section-title" id="homepage-filter-title">Browse the marketplace</h2>
           </div>
-          <div id="categories-container">
-            {/* JS will render the category filter here */}
+          <div id="categories-container" className="homepage-categories" aria-label="Marketplace categories">
+            <div className="homepage-category-loading" role="status">Loading categories…</div>
           </div>
         </section>
 
@@ -75,10 +68,22 @@ export default function Home() {
           </div>
         </div>
 
-        <h2 className="section-title">Featured Products</h2>
-        <div className="product-grid mb-4" id="featured-products">
-          {/* JS will render featured products here */}
-        </div>
+        <section className="homepage-featured" aria-labelledby="featured-products-title">
+          <div className="homepage-featured-heading">
+            <div>
+              <span className="homepage-filter-kicker">From local sellers</span>
+              <h2 className="section-title" id="featured-products-title">Explore listings</h2>
+              <p className="homepage-product-count" id="homepage-product-count" aria-live="polite">Loading listings…</p>
+            </div>
+            <a className="homepage-featured-link" href="/products">See all listings <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+          </div>
+          <div id="featured-products" className="product-grid mb-4" aria-live="polite">
+            <div className="homepage-listing-skeleton" aria-hidden="true"></div>
+            <div className="homepage-listing-skeleton" aria-hidden="true"></div>
+            <div className="homepage-listing-skeleton" aria-hidden="true"></div>
+            <div className="homepage-listing-skeleton" aria-hidden="true"></div>
+          </div>
+        </section>
       </div>
     </main>
   );
