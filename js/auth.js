@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // If on auth pages, redirect to dashboard
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('login.html') || currentPath.includes('signup.html') || /\/(login|signup)\/?$/.test(currentPath)) {
-          setTimeout(() => window.location.replace('/'), 500);
+          setTimeout(redirectToDashboard, 500);
         }
       } else {
         // User is signed out
