@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', async function() {
   const user = getCurrentUser();
   if (!user) {
-    window.location.href = 'login.html';
+    window.location.replace('products.html');
     return;
   }
 
@@ -479,6 +479,31 @@ document.addEventListener('DOMContentLoaded', async function() {
     '<option value="">Select your district</option>' +
     RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
 
+  let sellerCoordinates = null;
+  const locationButton = document.getElementById('capture-seller-location');
+  const locationStatus = document.getElementById('seller-location-status');
+  locationButton?.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      locationStatus.textContent = 'Location is not available in this browser. You can still enter your district and landmark.';
+      return;
+    }
+    locationButton.disabled = true;
+    locationStatus.textContent = 'Waiting for location permission…';
+    navigator.geolocation.getCurrentPosition((position) => {
+      sellerCoordinates = {
+        latitude: Math.round(position.coords.latitude * 1000) / 1000,
+        longitude: Math.round(position.coords.longitude * 1000) / 1000
+      };
+      locationButton.disabled = false;
+      locationStatus.textContent = 'Approximate location added to this listing. You can remove it by leaving the location unset.';
+    }, (error) => {
+      locationButton.disabled = false;
+      locationStatus.textContent = error.code === error.PERMISSION_DENIED
+        ? 'Location access was declined. You can still enter your district and landmark.'
+        : 'Could not determine your location. Try again or enter your district and landmark.';
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+  });
+
   function syncBuyOnlineAvailability() {
     const isRange = Number(priceMinInput.value) !== Number(priceMaxInput.value);
     if (isRange) buyOnlineInput.checked = false;
@@ -502,6 +527,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     const productSellerId = product?.sellerId || product?.seller_id;
     if (product && productSellerId === user.id) {
       isEditing      = true;
+      const latitude = Number(product.seller_lat ?? product.sellerLat);
+      const longitude = Number(product.seller_lng ?? product.sellerLng);
+      if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+        sellerCoordinates = { latitude, longitude };
+        locationStatus.textContent = 'This listing already has an approximate location.';
+      }
       existingImages = Array.isArray(product.image) ? product.image : [product.image];
 
       // keep original price so we can store previous_price when updating
@@ -544,10 +575,45 @@ document.addEventListener('DOMContentLoaded', async function() {
      Upload helpers
   ──────────────────────────────────────── */
 
+  async function prepareUploadableImage(file) {
+    const name = String(file?.name || 'photo');
+    const extension = name.split('.').pop()?.toLowerCase();
+    const mimeType = (file?.type || '').toLowerCase();
+
+    if (!['jxl', 'image/jxl'].includes(extension) && !mimeType.includes('jxl')) {
+      return file;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error('Unable to decode JXL image for upload.'));
+        image.src = objectUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth || 1200;
+      canvas.height = image.naturalHeight || 1200;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.92));
+      if (!blob) {
+        return file;
+      }
+
+      const safeName = name.replace(/\.(jxl)$/i, '.jpg');
+      return new File([blob], safeName, { type: 'image/jpeg' });
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
   async function uploadProductImages(files) {
     if (!supabase) throw new Error('Supabase storage is not available at this time.');
 
-    // Check if user is authenticated with Supabase
     const session = supabase.auth.session();
     if (!session || !session.user) {
       throw new Error('You must be logged in with Supabase to upload images. Please sign in first.');
@@ -561,10 +627,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (overlayText) overlayText.textContent = 'Uploading photos… 0%';
     if (overlaySubtext) overlaySubtext.textContent = '0%';
 
+    const preparedFiles = await Promise.all(files.map((file) => prepareUploadableImage(file)));
     const urls = [];
-    for (let i = 0; i < files.length; i++) {
-      const file     = files[i];
-      const fileName = user.id + '_' + Date.now() + '_' + i + '_' + file.name.replace(/\s+/g, '_');
+    for (let i = 0; i < preparedFiles.length; i++) {
+      const file = preparedFiles[i];
+      const fileName = user.id + '_' + Date.now() + '_' + i + '_' + (file.name || `photo-${i}.jpg`).replace(/\s+/g, '_');
       const { data, error } = await supabase.storage
         .from(SUPABASE_IMAGE_BUCKET)
         .upload(fileName, file, { cacheControl: '3600', upsert: false });
@@ -583,9 +650,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       urls.push(publicURL);
 
-      const pct = Math.round(((i + 1) / files.length) * 100);
+      const pct = Math.round(((i + 1) / preparedFiles.length) * 100);
       progressBar.style.width    = pct + '%';
-      progressStatus.textContent = (i + 1) + ' of ' + files.length + ' uploaded';
+      progressStatus.textContent = (i + 1) + ' of ' + preparedFiles.length + ' uploaded';
       if (overlayText) overlayText.textContent = 'Uploading photos… ' + pct + '%';
       if (overlaySubtext) overlaySubtext.textContent = pct + '%';
     }
@@ -663,7 +730,8 @@ document.addEventListener('DOMContentLoaded', async function() {
         sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
-        // attach captured seller coordinates when available
+        sellerLat: sellerCoordinates?.latitude ?? null,
+        sellerLng: sellerCoordinates?.longitude ?? null,
         buyOnline: !hasProductPriceRange({ priceMin: priceMinValue, priceMax: priceMaxValue }) && Boolean(buyOnlineInput.checked),
         isAd:        false,
         adRequested: false,

@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
   // Check if there is a hash in the URL and scroll smoothly to it
   if (window.location.hash) {

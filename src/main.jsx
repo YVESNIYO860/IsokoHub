@@ -4,7 +4,6 @@ import About from './About.jsx';
 import Admin from './Admin.jsx';
 import AdminChat from './AdminChat.jsx';
 import AdminProfile from './AdminProfile.jsx';
-import { Login, Signup } from './AuthPages.jsx';
 import BlogPost from './BlogPost.jsx';
 import Chat from './Chat.jsx';
 import ChatInbox from './ChatInbox.jsx';
@@ -51,8 +50,6 @@ const routeDefinitions = {
   '/privacy': { component: Privacy, scripts: sharedScripts },
   '/terms': { component: Terms, scripts: sharedScripts },
   '/support': { component: Support, scripts: sharedScripts },
-  '/login': { component: Login, scripts: ['js/route-utils.js', 'js/data.js', 'js/app.js', 'js/auth.js'] },
-  '/signup': { component: Signup, scripts: ['js/route-utils.js', 'js/data.js', 'js/app.js', 'js/auth.js'] },
   '/blog-post': {
     component: BlogPost,
     scripts: sharedScripts,
@@ -160,8 +157,6 @@ const pageMetadata = {
   '/support': ['Support | IsokoHub', 'Get help with your IsokoHub account, listings, or marketplace conversations.'],
   '/privacy': ['Privacy Policy | IsokoHub', 'Read how IsokoHub uses information to provide marketplace features.'],
   '/terms': ['Terms and Conditions | IsokoHub', 'Read the terms for using IsokoHub marketplace services.'],
-  '/login': ['Sign In | IsokoHub', 'Sign in to manage your IsokoHub account, listings, and conversations.'],
-  '/signup': ['Create an Account | IsokoHub', 'Create an IsokoHub account to buy and sell locally.'],
   '/chat-inbox': ['Messages | IsokoHub', 'View and manage your IsokoHub marketplace conversations.'],
   '/chat': ['Marketplace Chat | IsokoHub', 'Continue your conversation with an IsokoHub buyer or seller.'],
   '/checkout': ['Checkout | IsokoHub', 'Review your IsokoHub purchase details.'],

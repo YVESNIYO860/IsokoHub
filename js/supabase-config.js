@@ -68,3 +68,5 @@ try {
 } catch (err) {
   console.error('Failed to initialize Supabase:', err);
 }
+
+

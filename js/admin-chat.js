@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   const isAdmin = typeof isAdminUser === 'function' && isAdminUser(user);
   if (!isAdmin) {
     status.textContent = 'Admin access is required to view conversations.';
-    status.className = 'chat-status error';
+    status.classsName = 'chat-status error';
     return;
   }
   if (!window.supabase) return;
 
   const { data: conversations, error } = await supabase.from('marketplace_conversations').select('*').order('last_message_at', { ascending: false });
-  if (error) {
+  if (error) { 
     status.textContent = 'Conversation inbox is not ready. Run the chat migration in Supabase.';
     status.className = 'chat-status error';
     return;

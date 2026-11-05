@@ -61,9 +61,7 @@ module.exports = async function imageEdit(request, response) {
     ['SUPABASE_ANON_KEY', supabaseAnonKey]
   ].filter(([, value]) => !value).map(([name]) => name);
   if (missingEnvironment.length) {
-    return sendJson(response, 503, {
-      error: `Image editing is not configured. Add these Vercel environment variables: ${missingEnvironment.join(', ')}.`
-    });
+    return sendJson(response, 503, { error: 'Image API not configured.' });
   }
 
   const token = getBearerToken(request);

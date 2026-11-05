@@ -1469,16 +1469,17 @@ h3 { font-size: 1.5rem; }
   box-shadow: 0 14px 38px rgba(2, 6, 23, 0.24);
   backdrop-filter: blur(14px);
   transform: translateY(0);
-  transition: background 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease;
+  transition: transform 0.28s cubic-bezier(0.2, 0.75, 0.25, 1), background 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease;
   will-change: auto;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 
 .navbar.is-hidden {
-  transform: translateY(0);
-  opacity: 1;
-  box-shadow: 0 14px 38px rgba(2, 6, 23, 0.24);
+  transform: translateY(-105%);
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: none;
 }
 
 .navbar.scrolled {
@@ -7972,5 +7973,40 @@ textarea:focus {
   .footer-grid { gap: 1rem 0.8rem; }
   .footer-bottom { padding: 0.85rem 0; }
   .footer-bottom .container { gap: 0.4rem; }
+}
+
+.navbar { transition: transform 260ms cubic-bezier(0.2, 0.75, 0.25, 1), opacity 180ms ease, background 220ms ease, box-shadow 220ms ease; }
+.navbar.is-hidden { transform: translateY(-105%); opacity: 0; pointer-events: none; }
+.navbar.scrolled .navbar-bottom { min-height: 34px; padding-top: 0.12rem; padding-bottom: 0.12rem; }
+
+.support-fab {
+  right: auto;
+  bottom: 2rem;
+  left: 2rem;
+  display: flex;
+  width: max-content;
+  height: auto;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: 10px;
+  touch-action: none;
+  cursor: grab;
+  animation: none;
+  transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.support-fab.dragging { z-index: 10002; transform: none; cursor: grabbing; transition: none; }
+.support-fab-link { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; min-height: 2.6rem; padding: 0.35rem 0.6rem; border: 0; border-radius: 7px; background: transparent; color: inherit; font: inherit; font-size: 0.85rem; font-weight: 750; white-space: nowrap; cursor: pointer; touch-action: none; }
+.support-fab-link:hover { background: rgba(255, 255, 255, 0.14); }
+.support-fab-dismiss { position: absolute; top: -0.55rem; right: -0.55rem; display: grid; width: 1.55rem; height: 1.55rem; place-items: center; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #10213f; color: #fff; font-size: 0.72rem; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 33, 63, 0.24); }
+.support-fab-dismiss:hover { background: #1e40af; }
+.support-fab-link:focus-visible, .support-fab-dismiss:focus-visible { outline: 3px solid #facc15; outline-offset: 2px; }
+
+@media (max-width: 768px) {
+  .navbar.scrolled .navbar-bottom { display: none; }
+  .support-fab { right: 1rem; bottom: calc(4.75rem + env(safe-area-inset-bottom)); left: auto; padding: 0.25rem; border-radius: 9px; }
+  .support-fab-link { width: 42px; height: 42px; min-height: 42px; padding: 0; border-radius: 7px; }
+  .support-fab-link span { display: none; }
+  .support-fab-dismiss { top: -0.45rem; right: -0.45rem; }
 }
 

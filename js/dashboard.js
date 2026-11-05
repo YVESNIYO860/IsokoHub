@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
     }
-    window.location.href = 'login.html';
+    window.location.replace('products.html');
     return;
   }
 
@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const successMessage = urlParams.get('message');
-  const initialView = urlParams.get('view') === 'settings' ? 'settings' : 'catalog';
+  const initialView = ['settings', 'shops'].includes(urlParams.get('view')) ? urlParams.get('view') : 'catalog';
   if (successMessage) {
     const header = document.querySelector('.dashboard-main-card');
     if (header) {
@@ -190,11 +190,126 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
+  async function renderSellerShops(content) {
+    content.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>';
+    try {
+      const [shops, products] = await Promise.all([
+        fetchOwnedShops(user.id),
+        fetchProducts(false, user.id)
+      ]);
+      let editingShopId = null;
+
+      const render = () => {
+        const editingShop = shops.find((shop) => shop.id === editingShopId) || null;
+        const selectedProducts = new Set(editingShop?.products || []);
+        content.innerHTML = `
+          <section aria-labelledby="seller-shops-heading" style="display:grid;gap:1.25rem;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+              <div><h2 id="seller-shops-heading">My Shops</h2><p class="text-muted">Manage multiple storefronts across Rwanda's districts.</p></div>
+              <span class="shop-count-label">${shops.length} shop${shops.length === 1 ? '' : 's'}</span>
+            </div>
+            <form id="seller-shop-form" class="seller-shop-form">
+              <h3>${editingShop ? 'Edit shop' : 'Create a shop'}</h3>
+              <div class="seller-shop-form-grid">
+                <label>Shop name<input class="form-control" name="name" maxlength="120" required value="${escapeHtml(editingShop?.name || '')}" placeholder="e.g. Kigali Electronics"></label>
+                <label>District<select class="form-control" name="location" required><option value="">Select district</option>${RWANDA_DISTRICTS.map((district) => `<option value="${escapeHtml(district)}" ${editingShop?.location === district ? 'selected' : ''}>${escapeHtml(district)}</option>`).join('')}</select></label>
+                <label>Focus<input class="form-control" name="description" maxlength="180" value="${escapeHtml(editingShop?.description || '')}" placeholder="What does this shop sell?"></label>
+                <label>Slogan<input class="form-control" name="slogan" maxlength="120" value="${escapeHtml(editingShop?.profile?.slogan || '')}" placeholder="Optional"></label>
+                <label>Contact<input class="form-control" name="contact" maxlength="120" value="${escapeHtml(editingShop?.contact || '')}" placeholder="Phone or email"></label>
+                <label>Status<select class="form-control" name="status"><option value="active" ${!editingShop || editingShop.status === 'active' ? 'selected' : ''}>Active</option><option value="paused" ${editingShop?.status === 'paused' ? 'selected' : ''}>Paused</option></select></label>
+                <label class="seller-shop-wide">Shop bio<textarea class="form-control" name="bio" rows="3" maxlength="1000" placeholder="Tell shoppers about this shop">${escapeHtml(editingShop?.profile?.bio || '')}</textarea></label>
+                <label class="seller-shop-wide">Products to show<select class="form-control" name="products" multiple size="5">${products.map((product) => `<option value="${escapeHtml(product.id)}" ${selectedProducts.has(product.id) ? 'selected' : ''}>${escapeHtml(product.name || 'Untitled listing')} · ${escapeHtml(product.category || 'Other')}</option>`).join('')}</select><small class="text-muted">Select only listings from your account. Use Ctrl or Command to select more than one.</small></label>
+              </div>
+              <div id="seller-shop-status" role="status" class="text-muted"></div>
+              <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;">
+                <button type="submit" class="btn btn-primary">${editingShop ? 'Save shop' : 'Create shop'}</button>
+                ${editingShop ? '<button type="button" id="seller-shop-cancel" class="btn btn-secondary">Cancel</button>' : ''}
+              </div>
+            </form>
+            <div class="seller-shop-list" aria-label="Your shops">
+              ${shops.length ? shops.map((shop) => `<article class="seller-shop-row"><div><strong>${escapeHtml(shop.name)}</strong><span><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${escapeHtml(shop.location || 'District not set')} · ${(shop.products || []).length} listings</span></div><div class="seller-shop-row-actions"><a class="btn btn-secondary" href="/shop?id=${encodeURIComponent(shop.id)}">View</a><button type="button" class="btn btn-secondary" data-edit-shop="${escapeHtml(shop.id)}">Edit</button><button type="button" class="btn btn-danger" data-delete-shop="${escapeHtml(shop.id)}">Delete</button></div></article>`).join('') : '<div class="seller-shops-empty"><i class="fa-solid fa-store" aria-hidden="true"></i><strong>No shops yet</strong><span>Create your first district-specific storefront above.</span></div>'}
+            </div>
+          </section>
+        `;
+
+        const form = document.getElementById('seller-shop-form');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const status = document.getElementById('seller-shop-status');
+          const values = new FormData(form);
+          const shopName = String(values.get('name') || '').trim();
+          const district = String(values.get('location') || '').trim();
+          if (!shopName || !RWANDA_DISTRICTS.includes(district)) {
+            status.textContent = 'Enter a shop name and select a Rwanda district.';
+            return;
+          }
+          const existingProfile = editingShop?.profile || {};
+          const shopRecord = {
+            ...(editingShop || {}),
+            name: shopName,
+            description: String(values.get('description') || '').trim(),
+            location: district,
+            contact: String(values.get('contact') || '').trim(),
+            status: String(values.get('status') || 'active'),
+            profile: { ...existingProfile, slogan: String(values.get('slogan') || '').trim(), bio: String(values.get('bio') || '').trim() },
+            products: values.getAll('products').filter((id) => products.some((product) => product.id === id))
+          };
+          const submitButton = form.querySelector('button[type="submit"]');
+          submitButton.disabled = true;
+          status.textContent = 'Saving shop...';
+          try {
+            const savedShop = await saveOwnedShop(shopRecord);
+            const savedIndex = shops.findIndex((shop) => shop.id === savedShop.id);
+            if (savedIndex < 0) shops.unshift(savedShop);
+            else shops[savedIndex] = savedShop;
+            editingShopId = null;
+            render();
+          } catch (error) {
+            console.error('Unable to save seller shop:', error);
+            status.textContent = 'Could not save this shop. Check your connection and try again.';
+            submitButton.disabled = false;
+          }
+        });
+
+        document.getElementById('seller-shop-cancel')?.addEventListener('click', () => {
+          editingShopId = null;
+          render();
+        });
+        content.querySelectorAll('[data-edit-shop]').forEach((button) => button.addEventListener('click', () => {
+          editingShopId = button.dataset.editShop;
+          render();
+        }));
+        content.querySelectorAll('[data-delete-shop]').forEach((button) => button.addEventListener('click', async () => {
+          const shop = shops.find((entry) => entry.id === button.dataset.deleteShop);
+          if (!shop || !confirm(`Delete ${shop.name}? This only removes the shop, not its product listings.`)) return;
+          try {
+            await deleteOwnedShop(shop.id);
+            shops.splice(shops.findIndex((entry) => entry.id === shop.id), 1);
+            render();
+          } catch (error) {
+            console.error('Unable to delete seller shop:', error);
+            alert('Could not delete this shop. Check your connection and try again.');
+          }
+        }));
+      };
+
+      render();
+    } catch (error) {
+      console.error('Unable to load seller shops:', error);
+      content.innerHTML = '<div class="seller-shops-empty"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i><strong>Shop management is not ready</strong><span>Apply the seller-owned shops database migration and try again.</span></div>';
+    }
+  }
+
   async function renderDashboard(viewMode = 'catalog') {
     const content = document.getElementById('dashboard-content');
     content.innerHTML = `
       <div style="text-align:center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i></div>
     `;
+
+    if (viewMode === 'shops') {
+      await renderSellerShops(content);
+      return;
+    }
 
     if (viewMode === 'settings') {
       const currentAppearance = getDrawerUiSettings();

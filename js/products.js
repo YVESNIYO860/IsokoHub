@@ -8,14 +8,7 @@ function escapeHtml(value) {
 }
 
 function normalizeProductImage(value) {
-  if (value == null) return '';
-  const text = String(value).trim();
-  if (!text) return '';
-  const lower = text.toLowerCase();
-  if (lower.includes('no image') || lower.includes('placeholder') || /[<>"]/.test(text)) {
-    return '';
-  }
-  return text;
+  return normalizeProductImageUrl(value);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -34,6 +27,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentCategory = 'all';
   let currentCondition = 'all';
   let currentDistrict = 'all';
+  let buyerCoordinates = null;
+  let nearbyEnabled = false;
+  const nearbyToggle = document.getElementById('nearby-products-toggle');
+  const nearbyStatus = document.getElementById('nearby-products-status');
   const urlParams = new URLSearchParams(window.location.search);
   const searchQuery = urlParams.get('q');
   const queryCat = urlParams.get('category');
@@ -70,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   districtSelect.value = currentDistrict;
 
   function updateFilterCount() {
-    const activeCount = [currentCategory, currentCondition, currentDistrict].filter(value => value !== 'all').length;
+    const activeCount = [currentCategory, currentCondition, currentDistrict].filter(value => value !== 'all').length + Number(nearbyEnabled);
     filterCount.textContent = String(activeCount);
     filterToggle.setAttribute('aria-label', `${activeCount} active filters`);
   }
@@ -87,6 +84,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentCategory = 'all';
     currentCondition = 'all';
     currentDistrict = 'all';
+    nearbyEnabled = false;
+    nearbyToggle.setAttribute('aria-pressed', 'false');
+    nearbyToggle.classList.remove('active');
+    nearbyStatus.hidden = true;
     categorySelect.value = currentCategory;
     conditionSelect.value = currentCondition;
     districtSelect.value = currentDistrict;
@@ -110,6 +111,63 @@ document.addEventListener('DOMContentLoaded', async () => {
     currentDistrict = districtSelect.value;
     updateFilterCount();
     updateUrlAndRender();
+  });
+
+  function distanceFromBuyer(product) {
+    const rawLatitude = product.seller_lat ?? product.sellerLat ?? product.latitude;
+    const rawLongitude = product.seller_lng ?? product.sellerLng ?? product.longitude;
+    if (rawLatitude == null || rawLongitude == null || rawLatitude === '' || rawLongitude === '') return null;
+    const latitude = Number(rawLatitude);
+    const longitude = Number(rawLongitude);
+    if (!buyerCoordinates || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    const radians = (degrees) => degrees * Math.PI / 180;
+    const latitudeDelta = radians(latitude - buyerCoordinates.latitude);
+    const longitudeDelta = radians(longitude - buyerCoordinates.longitude);
+    const arc = Math.sin(latitudeDelta / 2) ** 2
+      + Math.cos(radians(buyerCoordinates.latitude)) * Math.cos(radians(latitude))
+      * Math.sin(longitudeDelta / 2) ** 2;
+    return 6371 * 2 * Math.atan2(Math.sqrt(arc), Math.sqrt(1 - arc));
+  }
+
+  nearbyToggle.addEventListener('click', () => {
+    if (nearbyEnabled) {
+      nearbyEnabled = false;
+      nearbyToggle.setAttribute('aria-pressed', 'false');
+      nearbyToggle.classList.remove('active');
+      nearbyStatus.hidden = true;
+      updateFilterCount();
+      renderProducts();
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      nearbyStatus.textContent = 'Location is not available in this browser.';
+      nearbyStatus.hidden = false;
+      return;
+    }
+
+    nearbyToggle.disabled = true;
+    nearbyStatus.textContent = 'Finding your location…';
+    nearbyStatus.hidden = false;
+    navigator.geolocation.getCurrentPosition((position) => {
+      buyerCoordinates = {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      };
+      nearbyEnabled = true;
+      nearbyToggle.disabled = false;
+      nearbyToggle.setAttribute('aria-pressed', 'true');
+      nearbyToggle.classList.add('active');
+      nearbyStatus.textContent = 'Products with a shared location appear nearest first. Your location is only used in this page.';
+      updateFilterCount();
+      renderProducts();
+    }, (error) => {
+      nearbyToggle.disabled = false;
+      nearbyStatus.textContent = error.code === error.PERMISSION_DENIED
+        ? 'Location access was declined. You can still browse by district.'
+        : 'Could not determine your location. Try again or browse by district.';
+      nearbyStatus.hidden = false;
+    }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
   });
 
   function updateUrlAndRender() {
@@ -143,6 +201,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (queryBuyOnline && (queryBuyOnline === '1' || queryBuyOnline === 'true')) {
       allProducts = allProducts.filter(p => p.buy_online === true || p.buy_online === 'true' || p.buyOnline === true);
+    }
+
+    if (nearbyEnabled) {
+      allProducts.sort((first, second) => (distanceFromBuyer(first) ?? Infinity) - (distanceFromBuyer(second) ?? Infinity));
     }
     
     if (queryStr) {
@@ -207,7 +269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               </div>
               <h3 class="product-title">${productName}</h3>
               ${shopBadge}
-              <div class="product-card-seller-line"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>${escapeHtml(p.district || 'District not set')}</span><span class="product-card-dot" aria-hidden="true">•</span><span>${p.seller_phone || p.seller_email ? 'Seller available' : 'Seller details pending'}</span></div>
+              <div class="product-card-seller-line"><i class="fa-solid fa-location-dot" aria-hidden="true"></i><span>${nearbyEnabled && distanceFromBuyer(p) !== null ? `${distanceFromBuyer(p).toFixed(1)} km away · ` : ''}${escapeHtml(p.district || 'District not set')}</span><span class="product-card-dot" aria-hidden="true">•</span><span>${p.seller_phone || p.seller_email ? 'Seller available' : 'Seller details pending'}</span></div>
               <div class="product-card-foot">
                 ${priceMarkup}
                 <span class="product-card-view-link">View listing <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></span>

@@ -43,6 +43,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const menuButtons = Array.from(document.querySelectorAll('.admin-menu button'));
   const refreshBtn = document.getElementById('refresh-admin-btn');
   const urlParams = new URLSearchParams(window.location.search);
+  const notificationCount = document.getElementById('admin-notification-count');
+  const notificationReadKey = `isokoHubAdminReadListings:${user?.id || user?.email || 'admin'}`;
+  let notificationReadIds = new Set();
+  let knownPendingIds = null;
+  try {
+    notificationReadIds = new Set(JSON.parse(localStorage.getItem(notificationReadKey) || '[]'));
+  } catch (err) {
+    notificationReadIds = new Set();
+  }
 
   const adminSidebar = document.querySelector('.admin-sidebar');
   const sidebarToggleBtn = document.getElementById('admin-sidebar-toggle');
@@ -81,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  let activeTab = ['pending', 'ads', 'inventory', 'users', 'shops', 'settings'].includes(urlParams.get('tab') || urlParams.get('view')) ? (urlParams.get('tab') || urlParams.get('view')) : 'pending';
+  let activeTab = ['pending', 'notifications', 'ads', 'inventory', 'users', 'shops', 'settings'].includes(urlParams.get('tab') || urlParams.get('view')) ? (urlParams.get('tab') || urlParams.get('view')) : 'pending';
   let selectedCategory = 'all';
   let editingShopId = null;
   const rwandaDistricts = [
@@ -127,6 +136,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       .replace(/'/g, '&#39;');
   }
 
+  function showListingNotification(product) {
+    const title = 'New listing for review';
+    const message = `${product.name || 'A seller'} · ${product.seller_email || product.sellerEmail || 'Seller details unavailable'}`;
+    let toast = document.getElementById('admin-listing-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'admin-listing-toast';
+      toast.setAttribute('role', 'status');
+      toast.style.cssText = 'position:fixed;right:1rem;bottom:1rem;z-index:10000;width:min(360px,calc(100vw - 2rem));padding:1rem 1.1rem;background:#10213f;color:#fff;border-left:4px solid #f59e0b;border-radius:8px;box-shadow:0 12px 36px rgba(15,23,42,.25);';
+      document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<strong>${escapeHtml(title)}</strong><div style="margin-top:.3rem;font-size:.9rem">${escapeHtml(message)}</div>`;
+    clearTimeout(toast.dismissTimer);
+    toast.dismissTimer = setTimeout(() => toast.remove(), 6500);
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notificationOptions = { body: message, icon: '/assets/logo.png', tag: `listing-${product.id}` };
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then((registration) => {
+          if (registration) registration.showNotification(title, notificationOptions);
+          else new Notification(title, notificationOptions);
+        }).catch(() => new Notification(title, notificationOptions));
+      } else {
+        new Notification(title, notificationOptions);
+      }
+    }
+  }
+
   function readShopLogoFile(file) {
     return new Promise((resolve, reject) => {
       if (!file) {
@@ -152,6 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const rows = shops.map((shop) => ({
         id: shop.id || createShopId(),
+        owner_id: shop.owner_id || null,
         name: shop.name || 'Untitled shop',
         description: shop.description || '',
         location: shop.location || '',
@@ -163,10 +201,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const { error } = await supabase.from('shops').upsert(rows, { onConflict: 'id' });
       if (error) throw error;
+      invalidateShopCache();
       localStorage.setItem('isokoHubAdminShops', JSON.stringify(rows));
     } catch (err) {
       console.warn('Unable to persist shops to Supabase:', err);
       localStorage.setItem('isokoHubAdminShops', JSON.stringify(shops));
+      invalidateShopCache();
     }
   }
 
@@ -541,11 +581,57 @@ document.addEventListener('DOMContentLoaded', async () => {
       fetchUserCount()
     ]);
 
+    const pendingIds = new Set(pendingProducts.map((product) => String(product.id)));
+    const unreadProducts = pendingProducts.filter((product) => !notificationReadIds.has(String(product.id)));
+    if (notificationCount) notificationCount.textContent = String(unreadProducts.length);
+    if (knownPendingIds) {
+      pendingProducts.filter((product) => !knownPendingIds.has(String(product.id)))
+        .forEach(showListingNotification);
+    }
+    knownPendingIds = pendingIds;
+
     const categories = getUniqueCategories([...pendingProducts, ...adRequests, ...allProducts]);
     updateCategoryFilterOptions(categories);
     categorySelect?.closest('.admin-sidebar-section')?.classList.toggle('admin-filter-hidden', !['pending', 'ads', 'inventory'].includes(activeTab));
 
     renderAdminStats({ pendingCount, adRequestCount, approvedCount, totalCount, userCount });
+    if (activeTab === 'notifications') {
+      content.innerHTML = `
+        <section class="admin-notifications-panel" aria-labelledby="admin-notifications-heading">
+          <div class="admin-section-heading">
+            <div><span class="admin-eyebrow">Listing activity</span><h2 id="admin-notifications-heading">Notifications</h2><p class="text-muted">New product listings waiting for your review.</p></div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <button type="button" id="admin-enable-notifications" class="btn btn-secondary"><i class="fa-solid fa-bell"></i> Enable desktop alerts</button>
+              <button type="button" id="admin-mark-notifications-read" class="btn btn-secondary">Mark all read</button>
+            </div>
+          </div>
+          <div id="admin-notification-status" class="text-muted" role="status" style="margin-bottom:1rem;"></div>
+          ${pendingProducts.length ? `<div class="admin-notification-list">${pendingProducts.map((product) => {
+            const isUnread = !notificationReadIds.has(String(product.id));
+            return `<article class="admin-notification-item ${isUnread ? 'unread' : ''}">
+              <span class="admin-notification-icon"><i class="fa-solid fa-box" aria-hidden="true"></i></span>
+              <div class="admin-notification-copy"><strong>${escapeHtml(product.name || 'Untitled listing')}</strong><span>${escapeHtml(product.seller_email || product.sellerEmail || 'Seller email unavailable')} · ${escapeHtml(product.district || 'Location not provided')}</span><small>${product.created_at ? new Date(product.created_at).toLocaleString() : 'Recently listed'}${isUnread ? ' · New' : ''}</small></div>
+              <button type="button" class="btn btn-secondary" onclick="handleOpenListing('${escapeHtml(product.id)}')">Review</button>
+            </article>`;
+          }).join('')}</div>` : '<div class="admin-empty-state"><i class="fa-solid fa-circle-check"></i><h3>You are all caught up</h3><p class="text-muted">There are no new listings waiting for review.</p></div>'}
+        </section>
+      `;
+      document.getElementById('admin-enable-notifications')?.addEventListener('click', async () => {
+        const status = document.getElementById('admin-notification-status');
+        if (!('Notification' in window)) {
+          status.textContent = 'Desktop notifications are not supported by this browser.';
+          return;
+        }
+        const permission = await Notification.requestPermission();
+        status.textContent = permission === 'granted' ? 'Desktop alerts are enabled while this dashboard is open.' : 'Desktop alerts were not enabled. Notifications will still appear here.';
+      });
+      document.getElementById('admin-mark-notifications-read')?.addEventListener('click', () => {
+        pendingProducts.forEach((product) => notificationReadIds.add(String(product.id)));
+        localStorage.setItem(notificationReadKey, JSON.stringify(Array.from(notificationReadIds)));
+        renderAdmin();
+      });
+      return;
+    }
     // If Users tab active, render users management and return
     if (activeTab === 'settings') {
       const settings = loadAdminSettings();
@@ -1089,5 +1175,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await renderAdmin();
+  window.setInterval(() => renderAdmin(), 30000);
 });
 

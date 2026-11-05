@@ -33,10 +33,22 @@ function createShopId() {
   return `shop-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function normalizeProductImageUrl(value) {
+  if (value == null) return '';
+  const text = String(value).trim();
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  if (lower.includes('no image') || lower.includes('placeholder') || /[<>"']/.test(text) || lower.endsWith('.jxl') || lower.includes('image/jxl')) {
+    return '';
+  }
+  return text;
+}
+
 function normalizeShopRecord(record = {}) {
   const profile = record?.profile && typeof record.profile === 'object' ? record.profile : {};
   return {
     id: record?.id || createShopId(),
+    owner_id: record?.owner_id || null,
     name: record?.name || 'Untitled shop',
     description: record?.description || '',
     location: record?.location || '',
@@ -70,20 +82,75 @@ function fetchShops() {
   return shopsRequestCache;
 }
 
+async function fetchOwnedShops(ownerId) {
+  const session = supabase?.auth?.session?.();
+  if (!session?.user?.id || session.user.id !== ownerId) {
+    throw new Error('You can only manage shops attached to your signed-in account.');
+  }
+
+  const { data, error } = await supabase
+    .from('shops')
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (Array.isArray(data) ? data : []).map(normalizeShopRecord);
+}
+
+async function saveOwnedShop(shopData = {}) {
+  const session = supabase?.auth?.session?.();
+  if (!session?.user?.id) throw new Error('Sign in to manage your shops.');
+
+  const row = {
+    ...shopData,
+    id: shopData.id || createShopId(),
+    owner_id: session.user.id,
+    name: String(shopData.name || '').trim(),
+    location: String(shopData.location || '').trim(),
+    products: Array.isArray(shopData.products) ? shopData.products : []
+  };
+  const { data, error } = await supabase
+    .from('shops')
+    .upsert(row, { onConflict: 'id' })
+    .select()
+    .single();
+  if (error) throw error;
+  shopsRequestCache = null;
+  return normalizeShopRecord(data);
+}
+
+async function deleteOwnedShop(shopId) {
+  const session = supabase?.auth?.session?.();
+  if (!session?.user?.id) throw new Error('Sign in to manage your shops.');
+  const { error } = await supabase
+    .from('shops')
+    .delete()
+    .eq('id', shopId)
+    .eq('owner_id', session.user.id);
+  if (error) throw error;
+  shopsRequestCache = null;
+}
+
 async function readStoredShops() {
+  let localShops = [];
   try {
-    const localShops = localStorage.getItem('isokoHubAdminShops');
-    if (localShops) {
-      const parsed = JSON.parse(localShops);
-      if (Array.isArray(parsed) && parsed.length) {
-        return parsed.map(normalizeShopRecord);
-      }
+    const storedShops = localStorage.getItem('isokoHubAdminShops');
+    if (storedShops) {
+      const parsed = JSON.parse(storedShops);
+      if (Array.isArray(parsed)) localShops = parsed.map(normalizeShopRecord);
     }
   } catch (err) {
     console.warn('Unable to load shops from storage:', err);
   }
 
-  return await fetchShops();
+  const remoteShops = supabase ? await fetchShops() : [];
+  const shopsById = new Map(localShops.map((shop) => [shop.id, shop]));
+  remoteShops.forEach((shop) => shopsById.set(shop.id, { ...shopsById.get(shop.id), ...shop }));
+  return Array.from(shopsById.values());
+}
+
+function invalidateShopCache() {
+  shopsRequestCache = null;
 }
 
 async function getShopById(shopId) {

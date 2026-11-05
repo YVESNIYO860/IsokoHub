@@ -808,8 +808,8 @@ function renderNavbar() {
   const showInstallAction = !isInStandaloneMode();
   const isAdmin = isAdminUser(user);
   const isAdminPage = /admin\.html/.test(window.location.pathname);
-  const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'login.html';
-  const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Sign In';
+  const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'products.html';
+  const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Marketplace';
   const accountHref = user ? 'dashboard.html' : 'login.html';
   const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='login.html';";
   const navbarHTML = `
@@ -836,7 +836,7 @@ function renderNavbar() {
 
         <div class="navbar-actions">
           <a href="${accountHref}" class="nav-action-item" ${accountClickHandler ? `onclick="${accountClickHandler}"` : ''}>
-            <span>Hello, ${user ? user.name : 'Sign in'}</span>
+            <span>Hello, ${user ? user.name : 'Marketplace'}</span>
             <strong>Account</strong>
           </a>
 
@@ -926,7 +926,7 @@ function renderNavbar() {
             <div class="drawer-user-info">
               <span class="drawer-user-greeting">${user ? 'Welcome back' : 'New here'}</span>
               <span class="drawer-user-name">${displayName}</span>
-              <span class="drawer-user-status">${user ? 'Ready to shop and sell' : 'Sign in to continue'}</span>
+              <span class="drawer-user-status">${user ? 'Ready to shop and sell' : 'Browse the marketplace'}</span>
             </div>
           </div>
         </a>
@@ -960,7 +960,7 @@ function renderNavbar() {
           <h3 style="display:flex; align-items:center; justify-content:space-between; gap:0.6rem;" role="button" tabindex="0" aria-expanded="false"><span><i class="fa-solid fa-gear" style="color:#64748b"></i> Help and Settings</span><i class="fa-solid fa-chevron-right dropdown-icon" style="opacity:0.5;"></i></h3>
           <div class="drawer-hidden">
             <ul>
-              <li><a href="${user ? 'dashboard.html' : 'signup.html'}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
+              <li><a href="${accountHref}"><i class="fa-solid fa-circle-user" style="margin-right:0.5rem; opacity:0.7;"></i> Your Account <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
               <li><a href="${settingsHref}"><i class="fa-solid fa-gear" style="margin-right:0.5rem; opacity:0.7;"></i> Settings <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>
               ${user ? `<li><a href="#" onclick="handleLogout(event)"><i class="fa-solid fa-right-from-bracket" style="margin-right:0.5rem; opacity:0.7;"></i> Logout</a></li>` : ''}
               ${isAdmin ? `<li><a href="admin.html"><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem; opacity:0.7;"></i> Admin Dashboard <i class="fa-solid fa-chevron-right" style="font-size:0.7rem; opacity:0.5;"></i></a></li>` : ''}
@@ -1507,12 +1507,99 @@ function renderGlobalSupportButton() {
   if (isSupportPage) return;
 
   const btnHTML = `
-    <button class="support-fab" onclick="openSupportPage()" title="WhatsApp Support">
-      <i class="fa-brands fa-whatsapp"></i>
-      <span>WhatsApp Support</span>
-    </button>
+    <div class="support-fab" id="support-fab" role="group" aria-label="WhatsApp support">
+      <button type="button" class="support-fab-link" title="Drag to move or open WhatsApp support" aria-label="Open WhatsApp support">
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+        <span>WhatsApp Support</span>
+      </button>
+      <button type="button" class="support-fab-dismiss" aria-label="Hide WhatsApp support" title="Hide WhatsApp support"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+    </div>
   `;
   document.body.insertAdjacentHTML('beforeend', btnHTML);
+
+  const supportFab = document.getElementById('support-fab');
+  const dismissButton = supportFab.querySelector('.support-fab-dismiss');
+  const supportLink = supportFab.querySelector('.support-fab-link');
+  const dismissedKey = 'isokoHubSupportFabDismissed';
+  const positionKey = 'isokoHubSupportFabPosition';
+
+  if (localStorage.getItem(dismissedKey) === 'true') {
+    supportFab.remove();
+    return;
+  }
+
+  const applyPosition = (left, top) => {
+    const margin = 8;
+    const maxLeft = Math.max(margin, window.innerWidth - supportFab.offsetWidth - margin);
+    const maxTop = Math.max(margin, window.innerHeight - supportFab.offsetHeight - margin);
+    supportFab.style.left = `${Math.min(Math.max(margin, left), maxLeft)}px`;
+    supportFab.style.top = `${Math.min(Math.max(margin, top), maxTop)}px`;
+    supportFab.style.right = 'auto';
+    supportFab.style.bottom = 'auto';
+  };
+
+  try {
+    const savedPosition = JSON.parse(localStorage.getItem(positionKey) || 'null');
+    if (Number.isFinite(savedPosition?.left) && Number.isFinite(savedPosition?.top)) {
+      applyPosition(savedPosition.left, savedPosition.top);
+    }
+  } catch (error) {
+    localStorage.removeItem(positionKey);
+  }
+
+  dismissButton.addEventListener('click', () => {
+    localStorage.setItem(dismissedKey, 'true');
+    supportFab.remove();
+  });
+
+  let pointerId = null;
+  let startX = 0;
+  let startY = 0;
+  let startLeft = 0;
+  let startTop = 0;
+  let draggedAt = 0;
+
+  supportFab.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('.support-fab-dismiss') || event.button !== 0) return;
+    const bounds = supportFab.getBoundingClientRect();
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
+    startLeft = bounds.left;
+    startTop = bounds.top;
+    supportFab.setPointerCapture(pointerId);
+  });
+
+  supportFab.addEventListener('pointermove', (event) => {
+    if (event.pointerId !== pointerId) return;
+    const deltaX = event.clientX - startX;
+    const deltaY = event.clientY - startY;
+    if (Math.abs(deltaX) < 6 && Math.abs(deltaY) < 6 && !supportFab.classList.contains('dragging')) return;
+    supportFab.classList.add('dragging');
+    applyPosition(startLeft + deltaX, startTop + deltaY);
+  });
+
+  const finishDrag = (event) => {
+    if (event.pointerId !== pointerId) return;
+    pointerId = null;
+    if (!supportFab.classList.contains('dragging')) return;
+    supportFab.classList.remove('dragging');
+    draggedAt = Date.now();
+    localStorage.setItem(positionKey, JSON.stringify({
+      left: supportFab.getBoundingClientRect().left,
+      top: supportFab.getBoundingClientRect().top
+    }));
+  };
+
+  supportFab.addEventListener('pointerup', finishDrag);
+  supportFab.addEventListener('pointercancel', finishDrag);
+  supportLink.addEventListener('click', () => {
+    if (Date.now() - draggedAt >= 250) openSupportPage();
+  });
+  window.addEventListener('resize', () => {
+    const bounds = supportFab.getBoundingClientRect();
+    applyPosition(bounds.left, bounds.top);
+  }, { passive: true });
 }
 
 function openSupportDrawer() {

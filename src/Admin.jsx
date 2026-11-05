@@ -24,6 +24,7 @@ export default function Admin() {
           <h2>Workspace</h2>
           <div className="admin-menu">
             <button type="button" className="active" data-tab="pending">Pending Review</button>
+            <button type="button" data-tab="notifications"><i className="fa-solid fa-bell" aria-hidden="true"></i> Notifications <span id="admin-notification-count" className="admin-notification-count" aria-label="Unread notifications">0</span></button>
             <button type="button" data-tab="inventory">Inventory</button>
             <button type="button" data-tab="users">Users</button>
             <button type="button" data-tab="shops">Shop Management</button>

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const user = getCurrentUser();
   if (!user) {
-    window.location.href = 'login.html?redirect=househub-sell.html';
+    window.location.replace('products.html');
     return;
   }
 

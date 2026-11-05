@@ -8,14 +8,7 @@ function escapeHtml(value) {
 }
 
 function normalizeProductImage(value) {
-  if (value == null) return '';
-  const text = String(value).trim();
-  if (!text) return '';
-  const lower = text.toLowerCase();
-  if (lower.includes('no image') || lower.includes('placeholder') || /[<>"\']/.test(text)) {
-    return '';
-  }
-  return text;
+  return normalizeProductImageUrl(value);
 }
 
 document.addEventListener('DOMContentLoaded', async () => {

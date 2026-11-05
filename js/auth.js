@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // If on auth pages, redirect to dashboard
         const currentPath = window.location.pathname.toLowerCase();
         if (currentPath.includes('login.html') || currentPath.includes('signup.html') || /\/(login|signup)\/?$/.test(currentPath)) {
-          setTimeout(redirectToDashboard, 500);
+          setTimeout(() => window.location.replace('/'), 500);
         }
       } else {
         // User is signed out
@@ -466,8 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const isProtected = protectedPages.some(page => currentPath.includes(page));
         
         if (isProtected && !currentPath.includes('index.html') && !currentPath.includes('/')) {
-          const loginUrl = window.location.protocol + '//' + window.location.host + '/login.html';
-          setTimeout(() => { window.location.href = loginUrl; }, 500);
+          setTimeout(() => { window.location.replace('/'); }, 500);
         }
       }
     });
@@ -584,7 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
       forgotPasswordBtn.disabled = true;
       try {
         const { error } = await supabase.auth.api.resetPasswordForEmail(identifier, {
-          redirectTo: `${window.location.origin}/login`
+          redirectTo: `${window.location.origin}/`
         });
         if (error) throw error;
         showMessage('If an account uses that email, a password reset link has been sent.', 'success');

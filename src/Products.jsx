@@ -10,6 +10,10 @@ const productsStyles = `
   .products-filter-toggle, .products-filter-close, .products-filter-reset { display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.65rem 0.85rem; color: #0f172a; background: #ffffff; font: inherit; font-size: 0.82rem; font-weight: 750; cursor: pointer; }
   .products-filter-toggle:hover, .products-filter-close:hover, .products-filter-reset:hover { border-color: #2563eb; color: #1d4ed8; }
   .products-filter-toggle { border-color: #1d4ed8; color: #1d4ed8; background: #eff6ff; }
+  .products-nearby-toggle { display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid #0f766e; border-radius: 8px; padding: 0.65rem 0.85rem; color: #0f766e; background: #fff; font: inherit; font-size: 0.82rem; font-weight: 750; cursor: pointer; }
+  .products-nearby-toggle:hover, .products-nearby-toggle.active { color: #fff; background: #0f766e; }
+  .products-nearby-toggle:disabled { cursor: wait; opacity: 0.65; }
+  .nearby-products-status { margin: 0 0 0.8rem; color: #475569; font-size: 0.86rem; }
   .products-filter-count { display: inline-grid; min-width: 1.35rem; height: 1.35rem; place-items: center; border-radius: 999px; color: #ffffff; background: #1d4ed8; font-size: 0.7rem; }
   .products-filter-panel { position: relative; }
   .products-filter-panel-header, .products-filter-panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
@@ -48,8 +52,10 @@ export default function Products() {
                   <span>Filters</span>
                   <span className="products-filter-count" id="products-filter-count">0</span>
                 </button>
+                <button type="button" className="products-nearby-toggle" id="nearby-products-toggle" aria-pressed="false"><i className="fa-solid fa-location-crosshairs" aria-hidden="true"></i> Near me</button>
                 <button type="button" className="products-filter-reset" id="products-filter-reset">Clear filters</button>
               </div>
+              <p id="nearby-products-status" className="nearby-products-status" role="status" hidden></p>
               <aside className="filters-sidebar products-filter-panel" id="products-filter-panel" hidden>
                 <div className="products-filter-panel-header">
                   <strong>Refine products</strong>

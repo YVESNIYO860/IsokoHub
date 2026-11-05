@@ -90,9 +90,15 @@ function AuthPage({ signup }) {
 }
 
 export function Login() {
-  return <AuthPage signup={false} />;
+  if (typeof window !== 'undefined') {
+    window.location.replace('/');
+  }
+  return null;
 }
 
 export function Signup() {
-  return <AuthPage signup />;
+  if (typeof window !== 'undefined') {
+    window.location.replace('/');
+  }
+  return null;
 }
