@@ -810,8 +810,8 @@ function renderNavbar() {
   const isAdminPage = /admin\.html/.test(window.location.pathname);
   const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'products.html';
   const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Marketplace';
-  const accountHref = user ? 'dashboard.html' : 'login.html';
-  const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='login.html';";
+  const accountHref = user ? 'dashboard.html' : '/login';
+  const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='/login';";
   const navbarHTML = `
     <nav class="navbar">
       <!-- Top Tier: Branding, Search, Actions -->
