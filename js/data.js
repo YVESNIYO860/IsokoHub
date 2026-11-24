@@ -764,6 +764,7 @@ async function createProduct(productData) {
     image: productData.image || [],
     description: productData.description,
     condition: productData.condition,
+    color: productData.color || null,
     seller_email: productData.sellerEmail,
     seller_phone: productData.sellerPhone,
     district: productData.district,

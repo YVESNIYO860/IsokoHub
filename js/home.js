@@ -194,8 +194,105 @@ let featuredRenderedCount = 0;
 let featuredProductsObserver = null;
 let featuredProductsScrollListener = null;
 let featuredProductsLoading = false;
+const featuredProductRecords = new Map();
 
-function createFeaturedProductCard(p, useHeroImageTreatment = false) {
+document.addEventListener('click', (event) => {
+  const target = event.target instanceof Element ? event.target : null;
+  const quickViewButton = target?.closest('.homepage-featured [data-featured-quick-view]');
+  const cartButton = target?.closest('[data-featured-cart], [data-featured-quick-cart]');
+  const productId = quickViewButton?.dataset.featuredQuickView
+    || cartButton?.dataset.featuredCart
+    || cartButton?.dataset.featuredQuickCart;
+  const product = productId ? featuredProductRecords.get(productId) : null;
+  if (!product) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (cartButton) {
+    const dialog = cartButton.closest('dialog');
+    if (dialog) {
+      if (dialog.open) dialog.close();
+      dialog.remove();
+    }
+    addToCart(product);
+    return;
+  }
+
+  const image = (Array.isArray(product.image) ? product.image : [product.image])
+    .map(normalizeProductImage)
+    .filter(Boolean)[0];
+  const productUrl = `product.html?id=${encodeURIComponent(product.id)}`;
+  const productName = escapeHtml(product.name || 'Untitled listing');
+  const description = String(product.description || '').trim();
+  const price = formatProductPrice(product);
+  const isSold = product.sold === true;
+  const exactPrice = Number(product.price);
+  const canAddToCart = !isSold
+    && Number.isFinite(exactPrice)
+    && exactPrice > 0
+    && !hasProductPriceRange(product);
+  const phone = product.seller_phone ? String(product.seller_phone).trim() : '';
+  const email = product.seller_email ? String(product.seller_email).trim() : '';
+  const contactUrl = phone
+    ? `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello, I am interested in your listing: ${product.name}`)}`
+    : email
+      ? `mailto:${email}?subject=${encodeURIComponent(`Question about ${product.name}`)}`
+      : productUrl;
+  const dialog = document.createElement('dialog');
+  dialog.className = 'featured-product-quick-view';
+  dialog.setAttribute('aria-labelledby', 'featured-quick-view-title');
+  dialog.innerHTML = `
+    <div class="featured-quick-view-panel">
+      <form method="dialog" class="featured-quick-view-close-form">
+        <button type="submit" class="featured-quick-view-close" aria-label="Close quick view">&times;</button>
+      </form>
+      ${image ? `<img class="featured-quick-view-image" src="${escapeHtml(image)}" alt="${productName}">` : '<div class="featured-quick-view-image featured-quick-view-placeholder" aria-hidden="true"></div>'}
+      <div class="featured-quick-view-content">
+        <span class="product-category">${escapeHtml(product.category || 'Marketplace')}</span>
+        <h2 id="featured-quick-view-title">${productName}</h2>
+        ${product.condition ? `<span class="badge-condition ${product.condition === 'New' ? 'badge-new' : 'badge-used'}">${escapeHtml(product.condition)}</span>` : ''}
+        ${isSold ? '<span class="featured-listing-sold">Sold</span>' : ''}
+        ${product.color ? `<p class="featured-quick-view-color"><i class="fa-solid fa-droplet" aria-hidden="true"></i> Color: ${escapeHtml(product.color)}</p>` : ''}
+        ${product.shop?.name ? `<p class="featured-quick-view-shop"><i class="fa-solid fa-store" aria-hidden="true"></i> ${escapeHtml(product.shop.name)}</p>` : ''}
+        ${description ? `<p class="featured-quick-view-description">${escapeHtml(description)}</p>` : ''}
+        <p class="featured-quick-view-price">${escapeHtml(price)}</p>
+        <p class="featured-quick-view-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${escapeHtml(product.district || 'Location not set')}</p>
+        <div class="featured-quick-view-actions">
+          <a href="${escapeHtml(contactUrl)}" class="featured-quick-view-contact" ${phone ? 'target="_blank" rel="noopener noreferrer"' : ''}>Contact seller</a>
+          ${canAddToCart ? `<button type="button" class="btn btn-primary" data-featured-quick-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
+          <a href="${productUrl}" class="featured-quick-view-details">View full details</a>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(dialog);
+  const closeQuickView = () => {
+    if (dialog.open) dialog.close();
+    dialog.remove();
+  };
+  dialog.querySelector('.featured-quick-view-close-form').addEventListener('submit', (submitEvent) => {
+    submitEvent.preventDefault();
+    closeQuickView();
+  });
+  dialog.addEventListener('click', (dialogEvent) => {
+    if (dialogEvent.target === dialog) closeQuickView();
+  });
+  dialog.addEventListener('cancel', (cancelEvent) => {
+    cancelEvent.preventDefault();
+    closeQuickView();
+  });
+  dialog.querySelector('.featured-quick-view-image[src]')?.addEventListener('error', (imageEvent) => {
+    const placeholder = document.createElement('div');
+    placeholder.className = 'featured-quick-view-image featured-quick-view-placeholder';
+    placeholder.setAttribute('aria-hidden', 'true');
+    imageEvent.currentTarget.replaceWith(placeholder);
+  }, { once: true });
+  dialog.showModal();
+});
+
+function createFeaturedProductCard(p, useHeroImageTreatment = false, isFeaturedListing = false) {
+  if (isFeaturedListing) featuredProductRecords.set(String(p.id), p);
   const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
   const displayImg = imageUrls[0] || '';
   const backdropMarkup = useHeroImageTreatment
@@ -215,27 +312,54 @@ function createFeaturedProductCard(p, useHeroImageTreatment = false) {
   const productUrl = `product.html?id=${encodeURIComponent(p.id)}`;
   const productName = escapeHtml(p.name || 'Untitled listing');
   const productCategory = escapeHtml(p.category || 'Marketplace');
-  const productCondition = escapeHtml(p.condition || 'Used');
+  const productCondition = p.condition ? escapeHtml(p.condition) : '';
+  const productColor = p.color ? escapeHtml(p.color) : '';
   const productDistrict = escapeHtml(p.district || 'Location not set');
+  const hasPriceRange = typeof hasProductPriceRange === 'function' && hasProductPriceRange(p);
+  const exactPrice = Number(p.price);
+  const hasExactPrice = Number.isFinite(exactPrice) && exactPrice > 0;
+  const isSold = p.sold === true;
+  const canAddToCart = isFeaturedListing && !isSold && hasExactPrice && !hasPriceRange;
+  const previousPrice = Number(p.previous_price ?? p.previousPrice);
+  const hasDiscount = isFeaturedListing && !isSold && !hasPriceRange && hasExactPrice
+    && Number.isFinite(previousPrice) && previousPrice > exactPrice;
+  const discountPercent = hasDiscount ? Math.round(((previousPrice - exactPrice) / previousPrice) * 100) : 0;
+  const description = isFeaturedListing ? String(p.description || '').trim() : '';
+  const priceMarkup = !hasExactPrice && !hasPriceRange
+    ? '<span class="featured-listing-price-note">Contact seller for price</span>'
+    : hasDiscount
+      ? `<div class="featured-listing-price-values"><span class="old-price">${formatPrice(previousPrice)}</span><span class="new-price">${formatProductPrice(p)}</span></div>`
+      : `<span class="product-price">${formatProductPrice(p)}</span>`;
 
   return `
-        <article class="product-card${useHeroImageTreatment ? ' hero-product-card blurred-product-card' : ''}">
+        <article class="product-card${useHeroImageTreatment ? ' hero-product-card blurred-product-card' : ''}${isFeaturedListing ? ' featured-listing-card' : ''}">
           <a class="hero-product-card-link" href="${productUrl}" aria-label="View ${productName}">
           ${imageMarkup}
           </a>
+          ${isFeaturedListing ? `<button type="button" class="featured-listing-quick-view" data-featured-quick-view="${escapeHtml(String(p.id))}" aria-label="Quick view: ${productName}"><i class="fa-regular fa-eye" aria-hidden="true"></i><span>Quick view</span></button>` : ''}
+          ${isFeaturedListing && isSold ? '<span class="featured-listing-sold">Sold</span>' : ''}
+          ${hasDiscount ? `<span class="featured-listing-discount">${discountPercent}% off</span>` : ''}
           <div class="product-card-content">
             <div class="product-card-meta-row">
               <span class="product-category">${productCategory}</span>
-              <span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${productCondition}</span>
+              ${productCondition ? `<span class="badge-condition ${p.condition === 'New' ? 'badge-new' : 'badge-used'}">${productCondition}</span>` : ''}
             </div>
             <h3 class="product-title"><a href="${productUrl}">${productName}</a></h3>
+            ${productColor ? `<p class="featured-listing-color"><i class="fa-solid fa-droplet" aria-hidden="true"></i> Color: ${productColor}</p>` : ''}
+            ${description ? `<p class="featured-listing-description">${escapeHtml(description)}</p>` : ''}
             ${shopBadge}
             <div class="product-card-location"><i class="fa-solid fa-location-dot"></i> ${productDistrict}</div>
             <div class="product-card-foot">
-              <span class="product-price">${formatProductPrice(p)}</span>
+              <div class="featured-listing-price">
+                <span class="featured-listing-price-label">Listed price</span>
+                ${priceMarkup}
+                ${hasPriceRange ? '<span class="featured-listing-price-note">Contact seller to confirm</span>' : ''}
+              </div>
               <div class="hero-product-card-actions">
                 <a href="${productUrl}" class="hero-product-card-view">View listing</a>
                 <a href="${escapeHtml(contactUrl)}" class="product-contact-btn" title="${contactTitle}" aria-label="${contactTitle}" target="_blank" rel="noopener noreferrer"><i class="${contactIcon}"></i></a>
+                ${canAddToCart ? `<button type="button" class="featured-listing-add-cart" data-featured-cart="${escapeHtml(String(p.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
+                ${isFeaturedListing && !isSold && p.buy_online && canAddToCart ? `<a href="${productUrl}&buy=1" class="featured-listing-buy-online"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Buy online</a>` : ''}
               </div>
             </div>
           </div>
@@ -311,7 +435,7 @@ function renderFeaturedProductsPage() {
   const nextProducts = featuredProducts.slice(featuredRenderedCount, nextCount);
   if (!nextProducts.length) return;
 
-  container.insertAdjacentHTML('beforeend', nextProducts.map((product) => createFeaturedProductCard(product, true)).join(''));
+  container.insertAdjacentHTML('beforeend', nextProducts.map((product) => createFeaturedProductCard(product, true, true)).join(''));
   featuredRenderedCount = nextCount;
 
   if (featuredRenderedCount >= featuredProducts.length) {

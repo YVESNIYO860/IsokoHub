@@ -447,6 +447,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   const errorEl        = document.getElementById('sell-error');
   const categorySelect = document.getElementById('prod-category');
   const conditionSelect= document.getElementById('prod-condition');
+  const colorSelect    = document.getElementById('prod-color');
+  const customColorGroup = document.getElementById('prod-color-other-group');
+  const customColorInput = document.getElementById('prod-color-other');
   const progressWrap   = document.getElementById('upload-progress-wrap');
   const progressBar    = document.getElementById('upload-progress-bar');
   const progressStatus = document.getElementById('upload-progress-status');
@@ -462,6 +465,14 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
   enhanceDescriptionEditor(document.getElementById('prod-description'));
+  function syncCustomColorInput() {
+    const needsCustomColor = colorSelect.value === 'Other';
+    customColorGroup.hidden = !needsCustomColor;
+    customColorInput.required = needsCustomColor;
+    if (!needsCustomColor) customColorInput.value = '';
+  }
+  colorSelect.addEventListener('change', syncCustomColorInput);
+  syncCustomColorInput();
   if (user.role !== 'admin' && user.email?.toLowerCase() !== 'yvesniyonkuru2022@gmail.com') {
     const { data: sellerProfile, error: profileError } = await supabase
       .from('user_profiles')
@@ -544,6 +555,13 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('prod-category').value          = product.category;
       priceMinInput.value                                     = product.price_min ?? product.priceMin ?? product.price;
       priceMaxInput.value                                     = product.price_max ?? product.priceMax ?? product.price;
+      const savedColor = String(product.color || '').trim();
+      const isPredefinedColor = Array.from(colorSelect.options).some((option) => option.value === savedColor && option.value !== 'Other');
+      if (savedColor) {
+        colorSelect.value = isPredefinedColor ? savedColor : 'Other';
+        if (!isPredefinedColor) customColorInput.value = savedColor;
+      }
+      syncCustomColorInput();
       buyOnlineInput.checked                                  = product.buy_online === true || product.buyOnline === true;
       setDescriptionEditorValue(document.getElementById('prod-description'), product.description);
       document.getElementById('prod-email').value             = product.sellerEmail || product.seller_email || user.email || '';
@@ -716,6 +734,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (!sellerEmailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellerEmailValue)) {
         throw new Error('Please enter a valid seller email address.');
       }
+      const selectedColor = colorSelect.value === 'Other' ? customColorInput.value.trim() : colorSelect.value;
 
       const productData = {
         name:        document.getElementById('prod-name').value,
@@ -727,6 +746,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         image:       imageUrls,
         description: document.getElementById('prod-description').value,
         condition: conditionSelect.value,
+        color: selectedColor || null,
         sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
