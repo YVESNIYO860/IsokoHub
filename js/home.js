@@ -13,6 +13,16 @@ function normalizeProductImage(value) {
 
 const HERO_PICK_CACHE_KEY = 'isokohub-home-ai-pick-v1';
 const HERO_PICK_CACHE_TTL = 15 * 60 * 1000;
+const HERO_SLIDE_LIMIT = 5;
+const HERO_SLIDE_INTERVAL = 6500;
+let heroProductPool = [];
+let heroSlides = [];
+let heroPreferredProductId = '';
+let heroSlideIndex = 0;
+let heroRotationTimer = null;
+let heroUserPaused = false;
+let heroSlideshowInitialized = false;
+let heroReducedMotionQuery = null;
 
 function readCachedHeroPick() {
   try {
@@ -24,7 +34,36 @@ function readCachedHeroPick() {
   }
 }
 
-function applyHeroPick(product) {
+function getHeroProductImage(product) {
+  return normalizeProductImage(Array.isArray(product?.image) ? product.image[0] : product?.image);
+}
+
+function updateHeroSlides(products, preferredProductId = '') {
+  if (preferredProductId) heroPreferredProductId = preferredProductId;
+  const currentProductId = heroSlides[heroSlideIndex]?.id;
+  const productsById = new Map(heroProductPool.map(product => [product.id, product]));
+  products.forEach(product => {
+    if (product?.id && getHeroProductImage(product)) productsById.set(product.id, product);
+  });
+  heroProductPool = Array.from(productsById.values());
+
+  const preferred = heroProductPool.find(product => product.id === heroPreferredProductId);
+  heroSlides = [
+    ...(preferred ? [preferred] : []),
+    ...heroProductPool.filter(product => product.id !== heroPreferredProductId)
+  ].slice(0, HERO_SLIDE_LIMIT);
+
+  const preservedIndex = heroSlides.findIndex(product => product.id === currentProductId);
+  heroSlideIndex = preferredProductId && preferred ? 0 : preservedIndex >= 0 ? preservedIndex : 0;
+  renderHeroSlide();
+  renderHeroSlideControls();
+  updateHeroAutoplay();
+}
+
+function renderHeroSlide() {
+  const product = heroSlides[heroSlideIndex];
+  if (!product) return;
+
   const image = document.getElementById('marketplace-hero-product-image');
   const imageLink = document.getElementById('marketplace-hero-image-link');
   const badge = document.getElementById('marketplace-hero-pick-badge');
@@ -33,12 +72,16 @@ function applyHeroPick(product) {
   const caption = document.getElementById('marketplace-hero-product-caption');
   const price = document.getElementById('marketplace-hero-product-price');
   const viewLink = document.getElementById('marketplace-hero-view-product');
-  const productImage = normalizeProductImage(Array.isArray(product?.image) ? product.image[0] : product?.image);
+  const status = document.getElementById('marketplace-hero-slide-status');
+  const productImage = getHeroProductImage(product);
   if (!product?.id || !productImage || !image || !imageLink || !badge || !category || !name || !caption || !price || !viewLink) {
-    return false;
+    return;
   }
 
   const productUrl = `/product?id=${encodeURIComponent(product.id)}`;
+  image.classList.remove('hero-slide-enter');
+  void image.offsetWidth;
+  image.classList.add('hero-slide-enter');
   image.src = productImage;
   image.alt = `${product.name || 'Marketplace listing'} product photo`;
   image.loading = 'eager';
@@ -46,29 +89,130 @@ function applyHeroPick(product) {
   image.hidden = false;
   image.onerror = () => {
     image.hidden = true;
-    console.warn('The homepage AI pick image could not be loaded.');
+    console.warn('A homepage slideshow image could not be loaded.');
   };
   imageLink.href = productUrl;
   imageLink.setAttribute('aria-label', `View ${product.name || 'AI-picked listing'}`);
   const badgeIcon = document.createElement('i');
-  badgeIcon.className = 'fa-solid fa-wand-magic-sparkles';
+  const isAiPick = product.id === heroPreferredProductId;
+  badgeIcon.className = isAiPick ? 'fa-solid fa-wand-magic-sparkles' : 'fa-solid fa-bag-shopping';
   badgeIcon.setAttribute('aria-hidden', 'true');
-  badge.replaceChildren(badgeIcon, document.createTextNode(' AI PICK OF THE DAY'));
+  badge.replaceChildren(badgeIcon, document.createTextNode(isAiPick ? ' AI PICK OF THE DAY' : ' FEATURED LOCAL LISTING'));
   category.textContent = [product.category, product.district].filter(Boolean).join(' · ') || 'Local marketplace pick';
   name.textContent = product.name || 'A great local find';
-  caption.textContent = 'Chosen from approved local listings. Ask AI for a pick tailored to your needs.';
+  caption.textContent = isAiPick
+    ? 'Selected by AI from approved local listings. Ask AI for a pick tailored to your needs.'
+    : 'A featured listing from the approved local marketplace.';
   viewLink.href = productUrl;
   viewLink.hidden = false;
 
   const hasPrice = product.price != null || product.priceMin != null || product.priceMax != null;
   price.hidden = !hasPrice;
   if (hasPrice) price.textContent = formatProductPrice(product);
-  return true;
+  if (status) status.textContent = `Listing ${heroSlideIndex + 1} of ${heroSlides.length}`;
+
+  document.querySelectorAll('#marketplace-hero-slide-indicators button').forEach((button, index) => {
+    button.setAttribute('aria-current', index === heroSlideIndex ? 'true' : 'false');
+  });
+}
+
+function renderHeroSlideControls() {
+  const controls = document.getElementById('marketplace-hero-slide-controls');
+  const indicators = document.getElementById('marketplace-hero-slide-indicators');
+  const toggle = document.getElementById('marketplace-hero-toggle');
+  if (!controls || !indicators || !toggle) return;
+
+  controls.hidden = heroSlides.length < 2;
+  indicators.replaceChildren(...heroSlides.map((product, index) => {
+    const indicator = document.createElement('button');
+    indicator.type = 'button';
+    indicator.className = 'marketplace-hero-slide-dot';
+    indicator.dataset.slideIndex = String(index);
+    indicator.setAttribute('aria-label', `Show listing ${index + 1}: ${product.name || 'Featured listing'}`);
+    indicator.setAttribute('aria-current', index === heroSlideIndex ? 'true' : 'false');
+    return indicator;
+  }));
+  toggle.hidden = heroSlides.length < 2 || Boolean(heroReducedMotionQuery?.matches);
+  toggle.setAttribute('aria-pressed', String(heroUserPaused));
+  toggle.setAttribute('aria-label', heroUserPaused ? 'Resume slideshow' : 'Pause slideshow');
+  toggle.title = heroUserPaused ? 'Resume slideshow' : 'Pause slideshow';
+  toggle.querySelector('i')?.classList.replace(
+    heroUserPaused ? 'fa-pause' : 'fa-play',
+    heroUserPaused ? 'fa-play' : 'fa-pause'
+  );
+}
+
+function updateHeroAutoplay() {
+  const hero = document.querySelector('.marketplace-hero-pick');
+  const shouldRotate = heroSlides.length > 1
+    && !heroUserPaused
+    && !heroReducedMotionQuery?.matches
+    && !document.hidden
+    && !hero?.matches(':hover')
+    && !hero?.contains(document.activeElement);
+  if (!shouldRotate) {
+    if (heroRotationTimer) window.clearInterval(heroRotationTimer);
+    heroRotationTimer = null;
+    return;
+  }
+  if (!heroRotationTimer) {
+    heroRotationTimer = window.setInterval(() => {
+      showHeroSlide(heroSlideIndex + 1);
+    }, HERO_SLIDE_INTERVAL);
+  }
+}
+
+function showHeroSlide(index) {
+  if (heroSlides.length < 2) return;
+  heroSlideIndex = (index + heroSlides.length) % heroSlides.length;
+  renderHeroSlide();
+  updateHeroAutoplay();
+}
+
+function initializeHeroSlideshow() {
+  if (heroSlideshowInitialized) return;
+  const hero = document.querySelector('.marketplace-hero-pick');
+  const previous = document.getElementById('marketplace-hero-previous');
+  const next = document.getElementById('marketplace-hero-next');
+  const indicators = document.getElementById('marketplace-hero-slide-indicators');
+  const toggle = document.getElementById('marketplace-hero-toggle');
+  if (!hero || !previous || !next || !indicators || !toggle) return;
+
+  heroSlideshowInitialized = true;
+  heroReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  previous.addEventListener('click', () => showHeroSlide(heroSlideIndex - 1));
+  next.addEventListener('click', () => showHeroSlide(heroSlideIndex + 1));
+  indicators.addEventListener('click', event => {
+    const button = event.target.closest('button[data-slide-index]');
+    if (button) showHeroSlide(Number(button.dataset.slideIndex));
+  });
+  toggle.addEventListener('click', () => {
+    heroUserPaused = !heroUserPaused;
+    renderHeroSlideControls();
+    updateHeroAutoplay();
+  });
+  hero.addEventListener('pointerenter', updateHeroAutoplay);
+  hero.addEventListener('pointerleave', updateHeroAutoplay);
+  hero.addEventListener('focusin', updateHeroAutoplay);
+  hero.addEventListener('focusout', () => window.setTimeout(updateHeroAutoplay, 0));
+  document.addEventListener('visibilitychange', updateHeroAutoplay);
+  const onMotionPreferenceChange = () => {
+    renderHeroSlideControls();
+    updateHeroAutoplay();
+  };
+  if (heroReducedMotionQuery.addEventListener) {
+    heroReducedMotionQuery.addEventListener('change', onMotionPreferenceChange);
+  } else if (heroReducedMotionQuery.addListener) {
+    heroReducedMotionQuery.addListener(onMotionPreferenceChange);
+  }
 }
 
 async function renderAiHeroPick() {
   const cachedProduct = readCachedHeroPick();
-  if (cachedProduct && applyHeroPick(cachedProduct)) return;
+  if (cachedProduct?.id && getHeroProductImage(cachedProduct)) {
+    updateHeroSlides([cachedProduct], cachedProduct.id);
+    return;
+  }
 
   try {
     const response = await fetch('/api/shopping-assistant', {
@@ -79,7 +223,8 @@ async function renderAiHeroPick() {
     });
     if (!response.ok) throw new Error(`Homepage AI pick request failed (${response.status}).`);
     const result = await response.json();
-    if (!applyHeroPick(result.recommendation)) return;
+    if (!result.recommendation?.id || !getHeroProductImage(result.recommendation)) return;
+    updateHeroSlides([result.recommendation], result.recommendation.id);
     try {
       sessionStorage.setItem(HERO_PICK_CACHE_KEY, JSON.stringify({
         savedAt: Date.now(),
@@ -95,7 +240,7 @@ async function renderAiHeroPick() {
 
 document.addEventListener('DOMContentLoaded', async () => {
   // The homepage markup is mounted from Home.jsx.
-  // No slideshow or intro video is rendered on app open.
+  initializeHeroSlideshow();
   renderAiHeroPick();
   updateInlineStats();
   renderCategories();
@@ -116,6 +261,7 @@ async function renderHomepageProductShelf() {
   try {
     const products = await enrichProductsWithShopData(await fetchProducts(true));
     const picks = products.filter((product) => product && product.status !== 'pending').slice(0, 8);
+    updateHeroSlides(picks);
     if (!picks.length) {
       track.innerHTML = '<div class="homepage-shelf-empty"><strong>No recent listings yet</strong><span>Browse all categories or check back as sellers add new items.</span><a href="/products">Browse listings <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div>';
       return;

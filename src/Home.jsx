@@ -18,6 +18,13 @@ export default function Home() {
                 <a id="marketplace-hero-view-product" className="marketplace-hero-view-product" href="/products" hidden>View this pick <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                 <a className="marketplace-hero-ask-ai" href="/shopping-assistant">Ask AI for your match <i className="fa-solid fa-sparkles" aria-hidden="true"></i></a>
               </div>
+              <div id="marketplace-hero-slide-controls" className="marketplace-hero-slide-controls" role="group" aria-label="Featured listings slideshow" hidden>
+                <button id="marketplace-hero-previous" className="marketplace-hero-slide-button" type="button" aria-label="Previous listing"><i className="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                <div id="marketplace-hero-slide-indicators" className="marketplace-hero-slide-indicators"></div>
+                <button id="marketplace-hero-next" className="marketplace-hero-slide-button" type="button" aria-label="Next listing"><i className="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                <button id="marketplace-hero-toggle" className="marketplace-hero-slide-button marketplace-hero-slide-toggle" type="button" aria-label="Pause slideshow" title="Pause slideshow" aria-pressed="false"><i className="fa-solid fa-pause" aria-hidden="true"></i></button>
+                <span id="marketplace-hero-slide-status" className="visually-hidden" aria-live="off"></span>
+              </div>
             </div>
           </article>
         </div>
