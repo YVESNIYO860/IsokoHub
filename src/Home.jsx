@@ -1,39 +1,25 @@
 export default function Home() {
   return (
     <main className="homepage">
-      <section className="marketplace-hero" aria-labelledby="marketplace-hero-title">
+      <section className="marketplace-hero" aria-labelledby="marketplace-hero-product-name">
         <div className="marketplace-hero-inner">
-          <div className="marketplace-hero-copy">
-            <span className="marketplace-hero-kicker"><i className="fa-solid fa-location-dot" aria-hidden="true"></i> Rwanda's local marketplace</span>
-            <h1 id="marketplace-hero-title">Discover more.<br /><span>Shop smarter.</span></h1>
-            <p>Explore products, homes, services, and opportunities from sellers across Rwanda.</p>
-
-            <div className="marketplace-hero-actions">
-              <a href="/products" className="btn btn-primary"><i className="fa-solid fa-grid-2" aria-hidden="true"></i> Browse all listings</a>
-              <a href="/sell" className="marketplace-hero-sell"><i className="fa-solid fa-plus" aria-hidden="true"></i> Start selling</a>
-            </div>
-            <div className="marketplace-hero-proof" aria-label="Marketplace activity">
-              <div><strong id="stat-active-listings">Loading</strong><span>Active listings</span></div>
-              <span className="marketplace-hero-divider" aria-hidden="true"></span>
-              <div><strong><i className="fa-solid fa-location-dot" aria-hidden="true"></i> Made for Rwanda</strong><span>Discover what's close to home</span></div>
-            </div>
-          </div>
-          <div className="marketplace-hero-visual">
-            <a className="marketplace-hero-photo-link" href="/products" aria-label="Explore marketplace listings">
-              <img src="/assets/hero-image.png?v=2" alt="A collage of clothing, electronics, books, home goods, and everyday products" width="1408" height="768" fetchPriority="high" decoding="async" />
-              <span className="marketplace-hero-image-label"><span><strong>One marketplace.</strong><small>Products and opportunities from across Rwanda</small></span><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
+          <article className="marketplace-hero-pick">
+            <a id="marketplace-hero-image-link" className="marketplace-hero-pick-photo" href="/products" aria-label="View marketplace listings">
+              <img id="marketplace-hero-product-image" src="/assets/hero-image.png?v=2" alt="A collage of products from the IsokoHub marketplace" width="1408" height="768" fetchPriority="high" decoding="async" />
             </a>
-            <a className="marketplace-hero-ai-card" href="/shopping-assistant" aria-label="Get shopping recommendations from IsokoHub AI">
-              <span className="marketplace-hero-ai-icon"><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
-              <span className="marketplace-hero-ai-copy">
-                <span>AI SHOPPING ASSISTANT</span>
-                <strong>Find what fits you</strong>
-                <small>Share your budget and needs for helpful local recommendations.</small>
-                <span className="marketplace-hero-ai-action">Get recommendations <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
-              </span>
-              <i className="fa-solid fa-arrow-up-right-from-square marketplace-hero-ai-arrow" aria-hidden="true"></i>
-            </a>
-          </div>
+            <div className="marketplace-hero-pick-shade" aria-hidden="true"></div>
+            <div className="marketplace-hero-pick-content">
+              <span id="marketplace-hero-pick-badge" className="marketplace-hero-pick-badge"><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> SMARTER LOCAL FINDS</span>
+              <span id="marketplace-hero-product-category" className="marketplace-hero-product-category">Approved products across Rwanda</span>
+              <h1 id="marketplace-hero-product-name">Find your next great find.</h1>
+              <p id="marketplace-hero-product-caption">Ask AI to find a real listing that fits your needs.</p>
+              <strong id="marketplace-hero-product-price" className="marketplace-hero-product-price" hidden></strong>
+              <div className="marketplace-hero-pick-actions">
+                <a id="marketplace-hero-view-product" className="marketplace-hero-view-product" href="/products" hidden>View this pick <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                <a className="marketplace-hero-ask-ai" href="/shopping-assistant">Ask AI for your match <i className="fa-solid fa-sparkles" aria-hidden="true"></i></a>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 

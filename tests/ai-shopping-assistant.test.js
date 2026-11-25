@@ -216,6 +216,75 @@ test('shopping endpoint executes a bounded search tool and returns real public r
   }
 });
 
+test('homepage AI recommendation selects one approved product from any category', async () => {
+  const environment = preserveEnvironment(['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'GROQ_API_KEY', 'GROQ_MODEL']);
+  const oldFetch = global.fetch;
+  process.env.SUPABASE_URL = 'https://isokohub-test.supabase.co';
+  process.env.SUPABASE_ANON_KEY = 'test-anon-key';
+  process.env.GROQ_API_KEY = 'test-groq-key';
+  delete process.env.GROQ_MODEL;
+  let groqRequest;
+  global.fetch = async (url, options) => {
+    if (String(url).startsWith('https://api.groq.com/')) {
+      groqRequest = JSON.parse(options.body);
+      return {
+        ok: true,
+        json: async () => ({ choices: [{ message: { content: JSON.stringify({ product_id: 'local-basket' }) } }] })
+      };
+    }
+    const requestUrl = new URL(String(url));
+    assert.equal(requestUrl.searchParams.get('status'), 'eq.approved');
+    assert.equal(requestUrl.searchParams.get('order'), 'created_at.desc');
+    return {
+      ok: true,
+      json: async () => [
+        {
+          id: 'used-laptop',
+          name: 'Used laptop',
+          category: 'Electronics',
+          price: 250000,
+          currency: 'RWF',
+          image: ['https://example.test/laptop.jpg'],
+          status: 'approved'
+        },
+        {
+          id: 'local-basket',
+          name: 'Handwoven market basket',
+          category: 'Others',
+          price: 12000,
+          currency: 'RWF',
+          image: ['https://example.test/basket.jpg'],
+          status: 'approved',
+          district: 'Huye',
+          seller_email: 'private@example.test'
+        }
+      ]
+    };
+  };
+
+  try {
+    const response = mockResponse();
+    await shoppingAssistant({
+      method: 'POST',
+      headers: { 'x-forwarded-for': '198.51.100.30' },
+      socket: {},
+      body: { language: 'auto', mode: 'hero_recommendation' }
+    }, response);
+    const result = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(result.recommendation.id, 'local-basket');
+    assert.equal(result.recommendation.name, 'Handwoven market basket');
+    assert.deepEqual(result.recommendation.image, ['https://example.test/basket.jpg']);
+    assert.equal(Object.hasOwn(result.recommendation, 'seller_email'), false);
+    assert.match(groqRequest.messages[0].content, /do not default to laptops, phones, or electronics/i);
+    assert.match(groqRequest.messages[1].content, /Handwoven market basket/);
+    assert.equal(groqRequest.response_format.type, 'json_object');
+  } finally {
+    global.fetch = oldFetch;
+    restoreEnvironment(environment);
+  }
+});
+
 test('shopping assistant chats naturally without searching listings and knows the developer name', async () => {
   const environment = preserveEnvironment(['GROQ_API_KEY', 'GROQ_MODEL']);
   const oldFetch = global.fetch;

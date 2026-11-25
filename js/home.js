@@ -11,9 +11,92 @@ function normalizeProductImage(value) {
   return normalizeProductImageUrl(value);
 }
 
+const HERO_PICK_CACHE_KEY = 'isokohub-home-ai-pick-v1';
+const HERO_PICK_CACHE_TTL = 15 * 60 * 1000;
+
+function readCachedHeroPick() {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(HERO_PICK_CACHE_KEY) || 'null');
+    return cached?.savedAt > Date.now() - HERO_PICK_CACHE_TTL ? cached.product : null;
+  } catch (error) {
+    console.warn('Unable to read the cached homepage AI pick:', error);
+    return null;
+  }
+}
+
+function applyHeroPick(product) {
+  const image = document.getElementById('marketplace-hero-product-image');
+  const imageLink = document.getElementById('marketplace-hero-image-link');
+  const badge = document.getElementById('marketplace-hero-pick-badge');
+  const category = document.getElementById('marketplace-hero-product-category');
+  const name = document.getElementById('marketplace-hero-product-name');
+  const caption = document.getElementById('marketplace-hero-product-caption');
+  const price = document.getElementById('marketplace-hero-product-price');
+  const viewLink = document.getElementById('marketplace-hero-view-product');
+  const productImage = normalizeProductImage(Array.isArray(product?.image) ? product.image[0] : product?.image);
+  if (!product?.id || !productImage || !image || !imageLink || !badge || !category || !name || !caption || !price || !viewLink) {
+    return false;
+  }
+
+  const productUrl = `/product?id=${encodeURIComponent(product.id)}`;
+  image.src = productImage;
+  image.alt = `${product.name || 'Marketplace listing'} product photo`;
+  image.loading = 'eager';
+  image.fetchPriority = 'high';
+  image.hidden = false;
+  image.onerror = () => {
+    image.hidden = true;
+    console.warn('The homepage AI pick image could not be loaded.');
+  };
+  imageLink.href = productUrl;
+  imageLink.setAttribute('aria-label', `View ${product.name || 'AI-picked listing'}`);
+  const badgeIcon = document.createElement('i');
+  badgeIcon.className = 'fa-solid fa-wand-magic-sparkles';
+  badgeIcon.setAttribute('aria-hidden', 'true');
+  badge.replaceChildren(badgeIcon, document.createTextNode(' AI PICK OF THE DAY'));
+  category.textContent = [product.category, product.district].filter(Boolean).join(' · ') || 'Local marketplace pick';
+  name.textContent = product.name || 'A great local find';
+  caption.textContent = 'Chosen from approved local listings. Ask AI for a pick tailored to your needs.';
+  viewLink.href = productUrl;
+  viewLink.hidden = false;
+
+  const hasPrice = product.price != null || product.priceMin != null || product.priceMax != null;
+  price.hidden = !hasPrice;
+  if (hasPrice) price.textContent = formatProductPrice(product);
+  return true;
+}
+
+async function renderAiHeroPick() {
+  const cachedProduct = readCachedHeroPick();
+  if (cachedProduct && applyHeroPick(cachedProduct)) return;
+
+  try {
+    const response = await fetch('/api/shopping-assistant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: 'auto', mode: 'hero_recommendation' }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!response.ok) throw new Error(`Homepage AI pick request failed (${response.status}).`);
+    const result = await response.json();
+    if (!applyHeroPick(result.recommendation)) return;
+    try {
+      sessionStorage.setItem(HERO_PICK_CACHE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        product: result.recommendation
+      }));
+    } catch (error) {
+      console.warn('Unable to cache the homepage AI pick:', error);
+    }
+  } catch (error) {
+    console.warn('Unable to load the homepage AI pick:', error);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   // The homepage markup is mounted from Home.jsx.
   // No slideshow or intro video is rendered on app open.
+  renderAiHeroPick();
   updateInlineStats();
   renderCategories();
   updateHomepageProductCount();

@@ -1,6 +1,6 @@
 # IsokoHub AI shopping and seller tools
 
-The customer assistant chats naturally, searches approved public listings across marketplace categories when asked, and can answer verified platform questions. It should not default to recommending a particular product category. Seller AI tools generate listing drafts and can extract explicitly stated details from a description into the seller form. Sellers review the values and submit the form themselves; the API does not directly create, edit, or delete products.
+The customer assistant chats naturally, searches approved public listings across marketplace categories when asked, and can answer verified platform questions. It should not default to recommending a particular product category. The homepage also asks AI to select one approved listing with a product image for its compact hero feature. Seller AI tools generate listing drafts and can extract explicitly stated details from a description into the seller form. Sellers review the values and submit the form themselves; the API does not directly create, edit, or delete products.
 
 ## Server configuration
 
