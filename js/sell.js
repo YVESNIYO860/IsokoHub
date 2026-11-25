@@ -548,6 +548,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const sellerAiStatus = document.getElementById('seller-ai-status');
   const sellerAiOutput = document.getElementById('seller-ai-output');
   const sellerAiDraft = document.getElementById('seller-ai-draft');
+  const sellerAiPreview = document.getElementById('seller-ai-preview');
   const sellerAiUseDescription = document.getElementById('seller-ai-use-description');
   const sellerAiCopy = document.getElementById('seller-ai-copy');
   const descriptionInput = document.getElementById('prod-description');
@@ -612,9 +613,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Could not generate the listing draft.');
       if (typeof result.text !== 'string' || !result.text.trim()) throw new Error('The AI service returned an empty draft.');
+      if (typeof renderProductDescription !== 'function') throw new Error('The formatted draft preview is unavailable. Reload the page and try again.');
 
       latestSellerAiAction = action;
       sellerAiDraft.value = result.text;
+      sellerAiPreview.innerHTML = renderProductDescription(result.text);
       sellerAiOutput.hidden = false;
       sellerAiUseDescription.hidden = action !== 'description';
       sellerAiStatus.textContent = 'Draft ready. Review every detail before adding it to your listing.';
@@ -627,18 +630,31 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   sellerAiUseDescription?.addEventListener('click', () => {
     if (latestSellerAiAction !== 'description' || !sellerAiDraft.value.trim()) return;
-    descriptionInput.value = sellerAiDraft.value;
-    descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
+    if (typeof setDescriptionEditorValue === 'function') {
+      setDescriptionEditorValue(descriptionInput, sellerAiDraft.value);
+    } else {
+      descriptionInput.value = sellerAiDraft.value;
+      descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     sellerAiStatus.textContent = 'Description draft added. Review and edit it before publishing.';
   });
 
   sellerAiCopy?.addEventListener('click', async () => {
     if (!sellerAiDraft.value.trim()) return;
     try {
-      await navigator.clipboard.writeText(sellerAiDraft.value);
+      const plainText = sellerAiPreview.innerText || sellerAiPreview.textContent || '';
+      if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+        const content = {
+          'text/html': new Blob([sellerAiPreview.innerHTML], { type: 'text/html' }),
+          'text/plain': new Blob([plainText], { type: 'text/plain' })
+        };
+        await navigator.clipboard.write([new ClipboardItem(content)]);
+      } else {
+        await navigator.clipboard.writeText(plainText);
+      }
       sellerAiStatus.textContent = 'Draft copied to the clipboard.';
     } catch {
-      sellerAiStatus.textContent = 'Could not copy automatically. Select and copy the draft text.';
+      sellerAiStatus.textContent = 'Could not copy automatically. Select and copy the formatted preview.';
     }
   });
 

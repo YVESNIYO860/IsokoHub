@@ -76,7 +76,10 @@
       if (typeof result.image !== 'string') {
         throw new Error('The image service returned an invalid result.');
       }
-      return dataUrlToBlob(`data:${result.type || 'image/png'};base64,${result.image}`, result.type || 'image/png');
+      return {
+        image: dataUrlToBlob(`data:${result.type || 'image/png'};base64,${result.image}`, result.type || 'image/png'),
+        enhancedPrompt: typeof result.enhancedPrompt === 'string' ? result.enhancedPrompt : cleanPrompt
+      };
     }
   };
 

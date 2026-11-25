@@ -62,6 +62,7 @@ function makePrompt(action, product, language, question) {
     'You help IsokoHub sellers prepare accurate product listings.',
     languageInstruction,
     task,
+    'For descriptions, use concise headings and simple bullets; use standard Markdown bold sparingly for important details. Avoid decorative symbols and emoji. The website renders Markdown formatting for readers.',
     'Use only facts present in the supplied product information. Never invent specifications, condition, warranty, included accessories, availability, certifications, or seller claims. If details are missing, omit them or say they were not supplied. Return plain text or Markdown only.',
     `Product information:\n${JSON.stringify(product)}`
   ].join('\n\n');

@@ -1,6 +1,6 @@
 # Image Studio AI Setup
 
-The Image Studio sends AI edits through the Vercel function at `/api/image-edit`. The Cloudflare token is only read by that server-side function; it is never sent to the browser.
+The Image Studio sends AI edits through the Vercel function at `/api/image-edit`. Groq first rewrites the text instruction as a concise, plain-language photo-edit prompt; Cloudflare FLUX performs the actual image edit. The image is sent to Cloudflare, while Groq receives the text prompt only. Both provider keys are only read by the server-side function and are never sent to the browser.
 
 ## 1. Apply the per-user usage limit
 
@@ -12,6 +12,7 @@ In Vercel → Project → Settings → Environment Variables, add these values f
 
 - `CLOUDFLARE_ACCOUNT_ID`: the Cloudflare account ID.
 - `CLOUDFLARE_API_TOKEN`: the Workers AI API token with Workers AI Read and Edit permissions.
+- `GROQ_API_KEY`: the Groq API key used to improve image-edit instructions.
 - `SUPABASE_URL`: the project's Supabase URL.
 - `SUPABASE_ANON_KEY`: the project's public/publishable Supabase key, used by the server only to validate the user's Supabase session.
 

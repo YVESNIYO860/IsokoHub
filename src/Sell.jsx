@@ -26,7 +26,14 @@ const sellStyles = `
   .seller-ai-status { min-height: 1.2rem; margin: .55rem 0 0; color: #52657e; font-size: .76rem; line-height: 1.4; }
   .seller-ai-output { margin-top: .75rem; }
   .seller-ai-output[hidden] { display: none; }
-  .seller-ai-output textarea { width: 100%; min-height: 7rem; padding: .7rem; border: 1px solid #d5deea; border-radius: 9px; background: #fff; color: #24354d; font: inherit; font-size: .82rem; line-height: 1.5; resize: vertical; }
+  .seller-ai-preview { min-height: 7rem; max-height: 22rem; overflow: auto; padding: .8rem; border: 1px solid #d5deea; border-radius: 9px; background: #fff; color: #24354d; font-size: .84rem; line-height: 1.6; }
+  .seller-ai-preview > :first-child { margin-top: 0; }
+  .seller-ai-preview > :last-child { margin-bottom: 0; }
+  .seller-ai-preview h3, .seller-ai-preview h4 { margin: .85rem 0 .4rem; color: #1b3558; font-size: .95rem; }
+  .seller-ai-preview p { margin: .45rem 0; }
+  .seller-ai-preview ul, .seller-ai-preview ol { margin: .45rem 0; padding-left: 1.35rem; }
+  .seller-ai-preview li { margin: .2rem 0; }
+  .seller-ai-preview strong { color: #173c70; font-weight: 800; }
   .seller-ai-output-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
   .seller-ai-output-actions button { min-height: 2.3rem; padding: .45rem .7rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #334155; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 700; }
   .seller-ai-output-actions #seller-ai-use-description { border-color: #1d4ed8; background: #1d4ed8; color: #fff; }
@@ -198,8 +205,9 @@ export default function Sell() {
                   </div>
                   <div id="seller-ai-status" className="seller-ai-status" role="status" aria-live="polite"></div>
                   <div id="seller-ai-output" className="seller-ai-output" hidden>
-                    <label htmlFor="seller-ai-draft">AI draft — review before publishing</label>
-                    <textarea id="seller-ai-draft" readOnly rows="5"></textarea>
+                    <p id="seller-ai-preview-label"><strong>AI draft preview</strong> — review before publishing</p>
+                    <div id="seller-ai-preview" className="seller-ai-preview" role="region" aria-labelledby="seller-ai-preview-label" tabIndex="0"></div>
+                    <textarea id="seller-ai-draft" hidden aria-hidden="true" readOnly></textarea>
                     <div className="seller-ai-output-actions">
                       <button type="button" id="seller-ai-use-description" hidden>Use as full description</button>
                       <button type="button" id="seller-ai-copy">Copy draft</button>

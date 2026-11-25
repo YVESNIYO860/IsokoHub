@@ -111,7 +111,7 @@ export default function ImageStudio() {
         <div className="studio-shell">
           <header className="studio-intro">
             <div><span className="studio-kicker">IsokoHub tools</span><h1>IsokoHub Image Studio</h1><p>Edit, enhance and prepare your product photos for free.</p></div>
-            <div className="studio-privacy"><i className="fa-solid fa-lock" aria-hidden="true"></i> Basic edits stay in your browser. AI edits send a resized image to Cloudflare for processing.</div>
+            <div className="studio-privacy"><i className="fa-solid fa-lock" aria-hidden="true"></i> Basic edits stay in your browser. Groq improves the text instruction; only the resized image is sent to Cloudflare for editing.</div>
           </header>
           <section className="studio-upload" id="studio-upload-zone">
             <input type="file" id="studio-file-input" accept="image/jpeg,image/png,image/webp" aria-label="Upload your image" />
