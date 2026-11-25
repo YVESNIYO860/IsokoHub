@@ -12,6 +12,7 @@ Configure these variables on the deployment that serves the `/api` functions:
 - `GROQ_MODEL` (optional): Groq chat-completions model; defaults to `openai/gpt-oss-120b`.
 
 On Vercel, add the variables in Project Settings → Environment Variables, then redeploy. The endpoints are `/api/shopping-assistant` and `/api/product-intelligence`.
+If a custom `GROQ_MODEL` has been retired, the server retries the request using the supported default model.
 
 For local development, the Vite server provides middleware for these two AI endpoints. Set the same values in your local process environment before running `npm run dev`. The seller endpoint additionally requires a signed-in account whose `user_profiles` row is active and verified. The shopper endpoint uses the Supabase anon key and returns only approved public listing fields.
 

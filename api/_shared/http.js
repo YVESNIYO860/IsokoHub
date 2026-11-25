@@ -1,8 +1,9 @@
 class ApiError extends Error {
-  constructor(message, statusCode = 500) {
+  constructor(message, statusCode = 500, exposeToClient = false) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
+    this.exposeToClient = exposeToClient;
   }
 }
 
@@ -92,7 +93,9 @@ function handleApiError(response, error, fallbackMessage) {
   const statusCode = Number.isInteger(error?.statusCode) ? error.statusCode : 500;
   if (statusCode >= 500) console.error('[api] request failed:', error?.message || error);
   sendJson(response, statusCode, {
-    error: statusCode >= 500 ? fallbackMessage : (error?.message || fallbackMessage)
+    error: statusCode >= 500 && error?.exposeToClient !== true
+      ? fallbackMessage
+      : (error?.message || fallbackMessage)
   });
 }
 
