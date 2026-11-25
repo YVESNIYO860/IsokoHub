@@ -63,7 +63,7 @@ const sellStyles = `
   .upload-zone-sub { color: #6b7280; font-size: 0.78rem; margin: 0; }
   .image-count-badge { display: inline-flex; align-items: center; gap: 4px; background: #6366f1; color: white; border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.75rem; font-weight: 600; margin-top: 0.5rem; }
   .image-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 0.7rem; margin-top: 0.9rem; }
-  .image-preview-item { position: relative; border-radius: 12px; overflow: hidden; border: 2px solid #e0e7ff; background: white; aspect-ratio: 1; box-shadow: 0 2px 8px rgba(99,102,241,0.10); transition: border-color 0.2s, transform 0.15s; }
+  .image-preview-item { position: relative;  overflow: hidden; border: 2px solid #e0e7ff; background: white; aspect-ratio: 1; box-shadow: 0 2px 8px rgba(99,102,241,0.10); transition: border-color 0.2s, transform 0.15s; }
   .image-preview-item:hover { border-color: #6366f1; transform: scale(1.03); }
   .image-preview-item img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
   .preview-remove-btn { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; background: rgba(239,68,68,0.92); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; line-height: 1; z-index: 3; transition: background 0.15s, transform 0.1s; }
