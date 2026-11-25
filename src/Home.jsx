@@ -18,10 +18,22 @@ export default function Home() {
               <div><strong><i className="fa-solid fa-location-dot" aria-hidden="true"></i> Made for Rwanda</strong><span>Discover what's close to home</span></div>
             </div>
           </div>
-          <a className="marketplace-hero-visual" href="/products" aria-label="Explore marketplace listings">
-            <img src="/assets/hero-image.png?v=2" alt="A collage of clothing, electronics, books, home goods, and everyday products" width="1408" height="768" fetchPriority="high" decoding="async" />
-            <span className="marketplace-hero-image-label"><span><strong>One marketplace.</strong><small>Products and opportunities from across Rwanda</small></span><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
-          </a>
+          <div className="marketplace-hero-visual">
+            <a className="marketplace-hero-photo-link" href="/products" aria-label="Explore marketplace listings">
+              <img src="/assets/hero-image.png?v=2" alt="A collage of clothing, electronics, books, home goods, and everyday products" width="1408" height="768" fetchPriority="high" decoding="async" />
+              <span className="marketplace-hero-image-label"><span><strong>One marketplace.</strong><small>Products and opportunities from across Rwanda</small></span><i className="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></span>
+            </a>
+            <a className="marketplace-hero-ai-card" href="/shopping-assistant" aria-label="Get shopping recommendations from IsokoHub AI">
+              <span className="marketplace-hero-ai-icon"><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i></span>
+              <span className="marketplace-hero-ai-copy">
+                <span>AI SHOPPING ASSISTANT</span>
+                <strong>Find what fits you</strong>
+                <small>Share your budget and needs for helpful local recommendations.</small>
+                <span className="marketplace-hero-ai-action">Get recommendations <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
+              </span>
+              <i className="fa-solid fa-arrow-up-right-from-square marketplace-hero-ai-arrow" aria-hidden="true"></i>
+            </a>
+          </div>
         </div>
       </section>
 

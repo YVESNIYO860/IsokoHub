@@ -908,7 +908,100 @@
       text-decoration: none;
     }
 
+    .marketplace-hero-photo-link {
+      position: absolute;
+      inset: 0;
+      display: block;
+      overflow: hidden;
+      color: inherit;
+      text-decoration: none;
+    }
+
     .marketplace-hero-visual img { display: block; visibility: visible; width: 100%; height: 100%; object-fit: cover; object-position: center; padding: 0; mix-blend-mode: multiply; }
+
+    .marketplace-hero-ai-card {
+      position: absolute;
+      z-index: 2;
+      top: clamp(0.65rem, 2vw, 1.1rem);
+      left: clamp(0.65rem, 2vw, 1.1rem);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.75rem;
+      width: min(350px, calc(100% - 1.5rem));
+      padding: 0.85rem 0.95rem;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 18px 42px rgba(16, 33, 63, 0.2);
+      color: #152238;
+      text-decoration: none;
+      backdrop-filter: blur(14px);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .marketplace-hero-ai-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 48px rgba(16, 33, 63, 0.24);
+      color: #152238;
+    }
+
+    .marketplace-hero-ai-card:focus-visible {
+      outline: 3px solid #2563eb;
+      outline-offset: 3px;
+    }
+
+    .marketplace-hero-ai-icon {
+      display: grid;
+      width: 2.6rem;
+      height: 2.6rem;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #1d4ed8, #0f766e);
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .marketplace-hero-ai-copy {
+      display: grid;
+      min-width: 0;
+      gap: 0.22rem;
+    }
+
+    .marketplace-hero-ai-copy > span:first-child {
+      color: #1d4ed8;
+      font-size: 0.6rem;
+      font-weight: 850;
+      letter-spacing: 0.1em;
+    }
+
+    .marketplace-hero-ai-copy strong {
+      color: #152238;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+
+    .marketplace-hero-ai-copy small {
+      color: #5b6b81;
+      font-size: 0.68rem;
+      line-height: 1.4;
+    }
+
+    .marketplace-hero-ai-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.2rem;
+      color: #1d4ed8;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .marketplace-hero-ai-arrow {
+      align-self: start;
+      color: #8290a4;
+      font-size: 0.7rem;
+    }
 
     .marketplace-hero-image-label {
       right: 0.7rem;
@@ -1038,6 +1131,7 @@
       .marketplace-hero-inner { grid-template-columns: 1fr; width: min(100% - 2rem, 640px); min-height: 0; gap: 1.35rem; padding: 1.8rem 0 1.5rem; }
       .marketplace-hero h1 { font-size: 2.65rem; }
       .marketplace-hero-visual { width: 100%; max-height: 430px; aspect-ratio: 1.3 / 1; }
+      .marketplace-hero-ai-card { top: 0.75rem; left: 0.75rem; width: min(350px, calc(100% - 1.5rem)); }
       .marketplace-hero-proof { display: flex; }
       .amazon-shelf-heading { align-items: flex-start; }
       .homepage-categories { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
@@ -1059,6 +1153,9 @@
       .marketplace-hero h1 { font-size: 2.2rem; }
       .marketplace-hero-copy > p { font-size: 0.9rem; }
       .marketplace-hero-visual { aspect-ratio: 1.15 / 1; }
+      .marketplace-hero-ai-card { gap: 0.55rem; padding: 0.65rem; }
+      .marketplace-hero-ai-icon { width: 2.25rem; height: 2.25rem; }
+      .marketplace-hero-ai-copy small { font-size: 0.63rem; }
       .marketplace-hero-proof { align-items: flex-start; gap: 0.55rem; }
       .marketplace-hero-proof strong { font-size: 0.74rem; }
       .marketplace-hero-proof span:not(.marketplace-hero-divider) { font-size: 0.66rem; }
