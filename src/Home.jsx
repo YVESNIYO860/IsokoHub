@@ -7,6 +7,7 @@ export default function Home() {
             <a id="marketplace-hero-image-link" className="marketplace-hero-pick-photo" href="/products" aria-label="View marketplace listings">
               <img id="marketplace-hero-product-image" src="/assets/hero-image.png?v=2" alt="A collage of products from the IsokoHub marketplace" width="1408" height="768" fetchPriority="high" decoding="async" />
             </a>
+            <button id="marketplace-hero-share" className="marketplace-hero-share" type="button" aria-label="Share this listing" hidden><i className="fa-solid fa-share-nodes" aria-hidden="true"></i><span id="marketplace-hero-share-label">Share</span></button>
             <div className="marketplace-hero-pick-shade" aria-hidden="true"></div>
             <div className="marketplace-hero-pick-content">
               <span id="marketplace-hero-pick-badge" className="marketplace-hero-pick-badge"><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> SMARTER LOCAL FINDS</span>
@@ -16,7 +17,6 @@ export default function Home() {
               <strong id="marketplace-hero-product-price" className="marketplace-hero-product-price" hidden></strong>
               <div className="marketplace-hero-pick-actions">
                 <a id="marketplace-hero-view-product" className="marketplace-hero-view-product" href="/products" hidden>View this pick <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-                <button id="marketplace-hero-share" className="marketplace-hero-share" type="button" aria-label="Share this listing" hidden><i className="fa-solid fa-share-nodes" aria-hidden="true"></i><span id="marketplace-hero-share-label">Share</span></button>
                 <a className="marketplace-hero-ask-ai" href="/shopping-assistant">Ask AI for your match <i className="fa-solid fa-sparkles" aria-hidden="true"></i></a>
               </div>
               <span id="marketplace-hero-share-status" className="visually-hidden" aria-live="polite"></span>

@@ -1013,16 +1013,22 @@
     }
 
     .marketplace-hero-share {
-      border-color: rgba(255, 255, 255, 0.35);
-      background: rgba(15, 23, 42, 0.24);
-      color: #fff;
+      position: absolute;
+      z-index: 3;
+      top: 1rem;
+      right: 1rem;
+      border-color: #fff;
+      border-radius: 999px;
+      background: #fff;
+      color: #123064;
       cursor: pointer;
+      box-shadow: 0 8px 20px rgba(2, 6, 23, 0.2);
     }
 
     .marketplace-hero-share:hover {
       transform: translateY(-1px);
-      background: rgba(15, 23, 42, 0.48);
-      color: #fff;
+      background: #eff6ff;
+      color: #123064;
     }
 
     .marketplace-hero-view-product:focus-visible,
@@ -1251,6 +1257,7 @@
       .marketplace-hero-product-caption { font-size: 0.74rem; }
       .marketplace-hero-pick-actions { gap: 0.45rem; }
       .marketplace-hero-view-product, .marketplace-hero-ask-ai, .marketplace-hero-share { min-height: 2.4rem; padding: 0.55rem 0.65rem; font-size: 0.7rem; }
+      .marketplace-hero-share { top: 0.65rem; right: 0.65rem; }
       .homepage-featured-heading { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
       .homepage-featured .product-grid { gap: 0.5rem; }
       .homepage-featured .product-card-content { padding: 0.65rem; }
