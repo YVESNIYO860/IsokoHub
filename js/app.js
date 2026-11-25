@@ -670,10 +670,12 @@ function setupStickyHeader() {
 
   const updateHeaderState = () => {
     const currentScrollY = window.scrollY;
+    const shouldScroll = currentScrollY > 8;
     const shouldHide = currentScrollY > 70 && currentScrollY > lastScrollY + 4;
     const shouldShow = currentScrollY < lastScrollY - 4 || currentScrollY <= 20;
 
-    navbar.classList.remove('scrolled', 'is-hidden');
+    navbar.classList.toggle('scrolled', shouldScroll);
+    navbar.classList.toggle('is-hidden', shouldHide && !shouldShow);
 
     if (mobileBottomNav) {
       const isMobile = window.innerWidth <= 768;
@@ -682,7 +684,7 @@ function setupStickyHeader() {
 
     const headerHeight = Math.ceil(navbar.getBoundingClientRect().height);
     document.documentElement.style.setProperty('--header-offset', '0px');
-    document.documentElement.style.setProperty('--header-offset-scrolled', '0px');
+    document.documentElement.style.setProperty('--header-offset-scrolled', `${headerHeight}px`);
     document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
     lastScrollY = currentScrollY;
     ticking = false;
