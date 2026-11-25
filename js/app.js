@@ -195,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
   addDependencies();
   setupLoaderLogic();
   ensurePwaMetaTags();
-  registerServiceWorker();
   setupInstallPrompt();
   applyDrawerUiSettings(getDrawerUiSettings());
 
@@ -378,18 +377,6 @@ function setInstallUiState(isInstalling = false) {
     button.disabled = isInstalling;
     button.textContent = isInstalling ? 'Installing...' : (button.dataset.defaultLabel || 'Install');
   });
-}
-
-function registerServiceWorker() {
-  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
-
-  const register = () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((error) => {
-      console.error('PWA service worker registration failed:', error);
-    });
-  };
-  if (document.readyState === 'complete') register();
-  else window.addEventListener('load', register, { once: true });
 }
 
 function isAndroidDevice() {

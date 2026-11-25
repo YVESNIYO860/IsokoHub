@@ -26,6 +26,20 @@ import Visitors from './Visitors.jsx';
 
 const root = createRoot(document.getElementById('react-home-root'));
 
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+
+  const register = () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((error) => {
+      console.error('PWA service worker registration failed:', error);
+    });
+  };
+  if (document.readyState === 'complete') register();
+  else window.addEventListener('load', register, { once: true });
+}
+
+registerServiceWorker();
+
 function normalizeRoutePath(pathname = window.location.pathname) {
   const value = String(pathname || '/').toLowerCase();
   const cleaned = value.replace(/\/+$/, '') || '/';
