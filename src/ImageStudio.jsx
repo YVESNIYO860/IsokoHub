@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const studioStyles = `
-  .studio-page { min-height: calc(100vh - var(--header-offset)); padding: 2rem 0 5rem; background: #f8fafc; }
+  .studio-page { min-height: calc(100vh - var(--header-height)); padding: 2rem 0 5rem; background: #f8fafc; }
   .studio-page [hidden] { display: none !important; }
   .studio-shell { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; }
   .studio-intro { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }

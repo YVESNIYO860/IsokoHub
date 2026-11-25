@@ -670,24 +670,20 @@ function setupStickyHeader() {
 
   const updateHeaderState = () => {
     const currentScrollY = window.scrollY;
-    const shouldScroll = currentScrollY > 8;
     const shouldHide = currentScrollY > 70 && currentScrollY > lastScrollY + 4;
     const shouldShow = currentScrollY < lastScrollY - 4 || currentScrollY <= 20;
 
-    navbar.classList.toggle('scrolled', shouldScroll);
-    navbar.classList.toggle('is-hidden', shouldHide && !shouldShow);
+    navbar.classList.remove('scrolled', 'is-hidden');
 
     if (mobileBottomNav) {
       const isMobile = window.innerWidth <= 768;
       mobileBottomNav.classList.toggle('is-hidden', isMobile && shouldHide && !shouldShow);
     }
 
-    const measuredHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
-    const baseOffset = measuredHeaderHeight;
-    const scrolledOffset = Math.max(64, Math.min(96, measuredHeaderHeight - 56));
-
-    document.documentElement.style.setProperty('--header-offset', `${baseOffset}px`);
-    document.documentElement.style.setProperty('--header-offset-scrolled', `${scrolledOffset}px`);
+    const headerHeight = Math.ceil(navbar.getBoundingClientRect().height);
+    document.documentElement.style.setProperty('--header-offset', '0px');
+    document.documentElement.style.setProperty('--header-offset-scrolled', '0px');
+    document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
     lastScrollY = currentScrollY;
     ticking = false;
   };

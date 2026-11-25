@@ -8,6 +8,10 @@ const sellStyles = `
   .sell-page-heading p { max-width: 680px; margin: 0; color: #64748b; line-height: 1.6; }
   .listing-update-notice { margin: 1rem 0; padding: .9rem 1rem; border: 1px solid #bfdbfe; border-radius: 12px; background: #eff6ff; color: #1e3a8a; line-height: 1.5; }
   .listing-update-notice[hidden] { display: none; }
+  .seller-access-note { display: flex; align-items: flex-start; gap: .75rem; margin: .85rem 0 1rem; padding: .9rem 1rem; border: 1px solid #bfdbfe; border-radius: 14px; background: linear-gradient(120deg, #eff6ff, #f8fbff 60%, #ecfeff); color: #1e3a8a; box-shadow: 0 8px 22px rgba(30, 64, 175, .07); }
+  .seller-access-note > i { display: grid; flex: 0 0 2rem; width: 2rem; height: 2rem; place-items: center; border-radius: 9px; background: #dbeafe; color: #1d4ed8; }
+  .seller-access-note p { margin: 0; font-size: .82rem; line-height: 1.55; }
+  .seller-access-note strong { color: #173c70; }
   .sell-form-section { margin: 1rem 0; padding: clamp(.9rem, 2vw, 1.3rem); border: 1px solid #e3eaf3; border-radius: 16px; background: linear-gradient(145deg, #fff, #fbfdff); }
   .sell-form-section-heading { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: 1rem; }
   .sell-form-section-icon { display: grid; flex: 0 0 2.4rem; width: 2.4rem; height: 2.4rem; place-items: center; border-radius: 11px; background: #eff6ff; color: #2563eb; }
@@ -123,6 +127,10 @@ export default function Sell() {
             </header>
             <div id="listing-update-notice" className="listing-update-notice" role="status" hidden></div>
             <div id="sell-error" className="text-danger mb-2 d-none"></div>
+            <aside className="seller-access-note" role="note">
+              <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
+              <p><strong>Seller AI tools are available to active, approved sellers.</strong> Review AI-suggested details before saving your listing.</p>
+            </aside>
             <form id="sell-form">
               <section className="sell-form-section">
                 <div className="sell-form-section-heading"><span className="sell-form-section-icon"><i className="fa-solid fa-box-open" aria-hidden="true"></i></span><div><h3>Product details</h3><p>Start with the exact name, category, condition, and color buyers will search for.</p></div></div>

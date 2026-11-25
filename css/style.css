@@ -1,8 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --header-offset: 96px;
-  --header-offset-scrolled: 74px;
+  --header-offset: 0px;
+  --header-offset-scrolled: 0px;
+  --header-height: 96px;
 
   /* Brand and semantic colors */
   --primary-blue: #1d4ed8;
@@ -110,8 +111,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-top: var(--header-offset);
-  transition: background-color 0.25s ease, color 0.25s ease, padding-top 0.25s ease;
+  padding-top: 0;
+  transition: background-color 0.25s ease, color 0.25s ease;
   scrollbar-color: #3b82f6 #e2e8f0;
   scrollbar-width: thin;
 }
@@ -1459,27 +1460,32 @@ h3 { font-size: 1.5rem; }
 
 /* ---- Header & Navigation (Modern Aesthetic) ---- */
 .navbar {
-  background: linear-gradient(135deg, #0f172a 0%, #111827 45%, #1e293b 100%);
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  background: linear-gradient(120deg, #0b1830 0%, #10213f 48%, #174c73 100%);
   color: white;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   z-index: 9999;
-  box-shadow: 0 14px 38px rgba(2, 6, 23, 0.24);
+  border-bottom: 1px solid rgba(191, 219, 254, 0.22);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.18);
   backdrop-filter: blur(14px);
-  transform: translateY(0);
-  transition: transform 0.28s cubic-bezier(0.2, 0.75, 0.25, 1), background 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease;
+  transition: background 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease;
   will-change: auto;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  isolation: isolate;
 }
 
-.navbar.is-hidden {
-  transform: translateY(-105%);
-  opacity: 0;
+.navbar::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #60a5fa 35%, #22d3ee 65%, transparent);
+  content: '';
   pointer-events: none;
-  box-shadow: none;
 }
 
 .navbar.scrolled {
@@ -2330,11 +2336,12 @@ body.menu-open .menu-active-overlay {
 
 @media (max-width: 768px) {
   :root {
-    --header-offset: 154px;
-    --header-offset-scrolled: 80px;
+    --header-offset: 0px;
+    --header-offset-scrolled: 0px;
+    --header-height: 154px;
   }
 
-  body { padding-top: var(--header-offset) !important; padding-bottom: 5.4rem; }
+  body { padding-top: 0 !important; padding-bottom: 5.4rem; }
   .marketplace-hero { scroll-margin-top: 158px; }
   .hero-marketplace { height: auto; min-height: 320px; max-height: none; padding: 1.25rem 1rem; }
   .hero-marketplace-grid { display: block; }
@@ -2998,7 +3005,7 @@ body.menu-open .menu-active-overlay {
 
 @media (max-width: 768px) {
   body {
-    padding-top: var(--header-offset);
+    padding-top: 0;
   }
 
   /* Navbar Stacking */
@@ -3124,7 +3131,7 @@ body.menu-open .menu-active-overlay {
 
 @media (max-width: 480px) {
   body {
-    padding-top: var(--header-offset);
+    padding-top: 0;
   }
 
   .side-drawer {
@@ -7975,8 +7982,7 @@ textarea:focus {
   .footer-bottom .container { gap: 0.4rem; }
 }
 
-.navbar { transition: transform 260ms cubic-bezier(0.2, 0.75, 0.25, 1), opacity 180ms ease, background 220ms ease, box-shadow 220ms ease; }
-.navbar.is-hidden { transform: translateY(-105%); opacity: 0; pointer-events: none; }
+.navbar { transition: background 220ms ease, box-shadow 220ms ease; }
 .navbar.scrolled .navbar-bottom { min-height: 34px; padding-top: 0.12rem; padding-bottom: 0.12rem; }
 
 .support-fab {

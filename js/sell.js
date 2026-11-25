@@ -538,7 +538,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       .eq('id', user.id)
       .maybeSingle();
     if (profileError || sellerProfile?.is_active !== true || sellerProfile?.is_verified !== true) {
-      errorEl.textContent = 'Your account is awaiting admin approval before you can manage listings.';
+      errorEl.textContent = profileError
+        ? 'We could not verify your seller approval. Refresh the page or try again later.'
+        : 'Seller AI tools and listing management are available to active, approved sellers. Your account is awaiting admin approval.';
       errorEl.classList.remove('d-none');
       form.hidden = true;
       return;
