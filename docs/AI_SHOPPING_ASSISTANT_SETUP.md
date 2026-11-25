@@ -1,6 +1,6 @@
 # IsokoHub AI shopping and seller tools
 
-The customer assistant searches approved public listings and can answer verified platform questions. Seller writing tools generate drafts from the seller's entered listing details. Both use server-side Groq requests; neither endpoint can create, edit, or delete a product.
+The customer assistant searches approved public listings and can answer verified platform questions. Seller AI tools generate listing drafts and can extract explicitly stated details from a description into the seller form. Sellers review the values and submit the form themselves; the API does not directly create, edit, or delete products.
 
 ## Server configuration
 
@@ -27,6 +27,7 @@ The AI endpoints do not require a new migration. Public product search uses the 
 2. Ask for a comparison of at least two listings. Missing values should be identified as unavailable.
 3. Ask a platform question, including how to report a listing; the response should reflect the current Support page and not claim a report feature exists.
 4. Sign in as an active, verified seller, open Sell Product, and generate a description or feature list. Review the draft before copying or using it.
-5. Try the seller tool with a non-approved account; it should be rejected by the server.
+5. Add product facts to the description and use **Fill fields from description**. Confirm that only supported details are filled, one by one, and review them before saving. The same form works when editing an existing listing.
+6. Try the seller tool with a non-approved account; it should be rejected by the server.
 
 If Groq is not configured, the AI endpoints return a visible configuration error. Product search also requires `SUPABASE_URL` and `SUPABASE_ANON_KEY`.

@@ -579,10 +579,96 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
   }
 
+  async function fillListingFieldsFromDescription(details) {
+    const updates = [];
+    const addTextUpdate = (id, label, value) => {
+      if (typeof value === 'string' && value.trim()) {
+        updates.push({
+          label,
+          apply() {
+            const field = document.getElementById(id);
+            if (!field) return false;
+            field.value = value.trim();
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+            field.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+          }
+        });
+      }
+    };
+    const addSelectUpdate = (field, label, value) => {
+      if (!value || !Array.from(field.options).some(option => option.value === value)) return;
+      updates.push({
+        label,
+        apply() {
+          field.value = value;
+          field.dispatchEvent(new Event('change', { bubbles: true }));
+          return true;
+        }
+      });
+    };
+
+    addTextUpdate('prod-name', 'product name', details.name);
+    addSelectUpdate(categorySelect, 'category', details.category);
+    addSelectUpdate(conditionSelect, 'condition', details.condition);
+    addSelectUpdate(colorSelect, 'color', details.color);
+    if (details.color === 'Other') addTextUpdate('prod-color-other', 'custom color', details.custom_color);
+    if (Number.isFinite(details.price_min)) addTextUpdate('prod-price-min', 'minimum price', String(details.price_min));
+    if (Number.isFinite(details.price_max)) addTextUpdate('prod-price-max', 'maximum price', String(details.price_max));
+
+    specificationFields.forEach(([key, inputId]) => {
+      addTextUpdate(inputId, key.replace(/_/g, ' '), details.specifications?.[key]);
+    });
+
+    let skippedCustomSpecifications = 0;
+    const customUpdates = Array.isArray(details.custom_specifications) ? details.custom_specifications : [];
+    customUpdates.forEach((specification) => {
+      const label = typeof specification?.label === 'string' ? specification.label.trim() : '';
+      const value = typeof specification?.value === 'string' ? specification.value.trim() : '';
+      if (!label || !value) return;
+      updates.push({
+        label,
+        apply() {
+          const matchingRow = Array.from(customSpecifications.children).find((row) => {
+            const fields = row.querySelectorAll('input');
+            return fields[0]?.value.trim().toLowerCase() === label.toLowerCase();
+          });
+          if (matchingRow) {
+            const valueInput = matchingRow.querySelectorAll('input')[1];
+            valueInput.value = value;
+            valueInput.dispatchEvent(new Event('input', { bubbles: true }));
+            valueInput.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+          }
+          if (customSpecifications.children.length >= maxCustomSpecifications) {
+            skippedCustomSpecifications += 1;
+            return false;
+          }
+          addCustomSpecificationRow(label, value);
+          return true;
+        }
+      });
+    });
+
+    let applied = 0;
+    for (let index = 0; index < updates.length; index += 1) {
+      const update = updates[index];
+      sellerAiStatus.textContent = `Filling ${update.label} (${index + 1} of ${updates.length})…`;
+      if (update.apply()) applied += 1;
+      await new Promise(resolve => setTimeout(resolve, 80));
+    }
+    return { applied, skippedCustomSpecifications };
+  }
+
   sellerAiControls?.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-seller-ai-action]');
     if (!button) return;
-    if (!descriptionInput.value.trim() && !document.getElementById('prod-name').value.trim()) {
+    const action = button.dataset.sellerAiAction;
+    if (action === 'fill_details' && !descriptionInput.value.trim()) {
+      sellerAiStatus.textContent = 'Add a product description before filling the listing fields.';
+      return;
+    }
+    if (action !== 'fill_details' && !descriptionInput.value.trim() && !document.getElementById('prod-name').value.trim()) {
       sellerAiStatus.textContent = 'Enter a product name and some details before generating a draft.';
       return;
     }
@@ -593,10 +679,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       return;
     }
 
-    const action = button.dataset.sellerAiAction;
     const buttons = Array.from(sellerAiControls.querySelectorAll('button'));
     buttons.forEach(item => { item.disabled = true; });
-    sellerAiStatus.textContent = 'Preparing an accurate draft…';
+    sellerAiStatus.textContent = action === 'fill_details'
+      ? 'Reading the description for product details…'
+      : 'Preparing an accurate draft…';
     try {
       const response = await fetch('/api/product-intelligence', {
         method: 'POST',
@@ -605,13 +692,29 @@ document.addEventListener('DOMContentLoaded', async function() {
           Authorization: `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          action,
+          action: action === 'fill_details' ? 'extract_listing_details' : action,
           language: document.getElementById('seller-ai-language').value,
           product: getSellerAiProduct()
         })
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Could not generate the listing draft.');
+      if (action === 'fill_details') {
+        if (!result.details || typeof result.details !== 'object') {
+          throw new Error('The AI service returned invalid listing details.');
+        }
+        const { applied, skippedCustomSpecifications } = await fillListingFieldsFromDescription(result.details);
+        sellerAiOutput.hidden = true;
+        if (!applied) {
+          sellerAiStatus.textContent = 'No specific product details could be filled. Add clearer facts to the description and try again.';
+        } else {
+          const skippedNotice = skippedCustomSpecifications
+            ? ` ${skippedCustomSpecifications} extra attribute(s) could not be added because the form is full.`
+            : '';
+          sellerAiStatus.textContent = `Filled or updated ${applied} listing field(s), one by one. Review them before saving.${skippedNotice}`;
+        }
+        return;
+      }
       if (typeof result.text !== 'string' || !result.text.trim()) throw new Error('The AI service returned an empty draft.');
       if (typeof renderProductDescription !== 'function') throw new Error('The formatted draft preview is unavailable. Reload the page and try again.');
 
