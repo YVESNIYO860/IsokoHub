@@ -968,7 +968,8 @@
     }
 
     .marketplace-hero-view-product,
-    .marketplace-hero-ask-ai {
+    .marketplace-hero-ask-ai,
+    .marketplace-hero-share {
       display: inline-flex;
       min-height: 2.6rem;
       align-items: center;
@@ -979,8 +980,13 @@
       border-radius: 9px;
       font-size: 0.78rem;
       font-weight: 800;
+      font-family: inherit;
       text-decoration: none;
       transition: background-color 160ms ease, transform 160ms ease;
+    }
+
+    .marketplace-hero-share[hidden] {
+      display: none;
     }
 
     .marketplace-hero-view-product {
@@ -1006,8 +1012,22 @@
       color: #fff;
     }
 
+    .marketplace-hero-share {
+      border-color: rgba(255, 255, 255, 0.35);
+      background: rgba(15, 23, 42, 0.24);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .marketplace-hero-share:hover {
+      transform: translateY(-1px);
+      background: rgba(15, 23, 42, 0.48);
+      color: #fff;
+    }
+
     .marketplace-hero-view-product:focus-visible,
-    .marketplace-hero-ask-ai:focus-visible {
+    .marketplace-hero-ask-ai:focus-visible,
+    .marketplace-hero-share:focus-visible {
       outline: 3px solid #93c5fd;
       outline-offset: 3px;
     }
@@ -1082,6 +1102,7 @@
     @media (prefers-reduced-motion: reduce) {
       .marketplace-hero-view-product,
       .marketplace-hero-ask-ai,
+      .marketplace-hero-share,
       .marketplace-hero-slide-dot {
         transition: none;
       }
@@ -1229,7 +1250,7 @@
       .marketplace-hero-pick h1 { font-size: clamp(1.55rem, 7.4vw, 2rem); }
       .marketplace-hero-product-caption { font-size: 0.74rem; }
       .marketplace-hero-pick-actions { gap: 0.45rem; }
-      .marketplace-hero-view-product, .marketplace-hero-ask-ai { min-height: 2.4rem; padding: 0.55rem 0.65rem; font-size: 0.7rem; }
+      .marketplace-hero-view-product, .marketplace-hero-ask-ai, .marketplace-hero-share { min-height: 2.4rem; padding: 0.55rem 0.65rem; font-size: 0.7rem; }
       .homepage-featured-heading { align-items: flex-start; flex-direction: column; gap: 0.55rem; }
       .homepage-featured .product-grid { gap: 0.5rem; }
       .homepage-featured .product-card-content { padding: 0.65rem; }

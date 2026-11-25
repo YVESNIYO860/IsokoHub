@@ -16,8 +16,10 @@ export default function Home() {
               <strong id="marketplace-hero-product-price" className="marketplace-hero-product-price" hidden></strong>
               <div className="marketplace-hero-pick-actions">
                 <a id="marketplace-hero-view-product" className="marketplace-hero-view-product" href="/products" hidden>View this pick <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                <button id="marketplace-hero-share" className="marketplace-hero-share" type="button" aria-label="Share this listing" hidden><i className="fa-solid fa-share-nodes" aria-hidden="true"></i><span id="marketplace-hero-share-label">Share</span></button>
                 <a className="marketplace-hero-ask-ai" href="/shopping-assistant">Ask AI for your match <i className="fa-solid fa-sparkles" aria-hidden="true"></i></a>
               </div>
+              <span id="marketplace-hero-share-status" className="visually-hidden" aria-live="polite"></span>
               <div id="marketplace-hero-slide-controls" className="marketplace-hero-slide-controls" role="group" aria-label="Featured listings slideshow" hidden>
                 <button id="marketplace-hero-previous" className="marketplace-hero-slide-button" type="button" aria-label="Previous listing"><i className="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
                 <div id="marketplace-hero-slide-indicators" className="marketplace-hero-slide-indicators"></div>

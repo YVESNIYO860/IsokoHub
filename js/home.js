@@ -20,6 +20,7 @@ let heroSlides = [];
 let heroPreferredProductId = '';
 let heroSlideIndex = 0;
 let heroRotationTimer = null;
+let heroShareFeedbackTimer = null;
 let heroUserPaused = false;
 let heroSlideshowInitialized = false;
 let heroReducedMotionQuery = null;
@@ -72,9 +73,10 @@ function renderHeroSlide() {
   const caption = document.getElementById('marketplace-hero-product-caption');
   const price = document.getElementById('marketplace-hero-product-price');
   const viewLink = document.getElementById('marketplace-hero-view-product');
+  const shareButton = document.getElementById('marketplace-hero-share');
   const status = document.getElementById('marketplace-hero-slide-status');
   const productImage = getHeroProductImage(product);
-  if (!product?.id || !productImage || !image || !imageLink || !badge || !category || !name || !caption || !price || !viewLink) {
+  if (!product?.id || !productImage || !image || !imageLink || !badge || !category || !name || !caption || !price || !viewLink || !shareButton) {
     return;
   }
 
@@ -105,6 +107,11 @@ function renderHeroSlide() {
     : 'A featured listing from the approved local marketplace.';
   viewLink.href = productUrl;
   viewLink.hidden = false;
+  shareButton.hidden = false;
+  const shareLabel = document.getElementById('marketplace-hero-share-label');
+  if (shareLabel) shareLabel.textContent = 'Share';
+  document.getElementById('marketplace-hero-share-status').textContent = '';
+  if (heroShareFeedbackTimer) window.clearTimeout(heroShareFeedbackTimer);
 
   const hasPrice = product.price != null || product.priceMin != null || product.priceMax != null;
   price.hidden = !hasPrice;
@@ -114,6 +121,46 @@ function renderHeroSlide() {
   document.querySelectorAll('#marketplace-hero-slide-indicators button').forEach((button, index) => {
     button.setAttribute('aria-current', index === heroSlideIndex ? 'true' : 'false');
   });
+}
+
+function showHeroShareFeedback(message, buttonLabel = 'Share') {
+  const status = document.getElementById('marketplace-hero-share-status');
+  const label = document.getElementById('marketplace-hero-share-label');
+  if (status) status.textContent = message;
+  if (label) label.textContent = buttonLabel;
+  if (heroShareFeedbackTimer) window.clearTimeout(heroShareFeedbackTimer);
+  heroShareFeedbackTimer = window.setTimeout(() => {
+    if (label) label.textContent = 'Share';
+    heroShareFeedbackTimer = null;
+  }, 2500);
+}
+
+async function shareHeroSlide() {
+  const product = heroSlides[heroSlideIndex];
+  if (!product?.id) return;
+
+  const url = new URL(`/product?id=${encodeURIComponent(product.id)}`, window.location.origin).toString();
+  const title = product.name || 'IsokoHub listing';
+  const shareData = { title, text: `Check out ${title} on IsokoHub.`, url };
+
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share(shareData);
+      showHeroShareFeedback('Listing shared.');
+      return;
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      console.warn('Native sharing failed; trying to copy the listing link.', error);
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(url);
+    showHeroShareFeedback('Listing link copied to clipboard.', 'Copied!');
+  } catch (error) {
+    console.error('Unable to copy the listing link:', error);
+    window.prompt('Copy this listing link to share:', url);
+  }
 }
 
 function renderHeroSlideControls() {
@@ -176,12 +223,14 @@ function initializeHeroSlideshow() {
   const next = document.getElementById('marketplace-hero-next');
   const indicators = document.getElementById('marketplace-hero-slide-indicators');
   const toggle = document.getElementById('marketplace-hero-toggle');
-  if (!hero || !previous || !next || !indicators || !toggle) return;
+  const shareButton = document.getElementById('marketplace-hero-share');
+  if (!hero || !previous || !next || !indicators || !toggle || !shareButton) return;
 
   heroSlideshowInitialized = true;
   heroReducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
   previous.addEventListener('click', () => showHeroSlide(heroSlideIndex - 1));
   next.addEventListener('click', () => showHeroSlide(heroSlideIndex + 1));
+  shareButton.addEventListener('click', shareHeroSlide);
   indicators.addEventListener('click', event => {
     const button = event.target.closest('button[data-slide-index]');
     if (button) showHeroSlide(Number(button.dataset.slideIndex));
