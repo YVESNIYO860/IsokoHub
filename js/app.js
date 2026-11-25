@@ -363,7 +363,7 @@ function ensurePwaMetaTags() {
   if (!document.querySelector('link[rel="apple-touch-icon"]')) {
     const appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
-    appleIcon.href = '/assets/logo.png';
+    appleIcon.href = '/assets/pwa-icon-192.png';
     document.head.appendChild(appleIcon);
   }
 }
@@ -373,32 +373,23 @@ let installPromptDismissed = false;
 const INSTALL_PROMPT_DISMISS_KEY = 'isokoHubInstallPromptDismissed';
 
 function setInstallUiState(isInstalling = false) {
-  const installButtons = document.querySelectorAll('.install-nav-btn, .install-app-primary');
+  const installButtons = document.querySelectorAll('.install-app-primary');
   installButtons.forEach((button) => {
     button.disabled = isInstalling;
-
-    if (button.classList.contains('install-nav-btn')) {
-      button.innerHTML = isInstalling
-        ? '<i class="fa-solid fa-spinner fa-spin"></i><strong>Installing...</strong>'
-        : '<i class="fa-solid fa-download"></i><strong>Install</strong>';
-    }
-
-    if (button.classList.contains('install-app-primary')) {
-      button.textContent = isInstalling ? 'Installing...' : (button.dataset.defaultLabel || 'Install');
-    }
+    button.textContent = isInstalling ? 'Installing...' : (button.dataset.defaultLabel || 'Install');
   });
 }
 
 function registerServiceWorker() {
-  if ('serviceWorker' in navigator) {
-    const hostname = window.location.hostname;
-    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '';
-    if (isLocalhost) return;
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
 
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+  const register = () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((error) => {
+      console.error('PWA service worker registration failed:', error);
     });
-  }
+  };
+  if (document.readyState === 'complete') register();
+  else window.addEventListener('load', register, { once: true });
 }
 
 function isAndroidDevice() {
@@ -803,7 +794,6 @@ function renderNavbar() {
   });
 
   const user = getCurrentUser();
-  const showInstallAction = !isInStandaloneMode();
   const isAdmin = isAdminUser(user);
   const isAdminPage = /admin\.html/.test(window.location.pathname);
   const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'products.html';
@@ -842,17 +832,6 @@ function renderNavbar() {
             <i class="fa-solid fa-comments"></i>
             <strong>Messages</strong>
           </a>
-
-          ${isAdminPage ? '' : `
-          ${showInstallAction ? `
-          <button type="button" class="nav-action-item install-nav-btn" onclick="showInstallPrompt()">
-            <i class="fa-solid fa-download"></i>
-            <strong>Install</strong>
-          </button>
-          ` : ''}
-          `}
-
-
 
           <a href="#" class="nav-action-item cart-icon">
             <i class="fa-solid fa-cart-shopping" style="font-size: 1.5rem;"></i>

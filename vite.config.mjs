@@ -106,6 +106,7 @@ export default defineConfig({
       cpSync(resolve(projectRoot, 'js'), runtimeOutput, { recursive: true });
       await minifyJavaScriptFiles(runtimeOutput);
       cpSync(resolve(projectRoot, 'assets'), resolve(outputDirectory, 'assets'), { recursive: true });
+      copyFileSync(resolve(projectRoot, 'manifest.json'), resolve(outputDirectory, 'manifest.json'));
       const serviceWorkerOutput = resolve(outputDirectory, 'sw.js');
       copyFileSync(resolve(projectRoot, 'sw.js'), serviceWorkerOutput);
       await minifyJavaScriptFiles(resolve(outputDirectory, 'sw.js'));
