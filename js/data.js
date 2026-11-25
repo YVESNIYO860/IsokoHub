@@ -1252,16 +1252,24 @@ function renderProductDescription(value = '') {
         output.push(`<${listType}>`);
         activeList = listType;
       }
-      output.push(`<li>${formatDescriptionInline(listMatch[listMatch.length - 1])}</li>`);
+      const item = listMatch[listMatch.length - 1];
+      const labeledFeature = item.match(/^([^:*_`]{1,60}):(\s+.+)$/);
+      const formattedItem = labeledFeature
+        ? `<strong>${formatDescriptionInline(labeledFeature[1])}</strong>:${formatDescriptionInline(labeledFeature[2])}`
+        : formatDescriptionInline(item);
+      output.push(`<li>${formattedItem}</li>`);
       return;
     }
 
     closeList();
     const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+    const plainHeading = trimmed.match(/^([^:\n]{3,80}):$/);
     const quote = trimmed.match(/^>\s?(.+)$/);
     if (heading) {
       const level = heading[1].length + 2;
       output.push(`<h${level}>${formatDescriptionInline(heading[2])}</h${level}>`);
+    } else if (plainHeading) {
+      output.push(`<h3>${formatDescriptionInline(plainHeading[1])}</h3>`);
     } else if (quote) {
       output.push(`<blockquote>${formatDescriptionInline(quote[1])}</blockquote>`);
     } else {

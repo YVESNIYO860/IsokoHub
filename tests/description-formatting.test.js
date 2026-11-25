@@ -24,6 +24,11 @@ assert.ok(description.includes('&lt;img'));
 assert.ok(!description.includes('<img'));
 assert.ok(!context.renderProductDescription('[bad](javascript:alert(1))').includes('<a '));
 
+const plainAiDescription = context.renderProductDescription('Samsung Galaxy A26 5G Specs:\n- RAM: 8GB\n- Storage: 256GB');
+assert.ok(plainAiDescription.includes('<h3>Samsung Galaxy A26 5G Specs</h3>'));
+assert.ok(plainAiDescription.includes('<li><strong>RAM</strong>: 8GB</li>'));
+assert.ok(!plainAiDescription.includes('*'));
+
 const textNode = (value) => ({ nodeType: 3, nodeValue: value });
 const element = (tagName, childNodes = [], attributes = {}) => ({
   nodeType: 1,

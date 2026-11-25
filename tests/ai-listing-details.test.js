@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const productIntelligence = require('../api/product-intelligence');
-const { sanitizeExtractedDetails } = productIntelligence._test;
+const { makePrompt, sanitizeExtractedDetails } = productIntelligence._test;
 
 function mockResponse() {
   return {
@@ -46,6 +46,18 @@ test('extracted listing details are restricted to supported, grounded form value
   assert.equal(details.price_max, 500000);
   assert.deepEqual(details.specifications, { brand: 'Samsung' });
   assert.deepEqual(details.custom_specifications, [{ label: 'Compatibility', value: 'Android apps' }]);
+});
+
+test('seller AI drafts avoid visible Markdown markers and use styled plain-text formatting', () => {
+  const prompt = makePrompt('description', {
+    name: 'Samsung Galaxy A26 5G',
+    category: 'Phones',
+    description: '8 GB RAM and 256 GB storage'
+  }, 'en', '');
+
+  assert.match(prompt, /Never use asterisks, underscores, hash marks, backticks, or Markdown formatting markers/);
+  assert.match(prompt, /plain-text headings ending in a colon and simple hyphen bullets/);
+  assert.doesNotMatch(prompt, /standard Markdown bold/);
 });
 
 test('seller AI extracts fields from a description without requiring a name or category first', async () => {
