@@ -9,7 +9,7 @@ Configure these variables on the deployment that serves the `/api` functions:
 - `GROQ_API_KEY`: Groq API key. Keep it server-side; never add it to browser code or commit it.
 - `SUPABASE_URL`: Supabase project URL.
 - `SUPABASE_ANON_KEY`: Supabase anon/public key used with public listing policies and the signed-in seller's bearer token. Do not use a service-role key.
-- `GROQ_MODEL` (optional): Groq chat-completions model; defaults to `llama-3.3-70b-versatile`.
+- `GROQ_MODEL` (optional): Groq chat-completions model; defaults to `openai/gpt-oss-120b`.
 
 On Vercel, add the variables in Project Settings → Environment Variables, then redeploy. The endpoints are `/api/shopping-assistant` and `/api/product-intelligence`.
 

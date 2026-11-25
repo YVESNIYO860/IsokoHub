@@ -147,15 +147,18 @@ test('public search returns approved listing fields only and preserves missing p
 });
 
 test('shopping endpoint executes a bounded search tool and returns real public results', async () => {
-  const environment = preserveEnvironment(['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'GROQ_API_KEY']);
+  const environment = preserveEnvironment(['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'GROQ_API_KEY', 'GROQ_MODEL']);
   const oldFetch = global.fetch;
   process.env.SUPABASE_URL = 'https://isokohub-test.supabase.co';
   process.env.SUPABASE_ANON_KEY = 'test-anon-key';
   process.env.GROQ_API_KEY = 'test-groq-key';
+  delete process.env.GROQ_MODEL;
   let groqCalls = 0;
-  global.fetch = async (url) => {
+  const requestedModels = [];
+  global.fetch = async (url, options) => {
     if (String(url).startsWith('https://api.groq.com/')) {
       groqCalls += 1;
+      requestedModels.push(JSON.parse(options.body).model);
       const message = groqCalls === 1
         ? {
           tool_calls: [{
@@ -196,6 +199,7 @@ test('shopping endpoint executes a bounded search tool and returns real public r
     const result = JSON.parse(response.body);
     assert.equal(response.statusCode, 200);
     assert.equal(groqCalls, 2);
+    assert.deepEqual(requestedModels, ['openai/gpt-oss-120b', 'openai/gpt-oss-120b']);
     assert.equal(result.products[0].id, 'listing-123');
     assert.equal(result.reply, 'I found an approved laptop listing.');
     assert.equal(Object.hasOwn(result.products[0], 'seller_email'), false);
