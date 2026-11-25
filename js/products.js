@@ -136,6 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           <div class="product-quick-view-actions">
             <a class="product-card-chat" href="chat.html?product=${encodeURIComponent(product.id)}"><i class="fa-solid fa-comments" aria-hidden="true"></i> Contact seller</a>
             ${canAddToCart ? `<button type="button" class="btn btn-primary" data-product-quick-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
+            <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
+              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
+            </button>
             <a class="product-quick-view-details" href="${productUrl}">View full details</a>
           </div>
         </div>
@@ -402,6 +405,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${hasDiscount ? `<span class="product-listing-discount" aria-label="${discountPercent}% off">${discountPercent}% off</span>` : ''}
           <div class="product-card-actions">
             <a href="chat.html?product=${encodeURIComponent(p.id)}" onclick="event.stopPropagation();" class="product-card-chat"><i class="fa-solid fa-comments"></i> Chat</a>
+            <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(p.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
+              <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
+            </button>
             ${canAddToCart ? `<button type="button" class="btn btn-primary product-listing-add-cart" data-product-add-to-cart="${escapeHtml(String(p.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
             ${p.buy_online && canAddToCart ? `<a href="${productUrl}&buy=1" class="btn btn-buy-online"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Buy online</a>` : ''}
           </div>

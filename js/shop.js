@@ -61,7 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(product.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
               : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
             return `
-              <a href="product.html?id=${product.id}" class="product-card">
+              <article class="product-card shop-product-card">
+                <a href="product.html?id=${encodeURIComponent(product.id)}" class="shop-product-link">
                 ${imageMarkup}
                 <div class="product-card-content">
                   <div class="product-card-meta-row">
@@ -75,7 +76,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <span style="background:#ecfeff;color:#0f766e;border-radius:999px;padding:0.35rem 0.75rem;font-size:0.78rem;display:inline-flex;align-items:center;gap:0.4rem;"><i class="fa-solid fa-eye"></i> View</span>
                   </div>
                 </div>
-              </a>
+                </a>
+                <div class="shop-product-actions">
+                  <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${escapeHtml(product.name || 'Untitled listing')}" aria-label="Share ${escapeHtml(product.name || 'Untitled listing')}" title="Share this product">
+                    <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
+                  </button>
+                </div>
+              </article>
             `;
           }).join('')}
         </div>

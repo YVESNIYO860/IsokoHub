@@ -78,6 +78,16 @@ function ProductCard({ product }) {
           <span className="assistant-product-open">View listing <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
         </div>
       </a>
+      <button
+        type="button"
+        className="product-share-button"
+        data-share-product={String(product.id)}
+        data-product-name={product.name}
+        aria-label={`Share ${product.name}`}
+        title="Share this product"
+      >
+        <i className="fa-solid fa-share-nodes" aria-hidden="true"></i><span className="product-share-label">Share</span>
+      </button>
     </article>
   );
 }

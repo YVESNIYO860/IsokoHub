@@ -86,23 +86,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         </div>
       `).join('')}</div>`
     : '';
-  const productPageUrl = `${window.location.origin}/product.html?id=${encodeURIComponent(product.id)}`;
-  const shareText = `Check out this IsokoHub listing: ${product.name}`;
-
-  const getCurrentShareImageUrl = () => images[activeImageIndex] || productPageUrl;
-  const buildShareUrls = () => {
-    const targetUrl = encodeURIComponent(productPageUrl);
-    const imageUrl = getCurrentShareImageUrl();
-    const headerTag = 'SHARE';
-    const adminNote = 'Shared by IsokoHub Admin for direct contact.';
-    const bodyText = `${headerTag}: ${shareText} - ${productPageUrl}\nImage: ${imageUrl}\n\n${adminNote}`;
-    return {
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(bodyText)}`,
-      facebook: `https://www.facebook.com/sharer/sharer.php?u=${targetUrl}&quote=${encodeURIComponent(bodyText)}`,
-      twitter: `https://twitter.com/intent/tweet?url=${targetUrl}&text=${encodeURIComponent(bodyText)}`
-    };
-  };
-
   wrapper.innerHTML = `
     <div class="product-detail-shell">
       <div class="product-gallery-card">
@@ -204,6 +187,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <span class="contact-action-copy"><strong>Email</strong><small>Ask a question</small></span>
                 </a>
               </div>
+              <button type="button" class="product-share-button product-detail-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${escapeHtml(product.name || 'Untitled listing')}" aria-label="Share ${escapeHtml(product.name || 'Untitled listing')}" title="Share this product">
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share this product</span>
+              </button>
               ${product.buy_online && !hasProductPriceRange(product) ? `<button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button>` : ''}
               ${!hasProductPriceRange(product) ? `<button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
                 <i class="fa-solid fa-cart-plus"></i> Add to Cart
@@ -452,34 +438,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  const updateShareLinks = () => {
-    const urls = buildShareUrls();
-    const whatsappBtn = document.getElementById('whatsapp-share-btn');
-    const facebookBtn = document.getElementById('facebook-share-btn');
-    const twitterBtn = document.getElementById('twitter-share-btn');
-
-    if (whatsappBtn) whatsappBtn.href = urls.whatsapp;
-    if (facebookBtn) facebookBtn.href = urls.facebook;
-    if (twitterBtn) twitterBtn.href = urls.twitter;
-  };
-
-  document.getElementById('whatsapp-share-btn')?.addEventListener('click', updateShareLinks);
-  document.getElementById('facebook-share-btn')?.addEventListener('click', updateShareLinks);
-  document.getElementById('twitter-share-btn')?.addEventListener('click', updateShareLinks);
-
-  document.getElementById('copy-link-btn')?.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(productPageUrl);
-      alert('Product link copied to clipboard');
-    } catch (err) {
-      console.error('Unable to copy link:', err);
-      prompt('Copy this link to share:', productPageUrl);
-    }
-  });
-
   const onImageUpdate = (index) => {
     updateActiveImage(index);
-    updateShareLinks();
   };
 
   document.querySelectorAll('.gallery-thumb').forEach((thumb) => {
@@ -488,8 +448,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('gallery-prev')?.addEventListener('click', () => onImageUpdate(activeImageIndex - 1));
   document.getElementById('gallery-next')?.addEventListener('click', () => onImageUpdate(activeImageIndex + 1));
-
-  updateShareLinks();
 
   document.getElementById('add-to-cart-btn')?.addEventListener('click', () => {
     addToCart(product);
@@ -512,17 +470,25 @@ function buildRelatedProductCard(product) {
   const price = typeof product.price !== 'undefined' ? formatProductPrice(product) : 'Price unavailable';
   const district = product.district || 'District not set';
 
+  const productName = escapeHtml(product.name || 'Product');
   return `
-    <a href="product.html?id=${encodeURIComponent(product.id)}" class="related-product-card">
-      <img src="${escapeHtml(displayImage)}" alt="${escapeHtml(product.name || 'Related product')}" class="related-product-image" onerror="this.onerror=null;this.src='assets/logo.png';">
-      <div class="related-product-body">
-        <div class="related-product-category">${escapeHtml(product.category || 'Product')}</div>
-        <h4 class="related-product-title">${escapeHtml(product.name || 'Product')}</h4>
-        <div class="related-product-location"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(district)}</div>
-        <div class="related-product-meta">
-          <span class="related-product-price">${price}</span>
+    <article class="related-product-card">
+      <a href="product.html?id=${encodeURIComponent(product.id)}" class="related-product-main-link">
+        <img src="${escapeHtml(displayImage)}" alt="${escapeHtml(product.name || 'Related product')}" class="related-product-image" onerror="this.onerror=null;this.src='assets/logo.png';">
+        <div class="related-product-body">
+          <div class="related-product-category">${escapeHtml(product.category || 'Product')}</div>
+          <h4 class="related-product-title">${productName}</h4>
+          <div class="related-product-location"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(district)}</div>
+          <div class="related-product-meta">
+            <span class="related-product-price">${price}</span>
+          </div>
         </div>
+      </a>
+      <div class="related-product-actions">
+        <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
+          <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
+        </button>
       </div>
-    </a>
+    </article>
   `;
 }

@@ -538,6 +538,9 @@ document.addEventListener('click', (event) => {
         <p class="featured-quick-view-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${escapeHtml(product.district || 'Location not set')}</p>
         <div class="featured-quick-view-actions">
           <a href="${escapeHtml(contactUrl)}" class="featured-quick-view-contact" ${phone ? 'target="_blank" rel="noopener noreferrer"' : ''}>Contact seller</a>
+          <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
+            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
+          </button>
           ${canAddToCart ? `<button type="button" class="btn btn-primary" data-featured-quick-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
           <a href="${productUrl}" class="featured-quick-view-details">View full details</a>
         </div>
@@ -635,6 +638,9 @@ function createFeaturedProductCard(p, useHeroImageTreatment = false, isFeaturedL
               </div>
               <div class="hero-product-card-actions">
                 <a href="${productUrl}" class="hero-product-card-view">View listing</a>
+                <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(p.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
+                  <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
+                </button>
                 <a href="${escapeHtml(contactUrl)}" class="product-contact-btn" title="${contactTitle}" aria-label="${contactTitle}" target="_blank" rel="noopener noreferrer"><i class="${contactIcon}"></i></a>
                 ${canAddToCart ? `<button type="button" class="featured-listing-add-cart" data-featured-cart="${escapeHtml(String(p.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
                 ${isFeaturedListing && !isSold && p.buy_online && canAddToCart ? `<a href="${productUrl}&buy=1" class="featured-listing-buy-online"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Buy online</a>` : ''}
