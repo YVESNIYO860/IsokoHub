@@ -161,9 +161,9 @@ function makePrompt(action, product, language, question) {
     ? 'Write in the same language as the product description or latest seller request. Use English if no language is clear.'
     : `Write in ${language === 'rw' ? 'Kinyarwanda' : language === 'fr' ? 'French' : 'English'}.`;
   const task = {
-    description: 'Write a clear, buyer-friendly marketplace description, using short paragraphs and a few bullets where useful.',
+    description: 'Write a clear, buyer-friendly marketplace description. Use a short introduction, then give each long feature its own titled section: put a plain-text title ending with a colon on its own line, followed by one short paragraph, with a blank line between sections. Avoid dense one-line text.',
     summary: 'Write a concise 1-2 sentence summary for a product card.',
-    features: 'Create a short bullet list of product features and practical benefits.',
+    features: 'Create a readable set of feature sections. Put each short feature title ending with a colon on its own line, followed by one short paragraph describing that feature. Leave a blank line between sections; never combine multiple features on one line.',
     seo: 'Return an SEO title, a short meta description, and a concise comma-separated keyword list.',
     answer_question: `Answer this seller question using only the supplied listing facts: ${question}`
   }[action];
@@ -172,7 +172,7 @@ function makePrompt(action, product, language, question) {
     'You help IsokoHub sellers prepare accurate product listings.',
     languageInstruction,
     task,
-    'Use concise plain-text headings ending in a colon and simple hyphen bullets. Never use asterisks, underscores, hash marks, backticks, or Markdown formatting markers. The website styles headings and specification labels in the preview.',
+    'Use plain-text headings ending in a colon and simple hyphen bullets only where useful. Never use asterisks, underscores, hash marks, backticks, or Markdown formatting markers. The website styles headings and specification labels in the preview.',
     'Use only facts present in the supplied product information. Never invent specifications, condition, warranty, included accessories, availability, certifications, or seller claims. If details are missing, omit them or say they were not supplied. Return plain text only.',
     `Product information:\n${JSON.stringify(product)}`
   ].join('\n\n');

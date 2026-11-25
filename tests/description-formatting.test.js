@@ -29,6 +29,12 @@ assert.ok(plainAiDescription.includes('<h3>Samsung Galaxy A26 5G Specs</h3>'));
 assert.ok(plainAiDescription.includes('<li><strong>RAM</strong>: 8GB</li>'));
 assert.ok(!plainAiDescription.includes('*'));
 
+const featureBlocks = context.renderProductDescription(
+  'High Capacity:\nA 20000mAh battery supports multiple device charges.\n\nTransparent Design:\nThe clear exterior displays the internal components.'
+);
+assert.ok(featureBlocks.includes('<h3>High Capacity</h3><p>A 20000mAh battery supports multiple device charges.</p>'));
+assert.ok(featureBlocks.includes('<h3>Transparent Design</h3><p>The clear exterior displays the internal components.</p>'));
+
 const textNode = (value) => ({ nodeType: 3, nodeValue: value });
 const element = (tagName, childNodes = [], attributes = {}) => ({
   nodeType: 1,

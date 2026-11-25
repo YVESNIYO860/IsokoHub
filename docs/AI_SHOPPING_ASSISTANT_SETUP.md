@@ -27,7 +27,7 @@ The AI endpoints do not require a new migration. Public product search uses the 
 1. Open the floating assistant or `/shopping-assistant`, select a language, try a greeting or general question, then search for a product/district. Confirm casual chat does not show unrelated listings and returned product cards open corresponding real listings.
 2. Ask for a comparison of at least two listings. Missing values should be identified as unavailable.
 3. Ask a platform question, including how to report a listing; the response should reflect the current Support page and not claim a report feature exists.
-4. Sign in as an active, verified seller, open Sell Product, and generate a description or feature list. Drafts use plain-text headings and hyphen bullets without visible Markdown markers; the preview styles headings and specification labels. Review the draft before copying or using it.
+4. Sign in as an active, verified seller, open Sell Product, and generate a description or feature list. Drafts use plain-text headings and hyphen bullets without visible Markdown markers; long features appear in separate titled sections, and the preview styles their headings and specification labels. Review the draft before copying or using it.
 5. Add product facts to the description and use **Fill fields from description**. Confirm that only supported details are filled, one by one, and review them before saving. The same form works when editing an existing listing.
 6. Try seller AI with a signed-in account awaiting approval; drafting should work, while posting or editing listings remains unavailable until approval.
 

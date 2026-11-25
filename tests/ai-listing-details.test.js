@@ -48,16 +48,20 @@ test('extracted listing details are restricted to supported, grounded form value
   assert.deepEqual(details.custom_specifications, [{ label: 'Compatibility', value: 'Android apps' }]);
 });
 
-test('seller AI drafts avoid visible Markdown markers and use styled plain-text formatting', () => {
-  const prompt = makePrompt('description', {
+test('seller AI drafts avoid Markdown markers and structure long features into titled blocks', () => {
+  const product = {
     name: 'Samsung Galaxy A26 5G',
     category: 'Phones',
     description: '8 GB RAM and 256 GB storage'
-  }, 'en', '');
+  };
+  const descriptionPrompt = makePrompt('description', product, 'en', '');
+  const featuresPrompt = makePrompt('features', product, 'en', '');
 
-  assert.match(prompt, /Never use asterisks, underscores, hash marks, backticks, or Markdown formatting markers/);
-  assert.match(prompt, /plain-text headings ending in a colon and simple hyphen bullets/);
-  assert.doesNotMatch(prompt, /standard Markdown bold/);
+  assert.match(descriptionPrompt, /Never use asterisks, underscores, hash marks, backticks, or Markdown formatting markers/);
+  assert.match(descriptionPrompt, /each long feature its own titled section/);
+  assert.match(featuresPrompt, /each short feature title ending with a colon on its own line/);
+  assert.match(featuresPrompt, /blank line between sections; never combine multiple features on one line/);
+  assert.doesNotMatch(descriptionPrompt, /standard Markdown bold/);
 });
 
 test('seller AI extracts fields from a description without requiring a name or category first', async () => {
