@@ -1,6 +1,6 @@
 # IsokoHub AI shopping and seller tools
 
-The customer assistant searches approved public listings and can answer verified platform questions. Seller AI tools generate listing drafts and can extract explicitly stated details from a description into the seller form. Sellers review the values and submit the form themselves; the API does not directly create, edit, or delete products.
+The customer assistant chats naturally, searches approved public listings across marketplace categories when asked, and can answer verified platform questions. It should not default to recommending a particular product category. Seller AI tools generate listing drafts and can extract explicitly stated details from a description into the seller form. Sellers review the values and submit the form themselves; the API does not directly create, edit, or delete products.
 
 ## Server configuration
 
@@ -24,7 +24,7 @@ The AI endpoints do not require a new migration. Public product search uses the 
 
 ## Smoke test
 
-1. Open the floating assistant or `/shopping-assistant`, select a language, and search for a product/district. Confirm returned cards open the corresponding real listing.
+1. Open the floating assistant or `/shopping-assistant`, select a language, try a greeting or general question, then search for a product/district. Confirm casual chat does not show unrelated listings and returned product cards open corresponding real listings.
 2. Ask for a comparison of at least two listings. Missing values should be identified as unavailable.
 3. Ask a platform question, including how to report a listing; the response should reflect the current Support page and not claim a report feature exists.
 4. Sign in as an active, verified seller, open Sell Product, and generate a description or feature list. Review the draft before copying or using it.

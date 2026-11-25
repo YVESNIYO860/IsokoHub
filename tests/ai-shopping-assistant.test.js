@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { parsePreliminaryFilters, validateLanguage } = require('../api/shopping-assistant')._test;
+const { isProductDiscoveryRequest, parsePreliminaryFilters, validateLanguage } = require('../api/shopping-assistant')._test;
 const { sanitizeProduct } = require('../api/product-intelligence')._test;
 const { queryPublicProducts, validateSearchArguments } = require('../api/_shared/product-search');
 const shoppingAssistant = require('../api/shopping-assistant');
@@ -40,6 +40,13 @@ test('natural-language filter extraction sorts cheapest matches first', () => {
 
   assert.equal(filters.brand, 'Samsung');
   assert.equal(filters.sortBy, 'price_asc');
+});
+
+test('only clear shopping requests trigger an automatic listing search', () => {
+  assert.equal(isProductDiscoveryRequest('Find a laptop'), true);
+  assert.equal(isProductDiscoveryRequest('Je cherche des annonces'), true);
+  assert.equal(isProductDiscoveryRequest('How are you today?'), false);
+  assert.equal(isProductDiscoveryRequest('Who developed IsokoHub?'), false);
 });
 
 test('seller language and product input are restricted to supported, public-safe fields', () => {
@@ -203,6 +210,43 @@ test('shopping endpoint executes a bounded search tool and returns real public r
     assert.equal(result.products[0].id, 'listing-123');
     assert.equal(result.reply, 'I found an approved laptop listing.');
     assert.equal(Object.hasOwn(result.products[0], 'seller_email'), false);
+  } finally {
+    global.fetch = oldFetch;
+    restoreEnvironment(environment);
+  }
+});
+
+test('shopping assistant chats naturally without searching listings and knows the developer name', async () => {
+  const environment = preserveEnvironment(['GROQ_API_KEY', 'GROQ_MODEL']);
+  const oldFetch = global.fetch;
+  process.env.GROQ_API_KEY = 'test-groq-key';
+  delete process.env.GROQ_MODEL;
+  let requestedMessages;
+  global.fetch = async (url, options) => {
+    assert.match(String(url), /^https:\/\/api\.groq\.com\//);
+    requestedMessages = JSON.parse(options.body).messages;
+    return {
+      ok: true,
+      json: async () => ({ choices: [{ message: { content: 'I am doing well, thank you! How can I help you today?' } }] })
+    };
+  };
+
+  try {
+    const response = mockResponse();
+    await shoppingAssistant({
+      method: 'POST',
+      headers: { 'x-forwarded-for': '198.51.100.27' },
+      socket: {},
+      body: { language: 'en', messages: [{ role: 'user', content: 'How are you today?' }] }
+    }, response);
+    const result = JSON.parse(response.body);
+    const prompt = requestedMessages.find(message => message.role === 'system').content;
+    assert.equal(response.statusCode, 200);
+    assert.equal(result.reply, 'I am doing well, thank you! How can I help you today?');
+    assert.deepEqual(result.products, []);
+    assert.match(prompt, /NIYONKURU Yves/);
+    assert.match(prompt, /Never default to laptops or any other category/);
+    assert.match(prompt, /Answer greetings, small talk/);
   } finally {
     global.fetch = oldFetch;
     restoreEnvironment(environment);
