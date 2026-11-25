@@ -21,4 +21,4 @@ Never use a Supabase service-role key in this function or any browser code. Do n
 
 Redeploy the Vercel project after saving its environment variables. Sign in, open Image Studio, upload a JPEG/PNG/WebP image, choose **AI Edit**, enter an instruction, and select **Generate edit**. The browser resizes the reference image to at most 504 pixels on its longest side, as required by FLUX.2 Klein, and requests an output up to 1008 pixels on its longest side. AI-generated details may differ from the actual product; review the comparison before downloading or publishing.
 
-For local development, run the project with Vercel's local function runtime (`vercel dev`) and set the same environment variables in an ignored local `.env.local` file. The Vite-only development server does not execute Vercel functions.
+For local development, run the project with Vercel's local function runtime (`vercel dev`) and set the same environment variables in an ignored local `.env.local` file. Vite has local middleware for the shopping assistant and seller product-intelligence endpoints, but Image Studio still requires the Vercel function runtime.

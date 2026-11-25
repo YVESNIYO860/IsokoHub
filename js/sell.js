@@ -464,6 +464,64 @@ document.addEventListener('DOMContentLoaded', async function() {
   const overlayText    = document.getElementById('upload-overlay-text');
   const overlaySubtext = document.getElementById('upload-overlay-subtext');
   const districtSelect = document.getElementById('prod-district');
+  const specificationFields = [
+    ['brand', 'prod-brand', []],
+    ['model', 'prod-model', []],
+    ['memory', 'prod-memory', ['ram', 'memory_size', 'memorySize']],
+    ['capacity', 'prod-capacity', []],
+    ['storage', 'prod-storage', ['storage_capacity', 'storageCapacity']],
+    ['processor', 'prod-processor', ['cpu']],
+    ['screen_size', 'prod-screen-size', ['screenSize']],
+    ['battery', 'prod-battery', ['battery_capacity', 'batteryCapacity']],
+    ['size', 'prod-size', ['dimensions']],
+    ['material', 'prod-material', []],
+    ['warranty', 'prod-warranty', []],
+    ['weight', 'prod-weight', []]
+  ];
+  const knownSpecificationKeys = new Set([
+    'brand', 'model', 'memory', 'ram', 'memory_size', 'capacity', 'storage',
+    'storage_capacity', 'processor', 'cpu', 'screen_size', 'battery',
+    'battery_capacity', 'size', 'dimensions', 'material', 'warranty', 'weight',
+    'color', 'condition', '_schema_version'
+  ]);
+  const customSpecifications = document.getElementById('custom-specifications');
+  const addSpecificationButton = document.getElementById('add-product-spec');
+  const listingUpdateNotice = document.getElementById('listing-update-notice');
+  const maxCustomSpecifications = 12;
+
+  function addCustomSpecificationRow(label = '', value = '') {
+    if (customSpecifications.children.length >= maxCustomSpecifications) return;
+    const row = document.createElement('div');
+    row.className = 'custom-spec-row';
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text';
+    labelInput.className = 'form-control';
+    labelInput.maxLength = 40;
+    labelInput.placeholder = 'Attribute (e.g. Warranty)';
+    labelInput.setAttribute('aria-label', 'Custom attribute name');
+    labelInput.value = label;
+    const valueInput = document.createElement('input');
+    valueInput.type = 'text';
+    valueInput.className = 'form-control';
+    valueInput.maxLength = 120;
+    valueInput.placeholder = 'Value';
+    valueInput.setAttribute('aria-label', 'Custom attribute value');
+    valueInput.value = value;
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'custom-spec-remove';
+    removeButton.setAttribute('aria-label', 'Remove custom attribute');
+    removeButton.innerHTML = '<i class="fa-solid fa-trash" aria-hidden="true"></i>';
+    removeButton.addEventListener('click', () => {
+      row.remove();
+      addSpecificationButton.disabled = customSpecifications.children.length >= maxCustomSpecifications;
+    });
+    row.append(labelInput, valueInput, removeButton);
+    customSpecifications.appendChild(row);
+    addSpecificationButton.disabled = customSpecifications.children.length >= maxCustomSpecifications;
+  }
+
+  addSpecificationButton.addEventListener('click', () => addCustomSpecificationRow());
   enhanceDescriptionEditor(document.getElementById('prod-description'));
   function syncCustomColorInput() {
     const needsCustomColor = colorSelect.value === 'Other';
@@ -486,6 +544,104 @@ document.addEventListener('DOMContentLoaded', async function() {
       return;
     }
   }
+  const sellerAiControls = document.getElementById('seller-ai-controls');
+  const sellerAiStatus = document.getElementById('seller-ai-status');
+  const sellerAiOutput = document.getElementById('seller-ai-output');
+  const sellerAiDraft = document.getElementById('seller-ai-draft');
+  const sellerAiUseDescription = document.getElementById('seller-ai-use-description');
+  const sellerAiCopy = document.getElementById('seller-ai-copy');
+  const descriptionInput = document.getElementById('prod-description');
+  let latestSellerAiAction = '';
+
+  function getSellerAiProduct() {
+    const specifications = {};
+    specificationFields.forEach(([key, elementId]) => {
+      const value = document.getElementById(elementId)?.value.trim();
+      if (value) specifications[key] = value;
+    });
+    Array.from(customSpecifications.children).forEach((row) => {
+      const fields = row.querySelectorAll('input');
+      const label = fields[0]?.value.trim();
+      const value = fields[1]?.value.trim();
+      const key = label?.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^[^a-z]+/, '').slice(0, 40);
+      if (key && value) specifications[key] = value;
+    });
+    const color = colorSelect.value === 'Other' ? customColorInput.value.trim() : colorSelect.value;
+    return {
+      name: document.getElementById('prod-name').value.trim(),
+      category: categorySelect.value,
+      condition: conditionSelect.value,
+      color,
+      price: priceMinInput.value ? Number(priceMinInput.value) : null,
+      description: descriptionInput.value.trim(),
+      specifications
+    };
+  }
+
+  sellerAiControls?.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-seller-ai-action]');
+    if (!button) return;
+    if (!descriptionInput.value.trim() && !document.getElementById('prod-name').value.trim()) {
+      sellerAiStatus.textContent = 'Enter a product name and some details before generating a draft.';
+      return;
+    }
+    const client = window.supabase;
+    const session = client?.auth && typeof client.auth.session === 'function' ? client.auth.session() : null;
+    if (!session?.access_token) {
+      sellerAiStatus.textContent = 'Sign in again before using seller AI tools.';
+      return;
+    }
+
+    const action = button.dataset.sellerAiAction;
+    const buttons = Array.from(sellerAiControls.querySelectorAll('button'));
+    buttons.forEach(item => { item.disabled = true; });
+    sellerAiStatus.textContent = 'Preparing an accurate draft…';
+    try {
+      const response = await fetch('/api/product-intelligence', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          action,
+          language: document.getElementById('seller-ai-language').value,
+          product: getSellerAiProduct()
+        })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Could not generate the listing draft.');
+      if (typeof result.text !== 'string' || !result.text.trim()) throw new Error('The AI service returned an empty draft.');
+
+      latestSellerAiAction = action;
+      sellerAiDraft.value = result.text;
+      sellerAiOutput.hidden = false;
+      sellerAiUseDescription.hidden = action !== 'description';
+      sellerAiStatus.textContent = 'Draft ready. Review every detail before adding it to your listing.';
+    } catch (error) {
+      sellerAiStatus.textContent = error.message || 'Could not generate the listing draft. Try again.';
+    } finally {
+      buttons.forEach(item => { item.disabled = false; });
+    }
+  });
+
+  sellerAiUseDescription?.addEventListener('click', () => {
+    if (latestSellerAiAction !== 'description' || !sellerAiDraft.value.trim()) return;
+    descriptionInput.value = sellerAiDraft.value;
+    descriptionInput.dispatchEvent(new Event('input', { bubbles: true }));
+    sellerAiStatus.textContent = 'Description draft added. Review and edit it before publishing.';
+  });
+
+  sellerAiCopy?.addEventListener('click', async () => {
+    if (!sellerAiDraft.value.trim()) return;
+    try {
+      await navigator.clipboard.writeText(sellerAiDraft.value);
+      sellerAiStatus.textContent = 'Draft copied to the clipboard.';
+    } catch {
+      sellerAiStatus.textContent = 'Could not copy automatically. Select and copy the draft text.';
+    }
+  });
+
   districtSelect.innerHTML =
     '<option value="">Select your district</option>' +
     RWANDA_DISTRICTS.map(d => `<option value="${d}">${d}</option>`).join('');
@@ -571,6 +727,26 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('prod-location').value          = districtParts.slice(1).join(' • ').trim();
       if (product.condition) {
         document.getElementById('prod-condition').value = product.condition;
+      }
+      const savedSpecifications = product.specifications && typeof product.specifications === 'object'
+        ? product.specifications
+        : {};
+      specificationFields.forEach(([key, inputId, aliases]) => {
+        const value = [key, ...aliases]
+          .map(specKey => savedSpecifications[specKey] ?? product[specKey])
+          .find(specValue => specValue != null && String(specValue).trim() !== '');
+        if (value != null) document.getElementById(inputId).value = String(value);
+      });
+      Object.entries(savedSpecifications).forEach(([key, value]) => {
+        const normalizedKey = key.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        if (knownSpecificationKeys.has(normalizedKey) || normalizedKey.startsWith('_') || typeof value !== 'string' && typeof value !== 'number') return;
+        const label = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ')
+          .replace(/\b\w/g, character => character.toUpperCase());
+        addCustomSpecificationRow(label, String(value));
+      });
+      if (typeof needsProductDetailsUpdate === 'function' && needsProductDetailsUpdate(product)) {
+        listingUpdateNotice.innerHTML = '<strong><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Listing details need review.</strong> The new specifications format is available. Review the fields below and save to update this listing; your existing photos, description, and pricing will be preserved.';
+        listingUpdateNotice.hidden = false;
       }
       if (existingImages.length > 0) {
         renderImagePreviews();
@@ -682,6 +858,38 @@ document.addEventListener('DOMContentLoaded', async function() {
     return urls;
   }
 
+  function collectListingSpecifications() {
+    const specifications = { _schema_version: 2, condition: conditionSelect.value };
+    const occupiedKeys = new Set(Object.keys(specifications));
+    const selectedColor = colorSelect.value === 'Other' ? customColorInput.value.trim() : colorSelect.value.trim();
+    specifications.color = selectedColor || null;
+
+    specificationFields.forEach(([key, inputId]) => {
+      const value = document.getElementById(inputId).value.trim();
+      if (value) {
+        specifications[key] = value;
+        occupiedKeys.add(key);
+      }
+    });
+
+    Array.from(customSpecifications.children).forEach((row) => {
+      const [labelInput, valueInput] = row.querySelectorAll('input');
+      const label = labelInput.value.trim();
+      const value = valueInput.value.trim();
+      if (!label && !value) return;
+      if (!label || !value) throw new Error('Complete both the name and value for each custom specification.');
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9 _-]{0,39}$/.test(label)) {
+        throw new Error('Custom specification names may use letters, numbers, spaces, hyphens, and underscores.');
+      }
+      const key = label.toLowerCase().replace(/[\s-]+/g, '_').replace(/_+/g, '_');
+      if (knownSpecificationKeys.has(key) || occupiedKeys.has(key)) throw new Error(`The "${label}" specification is already included.`);
+      occupiedKeys.add(key);
+      specifications[key] = value;
+    });
+
+    return specifications;
+  }
+
   /* ────────────────────────────────────────
      Form submit
   ──────────────────────────────────────── */
@@ -693,6 +901,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     try {
       const files = window._sellImages.slice();
       const category = categorySelect.value;
+      const selectedColor = colorSelect.value === 'Other' ? customColorInput.value.trim() : colorSelect.value;
+      const specifications = collectListingSpecifications();
       console.log('[sell] submitting, images count:', files.length, files.map(f => f.name));
 
       if (!isEditing && files.length < 1) {
@@ -734,8 +944,6 @@ document.addEventListener('DOMContentLoaded', async function() {
       if (!sellerEmailValue || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sellerEmailValue)) {
         throw new Error('Please enter a valid seller email address.');
       }
-      const selectedColor = colorSelect.value === 'Other' ? customColorInput.value.trim() : colorSelect.value;
-
       const productData = {
         name:        document.getElementById('prod-name').value,
         category,
@@ -747,6 +955,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         description: document.getElementById('prod-description').value,
         condition: conditionSelect.value,
         color: selectedColor || null,
+        specifications,
         sellerEmail: sellerEmailValue,
         sellerPhone: document.getElementById('prod-phone').value,
         district: fullLocation,
@@ -781,7 +990,12 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     } catch (err) {
       console.error('[sell] error:', err);
-      const message = err.message || 'Error saving product. Please try again.';
+      const errorMessage = String(err?.message || '');
+      const missingSpecificationsColumn = /specifications/i.test(errorMessage)
+        && /(column|schema cache|does not exist|could not find)/i.test(errorMessage);
+      const message = missingSpecificationsColumn
+        ? 'The product-details database update is not installed yet. Apply db/migrations/020_product_specifications.sql in Supabase, then try again.'
+        : errorMessage || 'Error saving product. Please try again.';
       errorEl.textContent = message;
       errorEl.classList.remove('d-none');
 

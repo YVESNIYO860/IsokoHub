@@ -96,7 +96,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productName = escapeHtml(product.name || 'Untitled listing');
     const description = String(product.description || '').trim();
     const shopName = product.shop?.name ? escapeHtml(product.shop.name) : '';
-    const productColor = product.color ? escapeHtml(product.color) : '';
+    const productSpecs = typeof getProductSpecifications === 'function' ? getProductSpecifications(product) : [];
+    const productSpecsMarkup = productSpecs.length
+      ? `<div class="product-quick-view-specs" aria-label="Product specifications">${productSpecs.map(spec => `
+          <div class="product-quick-view-spec">
+            <span class="product-quick-view-spec-icon"><i class="fa-solid ${escapeHtml(spec.icon)}" aria-hidden="true"></i></span>
+            <span class="product-quick-view-spec-copy"><small>${escapeHtml(spec.label)}</small><strong>${escapeHtml(spec.value)}</strong></span>
+          </div>
+        `).join('')}</div>`
+      : '';
+    const formattedDescription = description
+      ? (typeof renderProductDescription === 'function' ? renderProductDescription(description) : escapeHtml(description).replace(/\n/g, '<br>'))
+      : '';
     const price = typeof formatProductPrice === 'function'
       ? formatProductPrice(product)
       : formatPrice(Number(product.price) || 0);
@@ -117,9 +128,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           <span class="product-category">${escapeHtml(product.category || 'Other')}</span>
           <h2 id="product-quick-view-title">${productName}</h2>
           ${isSold ? '<span class="product-listing-sold-badge">Sold</span>' : ''}
-          ${productColor ? `<p class="product-quick-view-color"><i class="fa-solid fa-droplet" aria-hidden="true"></i> Color: ${productColor}</p>` : ''}
           ${shopName ? `<p class="product-quick-view-shop"><i class="fa-solid fa-store" aria-hidden="true"></i> ${shopName}</p>` : ''}
-          ${description ? `<p class="product-quick-view-description">${escapeHtml(description)}</p>` : ''}
+          ${productSpecsMarkup}
+          ${formattedDescription ? `<section class="product-quick-view-description-block" aria-label="Product description"><h3><i class="fa-solid fa-align-left" aria-hidden="true"></i> About this item</h3><div class="product-quick-view-description formatted-description">${formattedDescription}</div></section>` : ''}
           <p class="product-quick-view-price">${escapeHtml(price)}</p>
           <p class="product-quick-view-location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ${escapeHtml(product.district || 'District not set')}</p>
           <div class="product-quick-view-actions">

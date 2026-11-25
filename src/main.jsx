@@ -20,6 +20,7 @@ import { Privacy, Terms } from './PolicyPages.jsx';
 import SellerProfile from './SellerProfile.jsx';
 import Sell from './Sell.jsx';
 import Shop from './Shop.jsx';
+import ShoppingAssistant from './ShoppingAssistant.jsx';
 import Support from './Support.jsx';
 import Visitors from './Visitors.jsx';
 
@@ -51,6 +52,7 @@ const routeDefinitions = {
   '/privacy': { component: Privacy, scripts: sharedScripts },
   '/terms': { component: Terms, scripts: sharedScripts },
   '/support': { component: Support, scripts: sharedScripts },
+  '/shopping-assistant': { component: () => <ShoppingAssistant fullPage />, scripts: sharedScripts },
   '/login': { component: Login, scripts: ['js/route-utils.js', 'js/data.js', 'js/app.js', 'js/auth.js'] },
   '/signup': { component: Signup, scripts: ['js/route-utils.js', 'js/data.js', 'js/app.js', 'js/auth.js'] },
   '/blog-post': {
@@ -158,6 +160,7 @@ const pageMetadata = {
   '/about': ['About IsokoHub', 'Learn about IsokoHub and our mission to connect local buyers and sellers.'],
   '/admin-profile': ['About the Founder | IsokoHub', 'Meet the founder and developer behind IsokoHub.'],
   '/support': ['Support | IsokoHub', 'Get help with your IsokoHub account, listings, or marketplace conversations.'],
+  '/shopping-assistant': ['AI Shopping Assistant | IsokoHub', 'Find real IsokoHub listings, compare product details, and get marketplace help in English, Kinyarwanda, or French.'],
   '/privacy': ['Privacy Policy | IsokoHub', 'Read how IsokoHub uses information to provide marketplace features.'],
   '/terms': ['Terms and Conditions | IsokoHub', 'Read the terms for using IsokoHub marketplace services.'],
   '/login': ['Sign In | IsokoHub', 'Sign in to manage your IsokoHub account, listings, and conversations.'],
@@ -223,9 +226,11 @@ async function startApp() {
   if (route.styles) await route.styles();
   await loadScripts(route.scripts);
   const Page = route.component;
+  const isFullAssistant = pathname === '/shopping-assistant';
+  const showAssistantWidget = !isFullAssistant && !['/admin', '/admin-chat'].includes(pathname);
 
   flushSync(() => {
-    root.render(<Page />);
+    root.render(<><Page />{showAssistantWidget && <ShoppingAssistant />}</>);
   });
 
   await loadScripts(route.afterScripts || []);

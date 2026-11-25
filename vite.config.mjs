@@ -1,11 +1,13 @@
 import { defineConfig } from 'vite';
 import { cpSync, copyFileSync, mkdirSync } from 'node:fs';
 import { readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { transformWithEsbuild } from 'vite';
 
 const projectRoot = fileURLToPath(new URL('.', import.meta.url));
+const require = createRequire(import.meta.url);
 const cleanRoutePages = [
   'about',
   'admin-chat',
@@ -26,6 +28,7 @@ const cleanRoutePages = [
   'sell',
   'seller-profile',
   'shop',
+  'shopping-assistant',
   'signup',
   'support',
   'terms',
@@ -69,6 +72,32 @@ export default defineConfig({
     sourcemap: false
   },
   plugins: [{
+    name: 'isokohub-local-api',
+    configureServer(server) {
+      const handlers = {
+        '/api/shopping-assistant': require('./api/shopping-assistant.js'),
+        '/api/product-intelligence': require('./api/product-intelligence.js')
+      };
+      server.middlewares.use((request, response, next) => {
+        let pathname;
+        try {
+          pathname = new URL(request.url, 'http://localhost').pathname;
+        } catch {
+          return next();
+        }
+        const handler = handlers[pathname];
+        if (!handler) return next();
+        Promise.resolve(handler(request, response)).catch((error) => {
+          console.error('[local-api] request failed:', error);
+          if (!response.headersSent) {
+            response.statusCode = 500;
+            response.setHeader('Content-Type', 'application/json; charset=utf-8');
+            response.end(JSON.stringify({ error: 'The request could not be completed.' }));
+          }
+        });
+      });
+    }
+  }, {
     name: 'copy-runtime-assets',
     apply: 'build',
     async closeBundle() {

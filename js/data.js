@@ -765,6 +765,9 @@ async function createProduct(productData) {
     description: productData.description,
     condition: productData.condition,
     color: productData.color || null,
+    specifications: productData.specifications && typeof productData.specifications === 'object' && !Array.isArray(productData.specifications)
+      ? productData.specifications
+      : {},
     seller_email: productData.sellerEmail,
     seller_phone: productData.sellerPhone,
     district: productData.district,
@@ -1268,6 +1271,83 @@ function renderProductDescription(value = '') {
 
   closeList();
   return output.join('');
+}
+
+function getProductSpecifications(product = {}) {
+  const definitions = [
+    { label: 'Color', icon: 'fa-droplet', keys: ['color'] },
+    { label: 'Memory', icon: 'fa-memory', keys: ['memory', 'ram', 'memory_size', 'memorySize'] },
+    { label: 'Capacity', icon: 'fa-database', keys: ['capacity'] },
+    { label: 'Storage', icon: 'fa-hard-drive', keys: ['storage', 'storage_capacity', 'storageCapacity'] },
+    { label: 'Brand', icon: 'fa-tag', keys: ['brand'] },
+    { label: 'Model', icon: 'fa-mobile-screen-button', keys: ['model'] },
+    { label: 'Screen size', icon: 'fa-mobile-screen', keys: ['screen_size', 'screenSize'] },
+    { label: 'Processor', icon: 'fa-microchip', keys: ['processor', 'cpu'] },
+    { label: 'Battery', icon: 'fa-battery-half', keys: ['battery', 'battery_capacity', 'batteryCapacity'] },
+    { label: 'Size', icon: 'fa-ruler-combined', keys: ['size', 'dimensions'] },
+    { label: 'Material', icon: 'fa-layer-group', keys: ['material'] },
+    { label: 'Warranty', icon: 'fa-shield-halved', keys: ['warranty'] },
+    { label: 'Weight', icon: 'fa-weight-hanging', keys: ['weight'] },
+    { label: 'Condition', icon: 'fa-shield-halved', keys: ['condition'] }
+  ];
+  const nestedSpecifications = [product.specifications, product.attributes]
+    .filter(value => value && typeof value === 'object' && !Array.isArray(value));
+  const specifications = [];
+  const seenKeys = new Set();
+  const seenLabels = new Set();
+  const getValue = (keys) => {
+    for (const source of [product, ...nestedSpecifications]) {
+      for (const key of keys) {
+        const value = source[key];
+        if (typeof value === 'string' || typeof value === 'number') {
+          const normalized = String(value).trim();
+          if (normalized) return normalized;
+        }
+      }
+    }
+    return '';
+  };
+  const addSpecification = (label, icon, value, keys = []) => {
+    const normalizedLabel = label.toLowerCase();
+    if (!value || seenLabels.has(normalizedLabel)) return;
+    specifications.push({ label, icon, value });
+    seenLabels.add(normalizedLabel);
+    keys.forEach(key => {
+      seenKeys.add(key.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase().replace(/[^a-z0-9]+/g, '_'));
+    });
+  };
+
+  definitions.forEach(({ label, icon, keys }) => {
+    addSpecification(label, icon, getValue(keys), keys);
+  });
+
+  nestedSpecifications.forEach((source) => {
+    Object.entries(source).forEach(([key, rawValue]) => {
+      const normalizedKey = key.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      if (normalizedKey.startsWith('_')) return;
+      if (seenKeys.has(normalizedKey) || typeof rawValue !== 'string' && typeof rawValue !== 'number') return;
+      const value = String(rawValue).trim();
+      if (!value) return;
+      const label = key.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ')
+        .replace(/\b\w/g, character => character.toUpperCase());
+      const icon = /memory|ram/i.test(key) ? 'fa-memory'
+        : /capacity|storage|space/i.test(key) ? 'fa-hard-drive'
+        : /color/i.test(key) ? 'fa-droplet'
+        : /brand|model/i.test(key) ? 'fa-tag'
+        : /size|dimension/i.test(key) ? 'fa-ruler-combined'
+        : /material/i.test(key) ? 'fa-layer-group'
+        : 'fa-list-check';
+      addSpecification(label, icon, value, [normalizedKey]);
+    });
+  });
+
+  return specifications;
+}
+
+function needsProductDetailsUpdate(product = {}) {
+  const specifications = product.specifications;
+  const schemaVersion = Number(specifications?._schema_version);
+  return !specifications || !Number.isFinite(schemaVersion) || schemaVersion < 2;
 }
 
 function descriptionNodeToMarkdown(node) {

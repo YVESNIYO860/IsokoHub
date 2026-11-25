@@ -77,6 +77,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const sellerPhone = product.seller_phone ? String(product.seller_phone).trim() : '';
   const sellerEmail = product.seller_email ? String(product.seller_email).trim() : (product.sellerEmail ? String(product.sellerEmail).trim() : '');
+  const productSpecs = typeof getProductSpecifications === 'function' ? getProductSpecifications(product) : [];
+  const productSpecsMarkup = productSpecs.length
+    ? `<div class="item-specs-grid">${productSpecs.map(spec => `
+        <div class="item-spec">
+          <span class="item-spec-icon"><i class="fa-solid ${escapeHtml(spec.icon)}" aria-hidden="true"></i></span>
+          <span class="item-spec-copy"><small>${escapeHtml(spec.label)}</small><strong>${escapeHtml(spec.value)}</strong></span>
+        </div>
+      `).join('')}</div>`
+    : '';
   const productPageUrl = `${window.location.origin}/product.html?id=${encodeURIComponent(product.id)}`;
   const shareText = `Check out this IsokoHub listing: ${product.name}`;
 
@@ -119,10 +128,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="detail-stack">
           <div class="detail-card detail-header-card">
             <div class="pd-header">
-              <div class="pd-category">${product.category}</div>
-              <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; margin-top:0.6rem;">
-                <h1 class="pd-title" style="margin:0;">${product.name}</h1>
-                <span class="pd-badge ${product.condition === 'New' ? 'badge-new' : 'badge-used'}">${product.condition || 'Used'}</span>
+              <div class="pd-category"><i class="fa-solid fa-tag" aria-hidden="true"></i> ${escapeHtml(product.category || 'Other')}</div>
+              <div class="pd-heading-row">
+                <h1 class="pd-title">${escapeHtml(product.name || 'Untitled listing')}</h1>
+                <span class="pd-badge ${product.condition === 'New' ? 'badge-new' : 'badge-used'}"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> ${escapeHtml(product.condition || 'Used')}</span>
               </div>
             </div>
           </div>
@@ -133,9 +142,16 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
 
           <div class="detail-card">
-            <div class="detail-card-title">Location</div>
+            <div class="detail-card-title"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Location</div>
             <div class="detail-card-value"><i class="fa-solid fa-location-dot"></i> ${product.district || 'District not set'}${product.latitude || product.seller_lat ? ` • ${product.latitude ?? product.seller_lat}, ${product.longitude ?? product.seller_lng}` : ''}</div>
           </div>
+
+          ${productSpecsMarkup ? `
+            <section class="detail-card item-highlights-card" aria-label="Product specifications">
+              <h2 class="detail-card-title"><i class="fa-solid fa-list-check" aria-hidden="true"></i> Item highlights</h2>
+              ${productSpecsMarkup}
+            </section>
+          ` : ''}
 
           ${product.shop?.id ? `
             <div class="detail-card">
@@ -167,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </div>
 
           <div class="detail-card">
-            <div class="detail-card-title">About this item</div>
+            <div class="detail-card-title"><i class="fa-solid fa-align-left" aria-hidden="true"></i> About this item</div>
             <div class="detail-card-value formatted-description">${renderProductDescription(product.description || '')}</div>
           </div>
 

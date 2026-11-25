@@ -433,6 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const adRequested = p.ad_requested || false;
           const isAd = p.is_ad || false;
           const isSold = p.sold === true;
+          const needsDetailsUpdate = typeof needsProductDetailsUpdate === 'function' && needsProductDetailsUpdate(p);
 
           let statusBg = '#fef9c3'; 
           let statusText = '#854d0e';
@@ -459,6 +460,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <span style="font-weight: 700; color: var(--primary-blue); font-size: 1.1rem;">${formatProductPrice(p)}</span>
                 <span class="text-muted" style="font-size: 0.8rem;">${p.category}</span>
               </div>
+              ${needsDetailsUpdate ? '<div role="status" style="margin-bottom:.75rem;padding:.65rem .75rem;border:1px solid #bfdbfe;border-radius:10px;background:#eff6ff;color:#1e40af;font-size:.78rem;line-height:1.45;"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Add structured specifications to refresh this listing.</div>' : ''}
 
               ${isApproved && !isAd && !adRequested ? `
                 <button onclick="handleRequestAd('${p.id}')" class="btn promote-btn">
@@ -481,7 +483,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               ` : ''}
 
               <div class="manage-actions">
-                <a href="sell.html?editId=${p.id}" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">Edit</a>
+                <a href="sell.html?editId=${p.id}" class="btn btn-secondary" style="flex:1; border-radius:50px; font-size: 0.85rem;">${needsDetailsUpdate ? 'Update details' : 'Edit'}</a>
                 <button onclick="deleteItem('${p.id}')" class="btn btn-danger" style="flex:1; border-radius:50px; font-size: 0.85rem;">Delete</button>
               </div>
             </div>

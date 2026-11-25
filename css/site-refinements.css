@@ -424,3 +424,56 @@ p {
     transition: none;
   }
 }
+
+#react-home-root,
+#react-home-root > main,
+main :where(.container, .page-shell, .page-content, .products-layout, .products-main, .product-grid, .shops-grid) {
+  min-width: 0;
+}
+
+main :where(img, video, iframe, canvas) {
+  max-width: 100%;
+}
+
+main :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --page-gutter: clamp(0.875rem, 4vw, 1.25rem);
+  }
+
+  main > .container,
+  main > .page-shell,
+  main > .page-content {
+    padding-right: var(--page-gutter);
+    padding-left: var(--page-gutter);
+  }
+
+  main h1 {
+    font-size: clamp(1.8rem, 6vw, 2.35rem);
+  }
+
+  main h2 {
+    font-size: clamp(1.4rem, 4.8vw, 1.9rem);
+  }
+
+  main .btn {
+    min-height: 44px;
+  }
+
+  main :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
+  }
+
+  .shops-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  }
+}
