@@ -487,6 +487,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   const customSpecifications = document.getElementById('custom-specifications');
   const addSpecificationButton = document.getElementById('add-product-spec');
   const listingUpdateNotice = document.getElementById('listing-update-notice');
+  const sellerAccessMessage = document.getElementById('seller-access-message');
   const maxCustomSpecifications = 12;
 
   function addCustomSpecificationRow(label = '', value = '') {
@@ -531,19 +532,27 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
   colorSelect.addEventListener('change', syncCustomColorInput);
   syncCustomColorInput();
-  if (user.role !== 'admin' && user.email?.toLowerCase() !== 'yvesniyonkuru2022@gmail.com') {
+  const hasAdminAccess = user.role === 'admin' || user.email?.toLowerCase() === 'yvesniyonkuru2022@gmail.com';
+  let canManageListings = hasAdminAccess;
+  if (!hasAdminAccess) {
     const { data: sellerProfile, error: profileError } = await supabase
       .from('user_profiles')
       .select('is_verified,is_active')
       .eq('id', user.id)
       .maybeSingle();
-    if (profileError || sellerProfile?.is_active !== true || sellerProfile?.is_verified !== true) {
-      errorEl.textContent = profileError
-        ? 'We could not verify your seller approval. Refresh the page or try again later.'
-        : 'Seller AI tools and listing management are available to active, approved sellers. Your account is awaiting admin approval.';
-      errorEl.classList.remove('d-none');
-      form.hidden = true;
-      return;
+    canManageListings = !profileError && sellerProfile?.is_active === true && sellerProfile?.is_verified === true;
+    if (!canManageListings) {
+      submitBtn.disabled = true;
+      submitBtn.title = profileError
+        ? 'Listing access could not be verified.'
+        : sellerProfile?.is_active === false
+          ? 'An administrator must reactivate your account before you can post or edit listings.'
+          : 'An administrator must approve your account before you can post or edit listings.';
+      sellerAccessMessage.textContent = profileError
+        ? 'AI drafting is available, but we could not verify your approval status. Refresh the page before posting or editing listings.'
+        : sellerProfile?.is_active === false
+          ? 'AI drafting is available, but your account is inactive. Contact an administrator to restore posting and editing access.'
+          : 'AI drafting is available while you wait for approval. Posting and editing listings will unlock after an administrator approves your account.';
     }
   }
   const sellerAiControls = document.getElementById('seller-ai-controls');
@@ -1018,6 +1027,11 @@ document.addEventListener('DOMContentLoaded', async function() {
     e.preventDefault();
     errorEl.classList.add('d-none');
     errorEl.textContent = '';
+    if (!canManageListings) {
+      errorEl.textContent = sellerAccessMessage.textContent;
+      errorEl.classList.remove('d-none');
+      return;
+    }
 
     try {
       const files = window._sellImages.slice();
@@ -1124,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
       // Re-enable submit
-      submitBtn.disabled    = false;
+      submitBtn.disabled    = !canManageListings;
       submitBtn.textContent = isEditing ? 'Update Product' : 'List Product';
       progressWrap.classList.remove('visible');
       if (uploadOverlay) uploadOverlay.classList.remove('visible');

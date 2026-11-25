@@ -14,7 +14,7 @@ Configure these variables on the deployment that serves the `/api` functions:
 On Vercel, add the variables in Project Settings → Environment Variables, then redeploy. The endpoints are `/api/shopping-assistant` and `/api/product-intelligence`.
 If a custom `GROQ_MODEL` has been retired, the server retries the request using the supported default model.
 
-For local development, the Vite server provides middleware for these two AI endpoints. Set the same values in your local process environment before running `npm run dev`. The seller endpoint additionally requires a signed-in account whose `user_profiles` row is active and verified. The shopper endpoint uses the Supabase anon key and returns only approved public listing fields.
+For local development, the Vite server provides middleware for these two AI endpoints. Set the same values in your local process environment before running `npm run dev`. Seller AI tools require a signed-in account, including while seller approval is pending. Posting or editing listings still requires an active, approved account; this is enforced by the listing UI and database. The shopper endpoint uses the Supabase anon key and returns only approved public listing fields.
 
 The in-process request throttles are best-effort protections for a single running server instance. For deployments with multiple serverless instances, also configure provider/host-level rate limiting if a strict global quota is needed.
 
@@ -29,6 +29,6 @@ The AI endpoints do not require a new migration. Public product search uses the 
 3. Ask a platform question, including how to report a listing; the response should reflect the current Support page and not claim a report feature exists.
 4. Sign in as an active, verified seller, open Sell Product, and generate a description or feature list. Review the draft before copying or using it.
 5. Add product facts to the description and use **Fill fields from description**. Confirm that only supported details are filled, one by one, and review them before saving. The same form works when editing an existing listing.
-6. Try the seller tool with a non-approved account; it should be rejected by the server.
+6. Try seller AI with a signed-in account awaiting approval; drafting should work, while posting or editing listings remains unavailable until approval.
 
 If Groq is not configured, the AI endpoints return a visible configuration error. Product search also requires `SUPABASE_URL` and `SUPABASE_ANON_KEY`.

@@ -127,9 +127,9 @@ export default function Sell() {
             </header>
             <div id="listing-update-notice" className="listing-update-notice" role="status" hidden></div>
             <div id="sell-error" className="text-danger mb-2 d-none"></div>
-            <aside className="seller-access-note" role="note">
+            <aside id="seller-access-note" className="seller-access-note" role="note">
               <i className="fa-solid fa-shield-halved" aria-hidden="true"></i>
-              <p><strong>Seller AI tools are available to active, approved sellers.</strong> Review AI-suggested details before saving your listing.</p>
+              <p id="seller-access-message">AI drafting is available to signed-in sellers. Account approval is required before posting or editing listings.</p>
             </aside>
             <form id="sell-form">
               <section className="sell-form-section">

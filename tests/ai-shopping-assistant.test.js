@@ -253,19 +253,21 @@ test('shopping assistant chats naturally without searching listings and knows th
   }
 });
 
-test('seller endpoint verifies active approval before requesting a Groq draft', async () => {
+test('seller endpoint allows authenticated sellers awaiting approval to request AI drafts', async () => {
   const environment = preserveEnvironment(['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'GROQ_API_KEY']);
   const oldFetch = global.fetch;
   process.env.SUPABASE_URL = 'https://isokohub-test.supabase.co';
   process.env.SUPABASE_ANON_KEY = 'test-anon-key';
   process.env.GROQ_API_KEY = 'test-groq-key';
   let groqCalls = 0;
+  let profileChecks = 0;
   global.fetch = async (url) => {
     if (String(url).includes('/auth/v1/user')) {
       return { ok: true, json: async () => ({ id: 'seller-123' }) };
     }
     if (String(url).includes('/rest/v1/user_profiles')) {
-      return { ok: true, json: async () => [{ is_active: true, is_verified: true }] };
+      profileChecks += 1;
+      return { ok: true, json: async () => [{ is_active: true, is_verified: false }] };
     }
     groqCalls += 1;
     return { ok: true, json: async () => ({ choices: [{ message: { content: 'Accurate product draft.' } }] }) };
@@ -286,6 +288,7 @@ test('seller endpoint verifies active approval before requesting a Groq draft', 
     assert.equal(response.statusCode, 200);
     assert.equal(JSON.parse(response.body).text, 'Accurate product draft.');
     assert.equal(groqCalls, 1);
+    assert.equal(profileChecks, 0);
   } finally {
     global.fetch = oldFetch;
     restoreEnvironment(environment);
