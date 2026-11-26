@@ -1000,6 +1000,17 @@
       color: #123064;
     }
 
+    body[data-theme="dark"] .marketplace-hero-view-product {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: var(--primary-blue);
+      color: #ffffff;
+    }
+
+    body[data-theme="dark"] .marketplace-hero-view-product:hover {
+      background: var(--primary-blue-hover);
+      color: #ffffff;
+    }
+
     .marketplace-hero-ask-ai {
       border-color: rgba(255, 255, 255, 0.35);
       background: rgba(15, 23, 42, 0.24);
@@ -1157,6 +1168,7 @@
     .homepage-category-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.55rem; min-width: 0; min-height: 66px; padding: 0.7rem; border: 1px solid #dbe4ef; border-radius: 8px; background: #fff; color: #152238; text-decoration: none; transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease; }
     .homepage-category-card:hover { transform: translateY(-2px); border-color: #93b4e8; box-shadow: 0 7px 18px rgba(16, 33, 63, 0.08); }
     .homepage-category-icon { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 6px; background: #edf4ff; color: #1d4ed8; font-size: 0.95rem; }
+    body[data-theme="dark"] .homepage-category-icon { background: var(--surface-muted); color: #ffffff; }
     .homepage-category-name { min-width: 0; color: #152238; font-size: 0.76rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
     .homepage-category-arrow { color: #8b9bb0; font-size: 0.68rem; }
     .homepage-category-loading { grid-column: 1 / -1; padding: 0.8rem 0; color: #64748b; font-size: 0.85rem; }

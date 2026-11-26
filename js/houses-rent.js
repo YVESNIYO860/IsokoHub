@@ -225,6 +225,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Use location/district as title when name is missing for Househub listings
       const displayTitle = (p.name && String(p.name).trim()) ? p.name : (p.district || p.location || `House in ${p.district || 'unknown location'}`);
       const displayDescription = p.description ? p.description.slice(0, 90) + (p.description.length > 90 ? '...' : '') : '';
+      const exactPrice = Number(p.price);
+      const canAddToCart = !p.sold && Number.isFinite(exactPrice) && exactPrice > 0 && !hasProductPriceRange(p);
       return `
         <article class="product-card house-card">
           <a href="product.html?id=${encodeURIComponent(p.id)}" class="house-card-link">
@@ -242,7 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           </a>
           <div class="house-card-actions">
             <a href="product.html?id=${encodeURIComponent(p.id)}" class="house-card-view">View details <i class="fa-solid fa-arrow-right"></i></a>
-            ${hasProductPriceRange(p) ? `<a href="chat.html?product=${encodeURIComponent(p.id)}" class="house-card-view">Contact seller <i class="fa-solid fa-comments"></i></a>` : `<button type="button" class="house-card-cart" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})' aria-label="Add property to cart"><i class="fa-solid fa-cart-plus"></i></button>`}
+            ${canAddToCart ? `<button type="button" class="house-card-cart isokohub-add-to-cart" onclick='addToCart(${JSON.stringify(p).replace(/'/g, "&apos;")})'><i class="fa-solid fa-cart-plus" aria-hidden="true"></i><span>Add to cart</span></button>` : `<a href="chat.html?product=${encodeURIComponent(p.id)}" class="house-card-view">Contact seller <i class="fa-solid fa-comments"></i></a>`}
           </div>
         </article>
       `;

@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // compute price HTML after product is loaded
   const prevPriceVal = Number(product.previous_price || product.previousPrice || 0);
   const currentPriceVal = Number(product.price || 0);
+  const canAddToCart = !product.sold
+    && product.status !== 'sold'
+    && Number.isFinite(currentPriceVal)
+    && currentPriceVal > 0
+    && !hasProductPriceRange(product);
   const priceHtml = (prevPriceVal && prevPriceVal > currentPriceVal)
     ? `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price"><span class="old-price">${formatPrice(prevPriceVal)}</span> <span class="new-price">${formatProductPrice(product)}</span></div></div>`
     : `<div class="pd-price-row"><div class="pd-price-label">Price:</div><div class="pd-price">${formatProductPrice(product)}</div></div>`;
@@ -190,8 +195,8 @@ document.addEventListener('DOMContentLoaded', async () => {
               <button type="button" class="product-share-button product-detail-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${escapeHtml(product.name || 'Untitled listing')}" aria-label="Share ${escapeHtml(product.name || 'Untitled listing')}" title="Share this product">
                 <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share this product</span>
               </button>
-              ${product.buy_online && !hasProductPriceRange(product) ? `<button class="add-cart-btn" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${product.id}'">Buy Online</button>` : ''}
-              ${!hasProductPriceRange(product) ? `<button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn" style="border-radius: 999px;">
+              ${product.buy_online && canAddToCart ? `<button class="add-cart-btn isokohub-add-to-cart" onclick="event.preventDefault(); window.location.href='checkout.html?buy=${encodeURIComponent(product.id)}'"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Buy Online</button>` : ''}
+              ${canAddToCart ? `<button id="add-to-cart-btn" class="btn btn-primary btn-block add-cart-btn isokohub-add-to-cart">
                 <i class="fa-solid fa-cart-plus"></i> Add to Cart
               </button>` : ''}
               ${getCurrentUser && getCurrentUser() && (getCurrentUser().id === product.seller_id || getCurrentUser().id === product.sellerId) ? `<a href="sell.html?editId=${product.id}" class="btn btn-secondary btn-block" style="border-radius:999px;">Edit this listing</a>` : ''}
@@ -272,6 +277,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     relatedProductsGrid.innerHTML = relatedProducts.length
       ? relatedProducts.map((relatedProduct) => buildRelatedProductCard(relatedProduct)).join('')
       : '<div class="text-muted">No related products available right now.</div>';
+    relatedProductsGrid.querySelectorAll('[data-related-add-to-cart]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const relatedProduct = relatedProducts.find((item) => String(item.id) === button.dataset.relatedAddToCart);
+        if (relatedProduct) addToCart(relatedProduct);
+      });
+    });
   }
 
   const aiQuestionInput = document.getElementById('ai-question-input');
@@ -469,6 +480,12 @@ function buildRelatedProductCard(product) {
   const displayImage = firstImage || 'assets/logo.png';
   const price = typeof product.price !== 'undefined' ? formatProductPrice(product) : 'Price unavailable';
   const district = product.district || 'District not set';
+  const exactPrice = Number(product.price);
+  const canAddToCart = !product.sold
+    && product.status !== 'sold'
+    && Number.isFinite(exactPrice)
+    && exactPrice > 0
+    && !hasProductPriceRange(product);
 
   const productName = escapeHtml(product.name || 'Product');
   return `
@@ -488,6 +505,7 @@ function buildRelatedProductCard(product) {
         <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
           <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
         </button>
+        ${canAddToCart ? `<button type="button" class="isokohub-add-to-cart" data-related-add-to-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
       </div>
     </article>
   `;

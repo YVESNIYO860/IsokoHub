@@ -377,6 +377,23 @@ p {
   opacity: 0.7;
 }
 
+body[data-theme="dark"] .product-share-button {
+  border-color: #60a5fa;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(2, 6, 23, 0.3);
+}
+
+body[data-theme="dark"] .product-share-button:hover:not(:disabled) {
+  border-color: #93c5fd;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .product-share-button:focus-visible {
+  outline-color: #facc15;
+}
+
 .hero-product-card-actions {
   flex-wrap: wrap;
 }
@@ -423,6 +440,119 @@ p {
   width: 100%;
 }
 
+.shop-product-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+.house-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+button.isokohub-add-to-cart {
+  display: inline-flex !important;
+  width: 100% !important;
+  min-width: 0;
+  min-height: 2.8rem !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.75rem !important;
+  border: 1px solid #1d4ed8 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 0 5px 14px rgba(29, 78, 216, 0.2);
+  color: #ffffff !important;
+  font: inherit;
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  white-space: normal;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+button.isokohub-add-to-cart:hover:not(:disabled) {
+  border-color: #1e40af !important;
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  box-shadow: 0 7px 18px rgba(29, 78, 216, 0.28);
+  transform: translateY(-1px);
+}
+
+button.isokohub-add-to-cart:focus-visible {
+  outline: 3px solid #facc15;
+  outline-offset: 2px;
+}
+
+.amazon-product-grid .hero-product-card-actions {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.amazon-product-grid .hero-product-card-actions .hero-product-card-view,
+.amazon-product-grid .hero-product-card-actions .isokohub-add-to-cart {
+  grid-column: 1 / -1;
+}
+
+.product-listing-card .product-listing-add-cart,
+.homepage-featured .featured-listing-card .featured-listing-add-cart {
+  grid-column: 1 / -1;
+}
+
+body[data-theme="dark"] .cart-drawer {
+  border-color: #35547f;
+  background: #102a56;
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .cart-drawer-header {
+  background: #081a34;
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .cart-item {
+  border-color: #35547f;
+}
+
+body[data-theme="dark"] .cart-item-title,
+body[data-theme="dark"] .cart-item-price,
+body[data-theme="dark"] .quantity-control span,
+body[data-theme="dark"] .cart-subtotal-row,
+body[data-theme="dark"] .cart-subtotal-row strong {
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .cart-footer {
+  border-color: #35547f;
+  background: #132f5a;
+}
+
+body[data-theme="dark"] .cart-empty-icon {
+  border-color: #35547f;
+  background: #1a3b6b;
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .quantity-control {
+  background: #1a3b6b;
+}
+
+body[data-theme="dark"] .quantity-control button,
+body[data-theme="dark"] .remove-item,
+body[data-theme="dark"] .cart-footer-note,
+body[data-theme="dark"] .cart-empty-state h3,
+body[data-theme="dark"] .cart-empty-state p {
+  color: #ffffff;
+}
+
 .product-card-chat,
 .product-card-availability,
 .product-card-actions .btn-buy-online,
@@ -435,6 +565,19 @@ p {
   flex-basis: 2.55rem;
   width: 2.55rem;
   height: 2.55rem;
+}
+
+body[data-theme="dark"] .product-contact-btn,
+body[data-theme="dark"] .amazon-product-grid .hero-product-card .product-contact-btn {
+  background: var(--primary-blue);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+body[data-theme="dark"] .product-contact-btn:hover,
+body[data-theme="dark"] .amazon-product-grid .hero-product-card .product-contact-btn:hover {
+  background: var(--primary-blue-hover);
+  color: #ffffff;
 }
 
 @media (max-width: 640px) {
@@ -481,8 +624,18 @@ p {
     padding: 0 0.7rem 0.7rem;
   }
 
+  .shop-product-actions {
+    gap: 0.4rem;
+  }
+
   .related-product-actions {
     padding: 0 0.75rem 0.75rem;
+  }
+
+  button.isokohub-add-to-cart {
+    min-height: 3rem !important;
+    padding-inline: 0.55rem !important;
+    font-size: 0.76rem !important;
   }
 }
 

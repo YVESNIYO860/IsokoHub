@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const products = (await enrichProductsWithShopData(await fetchProducts(true)))
     .filter((product) => product.shop?.id === shopId);
+  const shopProductsById = new Map(products.map((product) => [String(product.id), product]));
 
   wrapper.innerHTML = `
     <section class="shop-hero-card">
@@ -57,6 +58,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="product-grid">
           ${products.map((product) => {
             const displayImg = normalizeProductImage(Array.isArray(product.image) ? product.image[0] : product.image);
+            const exactPrice = Number(product.price);
+            const canAddToCart = !product.sold && Number.isFinite(exactPrice) && exactPrice > 0 && !hasProductPriceRange(product);
             const imageMarkup = displayImg
               ? `<img src="${escapeHtml(displayImg)}" alt="${escapeHtml(product.name || 'Product image')}" class="product-card-img" loading="lazy" decoding="async" onload="this.classList.add('loaded');" onerror="this.onerror=null;this.removeAttribute('src');this.style.display='block';this.style.background='linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%)';">`
               : `<div class="product-card-img" style="background:linear-gradient(135deg, #f8fbff 0%, #e0f2fe 100%);"></div>`;
@@ -81,6 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${escapeHtml(product.name || 'Untitled listing')}" aria-label="Share ${escapeHtml(product.name || 'Untitled listing')}" title="Share this product">
                     <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
                   </button>
+                  ${canAddToCart ? `<button type="button" class="isokohub-add-to-cart" data-shop-add-to-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
                 </div>
               </article>
             `;
@@ -89,4 +93,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       ` : '<p class="text-muted">This shop has not assigned any products yet.</p>'}
     </section>
   `;
+
+  wrapper.querySelectorAll('[data-shop-add-to-cart]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const product = shopProductsById.get(button.dataset.shopAddToCart);
+      if (product) addToCart(product);
+    });
+  });
 });

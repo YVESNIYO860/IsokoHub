@@ -16,6 +16,17 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="IsokoHub">
   <link rel="apple-touch-icon" href="/assets/pwa-icon-192.png">
+  <script>
+    (() => {
+      try {
+        const settings = JSON.parse(localStorage.getItem('isokoHubDrawerSettings') || '{}');
+        document.documentElement.dataset.theme = settings.theme === 'dark' ? 'dark' : 'light';
+      } catch (error) {
+        console.warn('Unable to read the saved IsokoHub theme preference.', error);
+        document.documentElement.dataset.theme = 'light';
+      }
+    })();
+  </script>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/site-refinements.css">
   <!-- Firebase SDK -->

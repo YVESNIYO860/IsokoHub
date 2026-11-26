@@ -81,7 +81,7 @@ function applyDrawerUiSettings(settings = getDrawerUiSettings()) {
 
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   if (themeMeta) {
-    themeMeta.content = resolvedTheme === 'dark' ? '#020617' : '#0f172a';
+    themeMeta.content = resolvedTheme === 'dark' ? '#081a34' : '#0f172a';
   }
 }
 
@@ -206,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderNavbar();
   setupSupabaseAuthRefresh();
   renderFooter();
-  setupStickyHeader();
 
   if (typeof logSiteVisit === 'function') {
     logSiteVisit().catch(() => {});
@@ -642,47 +641,165 @@ function setupStickyHeader() {
   const navbar = document.querySelector('.navbar');
   if (!navbar) return;
 
+  if (typeof window.__isokoStickyHeaderCleanup === 'function') {
+    window.__isokoStickyHeaderCleanup();
+  }
+
   let ticking = false;
   let lastScrollY = window.scrollY;
+  let scrollDirection = 0;
+  let directionChangeDistance = 0;
+  let isCompact = false;
+  let fullHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
+  const headerRoot = navbar.parentElement;
   const mobileBottomNav = document.querySelector('.mobile-bottom-nav');
 
   const updateHeaderState = () => {
     const currentScrollY = window.scrollY;
     const shouldScroll = currentScrollY > 8;
-    const shouldHide = currentScrollY > 70 && currentScrollY > lastScrollY + 4;
-    const shouldShow = currentScrollY < lastScrollY - 4 || currentScrollY <= 20;
+    const scrollDelta = currentScrollY - lastScrollY;
 
     navbar.classList.toggle('scrolled', shouldScroll);
-    navbar.classList.toggle('is-hidden', shouldHide && !shouldShow);
+
+    if (currentScrollY <= 0) {
+      isCompact = false;
+      scrollDirection = 0;
+      directionChangeDistance = 0;
+    } else if (scrollDelta !== 0) {
+      const nextDirection = Math.sign(scrollDelta);
+      if (nextDirection === scrollDirection || scrollDirection === 0) {
+        scrollDirection = nextDirection;
+        directionChangeDistance = 0;
+      } else {
+        directionChangeDistance += scrollDelta;
+        if (Math.abs(directionChangeDistance) >= 6) {
+          scrollDirection = nextDirection;
+          directionChangeDistance = 0;
+          if (scrollDirection < 0) isCompact = false;
+        }
+      }
+
+      if (scrollDirection > 0 && currentScrollY >= 100) {
+        isCompact = true;
+      }
+    }
+
+    const wasCompact = navbar.classList.contains('is-compact');
+    if (isCompact && !wasCompact) {
+      fullHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
+    }
+
+    navbar.classList.toggle('is-compact', isCompact);
+    if (typeof window.__isokoHeaderPromoSetVisible === 'function') {
+      window.__isokoHeaderPromoSetVisible(isCompact);
+    }
 
     if (mobileBottomNav) {
       const isMobile = window.innerWidth <= 768;
-      mobileBottomNav.classList.toggle('is-hidden', isMobile && shouldHide && !shouldShow);
+      mobileBottomNav.classList.toggle('is-hidden', isMobile && isCompact);
     }
 
     const headerHeight = Math.ceil(navbar.getBoundingClientRect().height);
     document.documentElement.style.setProperty('--header-offset', '0px');
     document.documentElement.style.setProperty('--header-offset-scrolled', `${headerHeight}px`);
     document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+    if (!isCompact && (currentScrollY <= 0 || scrollDirection >= 0)) {
+      fullHeaderHeight = headerHeight;
+    }
+    if (headerRoot) {
+      headerRoot.style.minHeight = currentScrollY > 0 ? `${fullHeaderHeight}px` : '';
+    }
     lastScrollY = currentScrollY;
     ticking = false;
   };
 
-  window.addEventListener('scroll', () => {
+  const handleScroll = () => {
     if (!ticking) {
       window.requestAnimationFrame(updateHeaderState);
       ticking = true;
     }
-  }, { passive: true });
+  };
 
-  window.addEventListener('resize', () => {
+  const handleResize = () => {
     if (!ticking) {
-      window.requestAnimationFrame(updateHeaderState);
+      window.requestAnimationFrame(() => {
+        if (isCompact) {
+          navbar.classList.remove('is-compact');
+          fullHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
+          navbar.classList.add('is-compact');
+        } else {
+          fullHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
+        }
+        updateHeaderState();
+      });
       ticking = true;
     }
-  }, { passive: true });
+  };
+
+  const handleHeaderTransitionEnd = () => {
+    if (isCompact || window.scrollY <= 0 || !headerRoot) return;
+    fullHeaderHeight = Math.ceil(navbar.getBoundingClientRect().height);
+    headerRoot.style.minHeight = `${fullHeaderHeight}px`;
+  };
+
+  window.addEventListener('scroll', handleScroll, { passive: true });
+  window.addEventListener('resize', handleResize, { passive: true });
+  navbar.addEventListener('transitionend', handleHeaderTransitionEnd);
+  window.__isokoStickyHeaderCleanup = () => {
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', handleResize);
+    navbar.removeEventListener('transitionend', handleHeaderTransitionEnd);
+  };
 
   updateHeaderState();
+}
+
+function setupHeaderPromoSlideshow() {
+  if (typeof window.__isokoHeaderPromoCleanup === 'function') {
+    window.__isokoHeaderPromoCleanup();
+  }
+
+  const slides = Array.from(document.querySelectorAll('.navbar-promo-slide'));
+  if (slides.length < 2) return;
+
+  let activeIndex = 0;
+  const showSlide = (nextIndex) => {
+    activeIndex = nextIndex;
+    slides.forEach((slide, index) => {
+      const isActive = index === activeIndex;
+      slide.classList.toggle('is-active', isActive);
+      slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+    });
+  };
+
+  showSlide(activeIndex);
+  const prefersReducedMotion = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let slideshowInterval = null;
+  let isPromoVisible = false;
+  const setPromoVisible = (isVisible) => {
+    if (isPromoVisible === isVisible) return;
+    isPromoVisible = isVisible;
+    if (slideshowInterval !== null) {
+      window.clearInterval(slideshowInterval);
+      slideshowInterval = null;
+    }
+    if (isVisible && !prefersReducedMotion) {
+      slideshowInterval = window.setInterval(() => {
+        if (!document.hidden) {
+          showSlide((activeIndex + 1) % slides.length);
+        }
+      }, 5000);
+    }
+  };
+
+  window.__isokoHeaderPromoSetVisible = setPromoVisible;
+  window.__isokoHeaderPromoCleanup = () => {
+    setPromoVisible(false);
+    if (window.__isokoHeaderPromoSetVisible === setPromoVisible) {
+      delete window.__isokoHeaderPromoSetVisible;
+    }
+  };
 }
 
 function setupLoaderLogic() {
@@ -776,6 +893,13 @@ function renderDataLoader(message = 'Loading IsokoHub...') {
 }
 
 function renderNavbar() {
+  if (typeof window.__isokoHeaderPromoCleanup === 'function') {
+    window.__isokoHeaderPromoCleanup();
+  }
+  if (typeof window.__isokoNavbarDropdownPositionCleanup === 'function') {
+    window.__isokoNavbarDropdownPositionCleanup();
+  }
+
   document.querySelectorAll('.navbar, .mobile-bottom-nav, #side-drawer-overlay, #side-drawer').forEach((element) => {
     element.remove();
   });
@@ -783,10 +907,12 @@ function renderNavbar() {
   const user = getCurrentUser();
   const isAdmin = isAdminUser(user);
   const isAdminPage = /admin\.html/.test(window.location.pathname);
+  const settings = getDrawerUiSettings();
   const settingsHref = user ? (isAdmin ? 'admin.html?tab=settings' : 'dashboard.html?view=settings') : 'products.html';
   const displayName = user ? (user.name || user.full_name || user.display_name || user.email?.split('@')[0] || 'User') : 'Marketplace';
   const accountHref = user ? 'dashboard.html' : '/login';
   const accountClickHandler = user ? '' : "event.preventDefault(); window.location.href='/login';";
+  const initialThemeLabel = settings.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
   const navbarHTML = `
     <nav class="navbar">
       <!-- Top Tier: Branding, Search, Actions -->
@@ -800,6 +926,25 @@ function renderNavbar() {
           <img src="assets/logo.png" alt="IsokoHub" class="site-logo" loading="eager" onerror="this.style.display='none'">
           <span>IsokoHub</span>
         </a>
+
+        <div class="navbar-promo-slideshow" role="group" aria-label="Current IsokoHub offer" aria-live="off">
+          <span class="navbar-promo-slide is-active" aria-hidden="false">
+            <i class="fa-solid fa-gift" aria-hidden="true"></i>
+            <span>SPECIAL BONUS ON REFERRING</span>
+          </span>
+          <span class="navbar-promo-slide" aria-hidden="true">
+            <i class="fa-solid fa-gift" aria-hidden="true"></i>
+            <span>IMPANO ZIMINSI MIKURU NAHA WAZIVANA</span>
+          </span>
+          <span class="navbar-promo-slide" aria-hidden="true">
+            <i class="fa-solid fa-percent" aria-hidden="true"></i>
+            <span>10% KUMUNTU UZANA UMUKILIYA</span>
+          </span>
+          <span class="navbar-promo-slide" aria-hidden="true">
+            <i class="fa-solid fa-tag" aria-hidden="true"></i>
+            <span>-40% KUMUNTU USHAKA KO TUMUGURISHIRIZA IGICURUZWA!!</span>
+          </span>
+        </div>
 
         <form class="search-form" id="global-search-form" onsubmit="handleSearch(event)">
           <label class="sr-only" for="global-search-input">Search marketplace</label>
@@ -825,6 +970,11 @@ function renderNavbar() {
             <span class="cart-count">0</span>
             <strong>Cart</strong>
           </a>
+
+          <button type="button" class="nav-action-item navbar-theme-toggle" id="navbar-theme-toggle" aria-label="${initialThemeLabel}" aria-pressed="${settings.theme === 'dark'}" title="${initialThemeLabel}">
+            <i class="fa-solid ${settings.theme === 'dark' ? 'fa-sun' : 'fa-moon'}" aria-hidden="true"></i>
+            <span class="sr-only">${initialThemeLabel}</span>
+          </button>
         </div>
       </div>
 
@@ -954,8 +1104,8 @@ function renderNavbar() {
   const closeBtn = document.getElementById('close-drawer');
   const productsMenuToggle = document.getElementById('products-menu-toggle');
   const productsMenuDropdown = document.getElementById('products-menu-dropdown');
-  const settings = getDrawerUiSettings();
   const themeSelect = document.getElementById('drawer-theme-select');
+  const themeToggle = document.getElementById('navbar-theme-toggle');
   const compactToggle = document.getElementById('drawer-compact-toggle');
   const reducedMotionToggle = document.getElementById('drawer-reduced-motion-toggle');
   const highContrastToggle = document.getElementById('drawer-high-contrast-toggle');
@@ -965,6 +1115,28 @@ function renderNavbar() {
   if (reducedMotionToggle) reducedMotionToggle.checked = Boolean(settings.reducedMotion);
   if (highContrastToggle) highContrastToggle.checked = Boolean(settings.highContrast);
 
+  const syncThemeToggle = () => {
+    if (!themeToggle) return;
+    const isDark = document.body.dataset.theme === 'dark';
+    const label = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+    const icon = themeToggle.querySelector('i');
+    const screenReaderLabel = themeToggle.querySelector('.sr-only');
+    themeToggle.setAttribute('aria-pressed', String(isDark));
+    themeToggle.setAttribute('aria-label', label);
+    themeToggle.title = label;
+    if (icon) icon.className = `fa-solid ${isDark ? 'fa-sun' : 'fa-moon'}`;
+    if (screenReaderLabel) screenReaderLabel.textContent = label;
+  };
+
+  syncThemeToggle();
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      settings.theme = settings.theme === 'dark' ? 'light' : 'dark';
+      saveDrawerUiSettings(settings);
+      syncThemeToggle();
+    });
+  }
+
   const handleDrawerSettingsChange = () => {
     const nextSettings = {
       theme: themeSelect ? themeSelect.value : settings.theme,
@@ -973,6 +1145,7 @@ function renderNavbar() {
       highContrast: highContrastToggle ? highContrastToggle.checked : settings.highContrast
     };
     saveDrawerUiSettings(nextSettings);
+    syncThemeToggle();
   };
 
   [themeSelect, compactToggle, reducedMotionToggle, highContrastToggle].forEach((control) => {
@@ -996,6 +1169,10 @@ function renderNavbar() {
   updateNavbarDropdownPositions();
   window.addEventListener('resize', updateNavbarDropdownPositions, { passive: true });
   window.addEventListener('scroll', updateNavbarDropdownPositions, { passive: true });
+  window.__isokoNavbarDropdownPositionCleanup = () => {
+    window.removeEventListener('resize', updateNavbarDropdownPositions);
+    window.removeEventListener('scroll', updateNavbarDropdownPositions);
+  };
 
   const dropdownWraps = document.querySelectorAll('.navbar-dropdown-wrap');
   dropdownWraps.forEach((wrap) => {
@@ -1076,7 +1253,8 @@ function renderNavbar() {
     });
   });
 
-  
+  setupHeaderPromoSlideshow();
+  setupStickyHeader();
 }
 
 function renderFooter() {
@@ -1271,8 +1449,21 @@ function saveCart(cart) {
 }
 
 function addToCart(product) {
+  if (!product || typeof product !== 'object' || !product.id) {
+    window.alert('This listing is unavailable and cannot be added to your cart.');
+    return;
+  }
   if (typeof hasProductPriceRange === 'function' && hasProductPriceRange(product)) {
     window.alert('This listing has a price range. Please contact the seller to confirm the final price.');
+    return;
+  }
+  if (product?.sold === true || product?.status === 'sold') {
+    window.alert('This listing is sold and cannot be added to your cart.');
+    return;
+  }
+  const price = Number(product?.price);
+  if (!Number.isFinite(price) || price <= 0) {
+    window.alert('This listing has no fixed price. Please contact the seller before adding it to your cart.');
     return;
   }
   const cart = getCart();
@@ -1284,7 +1475,7 @@ function addToCart(product) {
     cart.push({
       id: product.id,
       name: product.name,
-      price: Number(product.price) || 0,
+      price,
       image: Array.isArray(product.image) ? product.image[0] : product.image,
       quantity: 1,
       seller_phone: product.seller_phone || product.sellerPhone || '',
@@ -1301,9 +1492,11 @@ function addToCart(product) {
   openCartDrawer();
 }
 
+window.addToCart = addToCart;
+
 function updateQuantity(productId, delta) {
   let cart = getCart();
-  const item = cart.find(item => item.id === productId);
+  const item = cart.find(item => String(item.id) === String(productId));
   
   if (item) {
     item.quantity += delta;
@@ -1315,7 +1508,7 @@ function updateQuantity(productId, delta) {
 }
 
 function removeFromCart(productId) {
-  const cart = getCart().filter(item => item.id !== productId);
+  const cart = getCart().filter(item => String(item.id) !== String(productId));
   saveCart(cart);
 }
 
@@ -1363,23 +1556,37 @@ function renderCartContent() {
     return;
   }
   
-  container.innerHTML = cart.map(item => `
-    <div class="cart-item">
-      <img src="${item.image}" alt="${item.name}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"80\" height=\"80\" viewBox=\"0 0 80 80\"><rect width=\"80\" height=\"80\" fill=\"%23f8fbff\"/><rect x=\"8\" y=\"8\" width=\"64\" height=\"64\" rx=\"12\" fill=\"%23ffffff\" stroke=\"%23dbeafe\" stroke-width=\"2\"/><circle cx=\"40\" cy=\"34\" r=\"14\" fill=\"%23e0f2fe\"/><path d=\"M24 60c8-14 16-14 32 0\" fill=\"%23bfdbfe\"/></svg>'">
-      <div class="cart-item-details">
-        <div class="cart-item-title">${item.name}</div>
-        <div class="cart-item-price">${formatPrice(item.price)} <span>each</span></div>
-        <div class="cart-item-actions">
-          <div class="quantity-control">
-            <button onclick="updateQuantity('${item.id}', -1)">-</button>
-            <span>${item.quantity}</span>
-            <button onclick="updateQuantity('${item.id}', 1)">+</button>
+  container.innerHTML = cart.map(item => {
+    const image = typeof item.image === 'string' && item.image.trim() ? item.image : '/assets/logo.png';
+    const name = escapeHtml(item.name || 'Product');
+    const productId = escapeHtml(String(item.id));
+    return `
+      <div class="cart-item">
+        <img src="${escapeHtml(image)}" alt="${name}" onerror="this.onerror=null;this.src='/assets/logo.png';">
+        <div class="cart-item-details">
+          <div class="cart-item-title">${name}</div>
+          <div class="cart-item-price">${formatPrice(item.price)} <span>each</span></div>
+          <div class="cart-item-actions">
+            <div class="quantity-control">
+              <button type="button" data-cart-product-id="${productId}" data-cart-quantity="-1" aria-label="Decrease quantity">-</button>
+              <span>${item.quantity}</span>
+              <button type="button" data-cart-product-id="${productId}" data-cart-quantity="1" aria-label="Increase quantity">+</button>
+            </div>
+            <button type="button" class="remove-item" data-cart-remove="${productId}">Remove</button>
           </div>
-          <button class="remove-item" onclick="removeFromCart('${item.id}')">Remove</button>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
+
+  container.querySelectorAll('[data-cart-quantity]').forEach((button) => {
+    button.addEventListener('click', () => {
+      updateQuantity(button.dataset.cartProductId, Number(button.dataset.cartQuantity));
+    });
+  });
+  container.querySelectorAll('[data-cart-remove]').forEach((button) => {
+    button.addEventListener('click', () => removeFromCart(button.dataset.cartRemove));
+  });
   
   document.getElementById('cart-subtotal').textContent = formatPrice(subtotal);
 }

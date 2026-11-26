@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { isProductDiscoveryRequest, parsePreliminaryFilters, validateLanguage } = require('../api/shopping-assistant')._test;
+const { isProductDiscoveryRequest, isInScopeRequest, isGreeting, parsePreliminaryFilters, validateLanguage } = require('../api/shopping-assistant')._test;
 const { sanitizeProduct } = require('../api/product-intelligence')._test;
 const { queryPublicProducts, validateSearchArguments } = require('../api/_shared/product-search');
 const shoppingAssistant = require('../api/shopping-assistant');
@@ -47,6 +47,18 @@ test('only clear shopping requests trigger an automatic listing search', () => {
   assert.equal(isProductDiscoveryRequest('Je cherche des annonces'), true);
   assert.equal(isProductDiscoveryRequest('How are you today?'), false);
   assert.equal(isProductDiscoveryRequest('Who developed IsokoHub?'), false);
+  assert.equal(isProductDiscoveryRequest('Trouve un ordinateur'), true);
+});
+
+test('assistant scope includes IsokoHub shopping and support, but not unrelated questions', () => {
+  assert.equal(isInScopeRequest('Find a laptop under 500,000 RWF'), true);
+  assert.equal(isInScopeRequest('Trouve un ordinateur'), true);
+  assert.equal(isInScopeRequest('How do I contact a seller on IsokoHub?'), true);
+  assert.equal(isInScopeRequest('Nshakira telefoni nshya'), true);
+  assert.equal(isInScopeRequest('What is the capital of Japan?'), false);
+  assert.equal(isInScopeRequest('Who developed IsokoHub?'), false);
+  assert.equal(isInScopeRequest('What does IsokoHub do?'), true);
+  assert.equal(isGreeting('Mwaramutse!'), true);
 });
 
 test('seller language and product input are restricted to supported, public-safe fields', () => {
@@ -161,11 +173,29 @@ test('shopping endpoint executes a bounded search tool and returns real public r
   process.env.GROQ_API_KEY = 'test-groq-key';
   delete process.env.GROQ_MODEL;
   let groqCalls = 0;
+  let assistantPrompt = '';
   const requestedModels = [];
+  const listings = Array.from({ length: 9 }, (_, index) => ({
+    id: index === 0 ? 'listing-123' : `listing-${index}`,
+    name: index === 0 ? 'Approved laptop' : `Approved laptop ${index}`,
+    category: 'Electronics',
+    price: 250000 + index,
+    currency: 'RWF',
+    image: index === 0 ? 'https://example.test/laptop.jpg' : [`https://example.test/laptop-${index}.jpg`],
+    description: 'Laptop in working condition',
+    condition: 'Used',
+    district: 'Huye',
+    specifications: { memory: '8 GB' },
+    status: 'approved',
+    sold: false,
+    ...(index === 0 ? { seller_email: 'private@example.test' } : {})
+  }));
   global.fetch = async (url, options) => {
     if (String(url).startsWith('https://api.groq.com/')) {
       groqCalls += 1;
-      requestedModels.push(JSON.parse(options.body).model);
+      const requestBody = JSON.parse(options.body);
+      requestedModels.push(requestBody.model);
+      assistantPrompt = requestBody.messages.find(message => message.role === 'system').content;
       const message = groqCalls === 1
         ? {
           tool_calls: [{
@@ -176,23 +206,7 @@ test('shopping endpoint executes a bounded search tool and returns real public r
         : { content: 'I found an approved laptop listing.' };
       return { ok: true, json: async () => ({ choices: [{ message }] }) };
     }
-    return {
-      ok: true,
-      json: async () => [{
-        id: 'listing-123',
-        name: 'Approved laptop',
-        category: 'Electronics',
-        price: 250000,
-        currency: 'RWF',
-        image: 'https://example.test/laptop.jpg',
-        description: 'Laptop in working condition',
-        condition: 'Used',
-        district: 'Huye',
-        specifications: { memory: '8 GB' },
-        status: 'approved',
-        seller_email: 'private@example.test'
-      }]
-    };
+    return { ok: true, json: async () => listings };
   };
 
   try {
@@ -207,9 +221,53 @@ test('shopping endpoint executes a bounded search tool and returns real public r
     assert.equal(response.statusCode, 200);
     assert.equal(groqCalls, 2);
     assert.deepEqual(requestedModels, ['openai/gpt-oss-120b', 'openai/gpt-oss-120b']);
+    assert.equal(result.products.length, 8);
     assert.equal(result.products[0].id, 'listing-123');
+    assert.deepEqual(result.products[0].image, ['https://example.test/laptop.jpg']);
+    assert.equal(result.products[0].sold, false);
+    assert.equal(result.hasMore, true);
+    assert.equal(result.nextOffset, 8);
     assert.equal(result.reply, 'I found an approved laptop listing.');
     assert.equal(Object.hasOwn(result.products[0], 'seller_email'), false);
+    assert.match(assistantPrompt, /displays every returned match as a product card with its listing image and offers pagination/i);
+  } finally {
+    global.fetch = oldFetch;
+    restoreEnvironment(environment);
+  }
+});
+
+test('shopping assistant pagination returns listing images and cart-safety status', async () => {
+  const environment = preserveEnvironment(['SUPABASE_URL', 'SUPABASE_ANON_KEY']);
+  const oldFetch = global.fetch;
+  process.env.SUPABASE_URL = 'https://isokohub-test.supabase.co';
+  process.env.SUPABASE_ANON_KEY = 'test-anon-key';
+  const rows = Array.from({ length: 9 }, (_, index) => ({
+    id: `page-${index}`,
+    name: `Laptop ${index}`,
+    category: 'Electronics',
+    price: 250000 + index,
+    currency: 'RWF',
+    image: [`https://example.test/laptop-${index}.jpg`],
+    description: 'Approved listing',
+    status: 'approved',
+    sold: false
+  }));
+  global.fetch = async () => ({ ok: true, json: async () => rows });
+
+  try {
+    const response = mockResponse();
+    await shoppingAssistant({
+      method: 'POST',
+      headers: { 'x-forwarded-for': '198.51.100.32' },
+      socket: {},
+      body: { language: 'en', page: { filters: { query: 'laptop', limit: 8 }, offset: 8 } }
+    }, response);
+    const result = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(result.products.map(product => product.id), ['page-8']);
+    assert.deepEqual(result.products[0].image, ['https://example.test/laptop-8.jpg']);
+    assert.equal(result.products[0].sold, false);
+    assert.equal(result.hasMore, false);
   } finally {
     global.fetch = oldFetch;
     restoreEnvironment(environment);
@@ -285,7 +343,7 @@ test('homepage AI recommendation selects one approved product from any category'
   }
 });
 
-test('shopping assistant chats naturally without searching listings and knows the developer name', async () => {
+test('shopping assistant answers in-scope marketplace support questions', async () => {
   const environment = preserveEnvironment(['GROQ_API_KEY', 'GROQ_MODEL']);
   const oldFetch = global.fetch;
   process.env.GROQ_API_KEY = 'test-groq-key';
@@ -296,7 +354,7 @@ test('shopping assistant chats naturally without searching listings and knows th
     requestedMessages = JSON.parse(options.body).messages;
     return {
       ok: true,
-      json: async () => ({ choices: [{ message: { content: 'I am doing well, thank you! How can I help you today?' } }] })
+      json: async () => ({ choices: [{ message: { content: 'Use the listing page to contact the seller.' } }] })
     };
   };
 
@@ -306,16 +364,45 @@ test('shopping assistant chats naturally without searching listings and knows th
       method: 'POST',
       headers: { 'x-forwarded-for': '198.51.100.27' },
       socket: {},
-      body: { language: 'en', messages: [{ role: 'user', content: 'How are you today?' }] }
+      body: { language: 'en', messages: [{ role: 'user', content: 'How do I contact a seller on IsokoHub?' }] }
     }, response);
     const result = JSON.parse(response.body);
     const prompt = requestedMessages.find(message => message.role === 'system').content;
     assert.equal(response.statusCode, 200);
-    assert.equal(result.reply, 'I am doing well, thank you! How can I help you today?');
+    assert.equal(result.reply, 'Use the listing page to contact the seller.');
     assert.deepEqual(result.products, []);
-    assert.match(prompt, /NIYONKURU Yves/);
-    assert.match(prompt, /Never default to laptops or any other category/);
-    assert.match(prompt, /Answer greetings, small talk/);
+    assert.match(prompt, /Only answer questions about IsokoHub, its approved product listings, shopping, or marketplace support/);
+    assert.match(prompt, /Politely refuse unrelated requests/);
+    assert.match(prompt, /get_platform_help/);
+  } finally {
+    global.fetch = oldFetch;
+    restoreEnvironment(environment);
+  }
+});
+
+test('assistant politely refuses unrelated questions in the selected language without calling AI', async () => {
+  const environment = preserveEnvironment(['GROQ_API_KEY', 'GROQ_MODEL']);
+  const oldFetch = global.fetch;
+  process.env.GROQ_API_KEY = 'test-groq-key';
+  let fetchCalls = 0;
+  global.fetch = async () => {
+    fetchCalls += 1;
+    throw new Error('Unrelated questions should be refused before calling external services.');
+  };
+
+  try {
+    const response = mockResponse();
+    await shoppingAssistant({
+      method: 'POST',
+      headers: { 'x-forwarded-for': '198.51.100.31' },
+      socket: {},
+      body: { language: 'fr', messages: [{ role: 'user', content: 'Explain photosynthesis.' }] }
+    }, response);
+    const result = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.match(result.reply, /uniquement.*marketplace IsokoHub/i);
+    assert.deepEqual(result.products, []);
+    assert.equal(fetchCalls, 0);
   } finally {
     global.fetch = oldFetch;
     restoreEnvironment(environment);

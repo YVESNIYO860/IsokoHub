@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './ShoppingAssistant.css';
 
 const STORAGE_KEY = 'isokohub-shopping-assistant-v1';
@@ -13,9 +13,9 @@ const suggestions = {
   fr: ['Trouve un ordinateur à moins de 500 000 RWF', 'Montre les téléphones d’occasion à Huye', 'Comment contacter un vendeur ?']
 };
 const labels = {
-  en: { title: 'IsokoHub shopping assistant', subtitle: 'Real listings. Helpful answers.', input: 'Ask about products or IsokoHub…', send: 'Send', close: 'Close assistant', clear: 'New chat', expand: 'Open full assistant', products: 'Matching listings', compare: 'Product comparison', more: 'Show more listings', loading: 'Searching listings and preparing an answer…', empty: 'No listings to show yet.' },
-  rw: { title: 'Umufasha wo guhaha wa IsokoHub', subtitle: 'Amatangazo nyayo. Ibisubizo bifasha.', input: 'Baza ku bicuruzwa cyangwa IsokoHub…', send: 'Ohereza', close: 'Funga umufasha', clear: 'Tangira ikiganiro gishya', expand: 'Fungura umufasha wuzuye', products: 'Amatangazo ahuye', compare: 'Kugereranya ibicuruzwa', more: 'Erekana andi matangazo', loading: 'Turashaka amatangazo kandi dutegura igisubizo…', empty: 'Nta matangazo arahari.' },
-  fr: { title: 'Assistant shopping IsokoHub', subtitle: 'Annonces réelles. Réponses utiles.', input: 'Posez une question sur les produits ou IsokoHub…', send: 'Envoyer', close: "Fermer l'assistant", clear: 'Nouvelle discussion', expand: 'Ouvrir en plein écran', products: 'Annonces correspondantes', compare: 'Comparaison des produits', more: 'Afficher plus d’annonces', loading: 'Recherche des annonces et préparation de la réponse…', empty: 'Aucune annonce à afficher.' }
+  en: { title: 'IsokoHub shopping assistant', subtitle: 'Real listings. Helpful answers.', input: 'Ask about products or IsokoHub…', send: 'Send', close: 'Close assistant', clear: 'New chat', expand: 'Open full assistant', products: 'Matching listings', compare: 'Product comparison', more: 'Show more listings', loading: 'Searching listings and preparing an answer…', empty: 'No listings to show yet.', addCart: 'Add to Cart', sold: 'Sold' },
+  rw: { title: 'Umufasha wo guhaha wa IsokoHub', subtitle: 'Amatangazo nyayo. Ibisubizo bifasha.', input: 'Baza ku bicuruzwa cyangwa IsokoHub…', send: 'Ohereza', close: 'Funga umufasha', clear: 'Tangira ikiganiro gishya', expand: 'Fungura umufasha wuzuye', products: 'Amatangazo ahuye', compare: 'Kugereranya ibicuruzwa', more: 'Erekana andi matangazo', loading: 'Turashaka amatangazo kandi dutegura igisubizo…', empty: 'Nta matangazo arahari.', addCart: 'Ongeraho mu gatebo', sold: 'Byagurishijwe' },
+  fr: { title: 'Assistant shopping IsokoHub', subtitle: 'Annonces réelles. Réponses utiles.', input: 'Posez une question sur les produits ou IsokoHub…', send: 'Envoyer', close: "Fermer l'assistant", clear: 'Nouvelle discussion', expand: 'Ouvrir en plein écran', products: 'Annonces correspondantes', compare: 'Comparaison des produits', more: 'Afficher plus d’annonces', loading: 'Recherche des annonces et préparation de la réponse…', empty: 'Aucune annonce à afficher.', addCart: 'Ajouter au panier', sold: 'Vendu' }
 };
 
 function readStoredMessages() {
@@ -50,8 +50,15 @@ function SpecificationValue({ product, names }) {
   return String(specifications[key] || specifications[key.toLowerCase()]);
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, language }) {
   const image = Array.isArray(product.image) ? product.image[0] : product.image;
+  const words = labels[language] || labels.en;
+  const price = product.price == null || product.price === '' ? NaN : Number(product.price);
+  const canAddToCart = product.sold === false
+    && Number.isFinite(price)
+    && price > 0
+    && product.priceMin == null
+    && product.priceMax == null;
   const specifications = product.specifications || {};
   const detailKeys = ['brand', 'model', 'memory', 'storage', 'capacity'];
   const details = detailKeys
@@ -78,6 +85,19 @@ function ProductCard({ product }) {
           <span className="assistant-product-open">View listing <i className="fa-solid fa-arrow-right" aria-hidden="true"></i></span>
         </div>
       </a>
+      {product.sold === true && <span className="assistant-product-sold">{words.sold}</span>}
+      {canAddToCart && (
+        <button
+          type="button"
+          className="isokohub-add-to-cart"
+          onClick={() => {
+            if (typeof window.addToCart === 'function') window.addToCart(product);
+          }}
+          aria-label={`${words.addCart}: ${product.name}`}
+        >
+          <i className="fa-solid fa-cart-plus" aria-hidden="true"></i> {words.addCart}
+        </button>
+      )}
       <button
         type="button"
         className="product-share-button"
@@ -132,6 +152,14 @@ export default function ShoppingAssistant({ fullPage = false }) {
   const composerInputRef = useRef(null);
   const launcherRef = useRef(null);
   const copy = labels[language === 'rw' || language === 'fr' ? language : 'en'];
+
+  useLayoutEffect(() => {
+    document.body.classList.toggle('isoko-assistant-open', fullPage || isOpen);
+    document.body.classList.toggle('isoko-assistant-full-page', fullPage);
+    return () => {
+      document.body.classList.remove('isoko-assistant-open', 'isoko-assistant-full-page');
+    };
+  }, [fullPage, isOpen]);
 
   useEffect(() => {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-24)));
@@ -252,7 +280,7 @@ export default function ShoppingAssistant({ fullPage = false }) {
               {message.products?.length > 0 && (
                 <section className="assistant-results">
                   <h4>{copy.products}</h4>
-                  <div className="assistant-product-grid">{message.products.map(product => <ProductCard key={product.id} product={product} />)}</div>
+                  <div className="assistant-product-grid">{message.products.map(product => <ProductCard key={product.id} product={product} language={language === 'rw' || language === 'fr' ? language : 'en'} />)}</div>
                   <Comparison comparison={message.comparison} language={language === 'rw' || language === 'fr' ? language : 'en'} />
                   {message.nextPage && <button type="button" className="assistant-load-more" onClick={() => showMore(message)}>{copy.more}</button>}
                 </section>

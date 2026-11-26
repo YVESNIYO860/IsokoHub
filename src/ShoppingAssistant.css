@@ -38,7 +38,8 @@
 .assistant-icon-button:focus-visible,
 .assistant-composer button:focus-visible,
 .assistant-suggestions button:focus-visible,
-.assistant-load-more:focus-visible {
+.assistant-load-more:focus-visible,
+.assistant-product-card .isokohub-add-to-cart:focus-visible {
   outline: 3px solid #93c5fd;
   outline-offset: 3px;
 }
@@ -278,6 +279,22 @@
 .assistant-product-card .product-share-button {
   width: calc(100% - 1rem);
   margin: 0 0.5rem 0.5rem;
+}
+
+.assistant-product-card .isokohub-add-to-cart {
+  width: calc(100% - 1rem);
+  margin: 0 0.5rem 0.5rem;
+}
+
+.assistant-product-sold {
+  align-self: flex-start;
+  margin: 0 0.5rem 0.5rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.65rem;
+  font-weight: 750;
 }
 
 .assistant-product-card .product-card-image-shell {
@@ -660,5 +677,96 @@
 
   .assistant-conversation {
     scroll-behavior: auto;
+  }
+}
+
+body.isoko-assistant-open #site-header-root {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 160ms ease, visibility 0s linear 160ms;
+}
+
+body.isoko-assistant-full-page #site-header-root {
+  display: none !important;
+}
+
+body[data-theme="dark"] .assistant-floating-panel,
+body[data-theme="dark"] .assistant-chat-full {
+  border-color: var(--border-color);
+  background: var(--surface-color);
+}
+
+body[data-theme="dark"] .assistant-chat-header,
+body[data-theme="dark"] .assistant-composer {
+  border-color: var(--border-color);
+  background: var(--surface-strong);
+}
+
+body[data-theme="dark"] .assistant-chat,
+body[data-theme="dark"] .assistant-chat-heading strong,
+body[data-theme="dark"] .assistant-results > h4,
+body[data-theme="dark"] .assistant-comparison h4,
+body[data-theme="dark"] .assistant-product-price,
+body[data-theme="dark"] .assistant-product-open {
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-chat-heading span,
+body[data-theme="dark"] .assistant-product-meta,
+body[data-theme="dark"] .assistant-product-specs,
+body[data-theme="dark"] .assistant-loading {
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-icon-button,
+body[data-theme="dark"] .assistant-icon-button:hover,
+body[data-theme="dark"] .assistant-suggestions button,
+body[data-theme="dark"] .assistant-message-bubble,
+body[data-theme="dark"] .assistant-comparison,
+body[data-theme="dark"] .assistant-comparison-scroll,
+body[data-theme="dark"] .assistant-load-more,
+body[data-theme="dark"] .assistant-composer textarea {
+  border-color: var(--border-color);
+  background: var(--surface-muted);
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-message-user .assistant-message-bubble {
+  border-color: #2563eb;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-comparison th,
+body[data-theme="dark"] .assistant-comparison td {
+  border-color: var(--border-color);
+}
+
+body[data-theme="dark"] .assistant-comparison thead th,
+body[data-theme="dark"] .assistant-product-placeholder {
+  background: var(--surface-muted);
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-product-price,
+body[data-theme="dark"] .assistant-product-open,
+body[data-theme="dark"] .assistant-results > h4 i,
+body[data-theme="dark"] .assistant-comparison h4 i {
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-product-sold {
+  background: #334155;
+  color: #ffffff;
+}
+
+body[data-theme="dark"] .assistant-full-link {
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.isoko-assistant-open #site-header-root {
+    transition: none;
   }
 }

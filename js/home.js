@@ -541,7 +541,7 @@ document.addEventListener('click', (event) => {
           <button type="button" class="product-share-button" data-share-product="${escapeHtml(String(product.id))}" data-product-name="${productName}" aria-label="Share ${productName}" title="Share this product">
             <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
           </button>
-          ${canAddToCart ? `<button type="button" class="btn btn-primary" data-featured-quick-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
+          ${canAddToCart ? `<button type="button" class="btn btn-primary isokohub-add-to-cart" data-featured-quick-cart="${escapeHtml(String(product.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
           <a href="${productUrl}" class="featured-quick-view-details">View full details</a>
         </div>
       </div>
@@ -573,7 +573,7 @@ document.addEventListener('click', (event) => {
 });
 
 function createFeaturedProductCard(p, useHeroImageTreatment = false, isFeaturedListing = false) {
-  if (isFeaturedListing) featuredProductRecords.set(String(p.id), p);
+  featuredProductRecords.set(String(p.id), p);
   const imageUrls = (Array.isArray(p.image) ? p.image : [p.image]).map(normalizeProductImage).filter(Boolean);
   const displayImg = imageUrls[0] || '';
   const backdropMarkup = useHeroImageTreatment
@@ -600,7 +600,7 @@ function createFeaturedProductCard(p, useHeroImageTreatment = false, isFeaturedL
   const exactPrice = Number(p.price);
   const hasExactPrice = Number.isFinite(exactPrice) && exactPrice > 0;
   const isSold = p.sold === true;
-  const canAddToCart = isFeaturedListing && !isSold && hasExactPrice && !hasPriceRange;
+  const canAddToCart = !isSold && hasExactPrice && !hasPriceRange;
   const previousPrice = Number(p.previous_price ?? p.previousPrice);
   const hasDiscount = isFeaturedListing && !isSold && !hasPriceRange && hasExactPrice
     && Number.isFinite(previousPrice) && previousPrice > exactPrice;
@@ -642,7 +642,7 @@ function createFeaturedProductCard(p, useHeroImageTreatment = false, isFeaturedL
                   <i class="fa-solid fa-share-nodes" aria-hidden="true"></i><span class="product-share-label">Share</span>
                 </button>
                 <a href="${escapeHtml(contactUrl)}" class="product-contact-btn" title="${contactTitle}" aria-label="${contactTitle}" target="_blank" rel="noopener noreferrer"><i class="${contactIcon}"></i></a>
-                ${canAddToCart ? `<button type="button" class="featured-listing-add-cart" data-featured-cart="${escapeHtml(String(p.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
+                ${canAddToCart ? `<button type="button" class="isokohub-add-to-cart featured-listing-add-cart" data-featured-cart="${escapeHtml(String(p.id))}"><i class="fa-solid fa-cart-plus" aria-hidden="true"></i> Add to cart</button>` : ''}
                 ${isFeaturedListing && !isSold && p.buy_online && canAddToCart ? `<a href="${productUrl}&buy=1" class="featured-listing-buy-online"><i class="fa-solid fa-bolt" aria-hidden="true"></i> Buy online</a>` : ''}
               </div>
             </div>
